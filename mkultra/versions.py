@@ -37,7 +37,7 @@ class Versions(object):
 
     def to_json(self):
         return json.dumps([
-            {"version": str(k), "aliases": self._data[k]}
+            {'version': str(k), 'aliases': self._data[k]}
             for k in sorted(iterkeys(self._data), reverse=True)
         ])
 
