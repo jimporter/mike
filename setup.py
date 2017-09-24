@@ -1,7 +1,8 @@
 import os
 from setuptools import setup, find_packages
+from six import iteritems
 
-from mkultra.version import version
+from mkultra.app_version import version
 
 custom_cmds = {}
 

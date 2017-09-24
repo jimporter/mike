@@ -1,11 +1,10 @@
 import argparse
-import json
 import subprocess
 
 from . import git_utils
-from .version import version
+from .app_version import version as app_version
+from .versions import Versions
 
-versions_file = 'versions.json'
 mkdocs_site_dir = 'site'
 
 
@@ -17,22 +16,10 @@ def run_mkdocs():
     return subprocess.call(['mkdocs', 'build'])
 
 
-def get_versions_json(branch, filename=versions_file):
-    try:
-        data = git_utils.read_file(branch, filename)
-        return set(json.loads(data))
-    except:
-        return set()
-
-
-def make_versions_json(versions, filename=versions_file):
-    return git_utils.FileInfo(filename, json.dumps(sorted(versions)))
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version',
-                        version='%(prog)s ' + version)
+                        version='%(prog)s ' + app_version)
     parser.add_argument('-m', '--message', default='commit',
                         help='commit message')
     parser.add_argument('-D', '--delete', action='append', default=[],
@@ -45,8 +32,10 @@ def main():
                         help='push to {remote}/{branch} after commit')
     parser.add_argument('-f', '--force', action='store_true',
                         help='force push when pushing')
-    parser.add_argument('version', nargs='*', metavar='VERSION',
+    parser.add_argument('version', nargs='?', metavar='VERSION',
                         help='version (directory) to deploy this build to')
+    parser.add_argument('alias', nargs='*', metavar='ALIAS',
+                        help='alias for this build (e.g. "latest")')
     args = parser.parse_args()
 
     if not args.version and not args.delete:
@@ -55,17 +44,18 @@ def main():
     if args.version:
         run_mkdocs()
 
-    all_versions = get_versions_json(args.branch)
+    all_versions = Versions.load_from_git(args.branch)
     all_versions.difference_update(args.delete)
-    all_versions.update(args.version)
+    all_versions.add(args.version, args.alias)
 
     commit = git_utils.Commit(args.branch, args.message)
     commit.delete_files(args.delete)
     commit.delete_files(args.version)
 
-    for f in git_utils.walk_files(mkdocs_site_dir, args.version):
+    destdirs = [args.version] + args.alias
+    for f in git_utils.walk_files(mkdocs_site_dir, destdirs):
         commit.add_file_data(f)
-    commit.add_file_data(make_versions_json(all_versions))
+    commit.add_file_data(all_versions.to_file_info())
     commit.add_file_data(make_nojekyll())
 
     commit.finish()
