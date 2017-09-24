@@ -1,6 +1,6 @@
-# multi-mkdocs
+# mkultra
 
-**multi-mkdocs** is a work-in-progress Python utility to easily deploy multiple
+**mkultra** is a work-in-progress Python utility to easily deploy multiple
 versions of your [MkDocs](http://www.mkdocs.org)-powered docs to a Git branch,
 suitable for deploying to Github via `gh-pages`.
 
