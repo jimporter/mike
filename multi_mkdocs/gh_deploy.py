@@ -4,16 +4,16 @@ import subprocess
 
 import git_utils
 
-versions_file = "versions.json"
-mkdocs_site_dir = "site"
+versions_file = 'versions.json'
+mkdocs_site_dir = 'site'
 
 
 def make_nojekyll():
-    return git_utils.FileInfo(".nojekyll", "")
+    return git_utils.FileInfo('.nojekyll', '')
 
 
 def run_mkdocs():
-    return subprocess.call(["mkdocs", "build"])
+    return subprocess.call(['mkdocs', 'build'])
 
 
 def get_versions(branch, filename=versions_file):
@@ -28,25 +28,25 @@ def make_versions_json(versions, filename=versions_file):
     return git_utils.FileInfo(filename, json.dumps(sorted(versions)))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--message", default="commit",
-                        help="commit message")
-    parser.add_argument("-D", "--delete", action="append", default=[],
-                        help="files to delete")
-    parser.add_argument("-r", "--remote", default="origin",
-                        help="origin to push to [%default]")
-    parser.add_argument("-b", "--branch", default="gh-pages",
-                        help="branch to commit to [%default]")
-    parser.add_argument("-p", "--push", action="store_true",
-                        help="push to {remote}/{branch} after commit")
-    parser.add_argument("-f", "--force", action="store_true",
-                        help="force push when pushing")
-    parser.add_argument("version", nargs="*")
+    parser.add_argument('-m', '--message', default='commit',
+                        help='commit message')
+    parser.add_argument('-D', '--delete', action='append', default=[],
+                        help='files to delete')
+    parser.add_argument('-r', '--remote', default='origin',
+                        help='origin to push to [%default]')
+    parser.add_argument('-b', '--branch', default='gh-pages',
+                        help='branch to commit to [%default]')
+    parser.add_argument('-p', '--push', action='store_true',
+                        help='push to {remote}/{branch} after commit')
+    parser.add_argument('-f', '--force', action='store_true',
+                        help='force push when pushing')
+    parser.add_argument('version', nargs='*')
     args = parser.parse_args()
 
     if not args.version and not args.delete:
-        parser.error("must either add or remove a version")
+        parser.error('must either add or remove a version')
 
     if args.version:
         run_mkdocs()

@@ -28,44 +28,44 @@ def git_path(path):
     path = os.path.normpath(path)
     # Fix unicode pathnames on OS X; see
     # <http://stackoverflow.com/a/5582439/44289>.
-    if sys.platform == "darwin":
+    if sys.platform == 'darwin':
         if isinstance(path, binary_type):
-            path = path.decode("utf-8")
-        path = unicodedata.normalize("NFKC", path)
-    return "/".join(path.split(os.path.sep))
+            path = path.decode('utf-8')
+        path = unicodedata.normalize('NFKC', path)
+    return '/'.join(path.split(os.path.sep))
 
 
 def make_when(timestamp=None):
     if timestamp is None:
         timestamp = int(time.time())
-    timezone = "{:+05d}".format(-1 * time.timezone / 3600 * 100)
-    return "{} {}".format(timestamp, timezone)
+    timezone = '{:+05d}'.format(-1 * time.timezone / 3600 * 100)
+    return '{} {}'.format(timestamp, timezone)
 
 
 def get_config(key):
-    cmd = ["git", "config", key]
+    cmd = ['git', 'config', key]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise ValueError("Error getting config: {}".format(stderr))
+        raise ValueError('Error getting config: {}'.format(stderr))
     return stdout.strip()
 
 
 def get_previous_commit(branch):
-    cmd = ["git", "rev-list", "--max-count=1", branch, "--"]
+    cmd = ['git', 'rev-list', '--max-count=1', branch, '--']
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise ValueError("Error getting previous commit: {}".format(stderr))
+        raise ValueError('Error getting previous commit: {}'.format(stderr))
     return stdout.strip()
 
 
 def update_branch(remote, branch):
     try:
         rev = get_previous_commit(branch)
-        cmd = ["git", "update-ref", "refs/heads/{}".format(branch), rev]
+        cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), rev]
         if sp.call(cmd) != 0:
-            raise ValueError("Failed to update branch")
+            raise ValueError('Failed to update branch')
     except ValueError:
         # Couldn't get previous commits, so there's probably no branch (which
         # is fine).
@@ -73,7 +73,7 @@ def update_branch(remote, branch):
 
 
 class FileInfo(object):
-    def __init__(self, path, data, mode="100644"):
+    def __init__(self, path, data, mode='100644'):
         self.path = path
         self.mode = mode
         self.data = data
@@ -81,67 +81,67 @@ class FileInfo(object):
 
 class Commit(object):
     def __init__(self, branch, message):
-        cmd = ["git", "fast-import", "--date-format=raw", "--quiet"]
+        cmd = ['git', 'fast-import', '--date-format=raw', '--quiet']
         self._pipe = sp.Popen(cmd, stdin=sp.PIPE, universal_newlines=False)
         self._start_commit(branch, message)
 
     def _write(self, data):
         if isinstance(data, text_type):
-            data = data.encode("utf-8")
+            data = data.encode('utf-8')
         return self._pipe.stdin.write(data)
 
     def _start_commit(self, branch, message):
-        name = get_config("user.name")
-        email = get_config("user.email")
-        self._write("commit refs/heads/{}\n".format(branch))
-        self._write("committer {name} <{email}> {time}\n".format(
+        name = get_config('user.name')
+        email = get_config('user.email')
+        self._write('commit refs/heads/{}\n'.format(branch))
+        self._write('committer {name} <{email}> {time}\n'.format(
             name=name, email=email, time=make_when()
         ))
-        self._write("data {length}\n{message}\n".format(
+        self._write('data {length}\n{message}\n'.format(
             length=len(message), message=message
         ))
         try:
             head = get_previous_commit(branch)
-            self._write("from {}\n".format(head))
+            self._write('from {}\n'.format(head))
         except ValueError:
             pass
 
     def delete_files(self, files):
-        if files == "*":
-            self._write("deleteall\n")
+        if files == '*':
+            self._write('deleteall\n')
         elif files:
             for f in files:
-                self._write("D {}\n".format(f))
+                self._write('D {}\n'.format(f))
 
     def add_file_data(self, file_info):
-        self._write("M {mode} inline {path}\n".format(
+        self._write('M {mode} inline {path}\n'.format(
             path=git_path(file_info.path), mode=file_info.mode
         ))
-        self._write("data {}\n".format(len(file_info.data)))
+        self._write('data {}\n'.format(len(file_info.data)))
         self._write(file_info.data)
-        self._write("\n")
+        self._write('\n')
 
     def finish(self):
-        self._write("\n")
+        self._write('\n')
         self._pipe.stdin.close()
         if self._pipe.wait() != 0:
-            raise ValueError("Failed to process commit")
+            raise ValueError('Failed to process commit')
 
 
 def push_branch(self, remote, branch, force=False):
-    cmd = ["git", "push"] + (["--force"] if force else []) + [remote, branch]
+    cmd = ['git', 'push'] + (['--force'] if force else []) + [remote, branch]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if self._pipe.wait() != 0:
-        raise ValueError("Failed to push branch: {}".format(stderr))
+        raise ValueError('Failed to push branch: {}'.format(stderr))
 
 
-def walk_files(srcdir, dstdirs=[""]):
+def walk_files(srcdir, dstdirs=['']):
     for path, _, filenames in os.walk(srcdir):
         for f in filenames:
             inpath = os.path.join(path, f)
-            with open(inpath, "rb") as fd:
-                mode = "100755" if os.access(inpath, os.X_OK) else "100644"
+            with open(inpath, 'rb') as fd:
+                mode = '100755' if os.access(inpath, os.X_OK) else '100644'
                 data = fd.read()
             for d in dstdirs:
                 outpath = os.path.join(
@@ -151,11 +151,11 @@ def walk_files(srcdir, dstdirs=[""]):
 
 
 def read_file(branch, filename):
-    cmd = ["git", "show", "{branch}:{filename}".format(
+    cmd = ['git', 'show', '{branch}:{filename}'.format(
         branch=branch, filename=filename
     )]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise ValueError("Unable to read file: {}".format(stderr))
-    return stdout.decode("utf-8")
+        raise ValueError('Unable to read file: {}'.format(stderr))
+    return stdout.decode('utf-8')
