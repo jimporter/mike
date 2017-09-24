@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-from multi_mkdocs.version import version
+from mkultra.version import version
 
 custom_cmds = {}
 
@@ -10,7 +10,7 @@ try:
 
     class LintCommand(Flake8):
         def distribution_files(self):
-            return ['setup.py', 'multi_mkdocs']
+            return ['setup.py', 'mkultra']
 
     custom_cmds['lint'] = LintCommand
 except:
@@ -26,14 +26,14 @@ except ImportError:
     pass
 
 setup(
-    name='multi-mkdocs',
+    name='mkultra',
     version=version,
 
     description=('Manage multiple versions of your MkDocs-powered ' +
                  'documentation'),
     long_description=long_desc,
     keywords='mkdocs multiple versions',
-    url='https://github.com/jimporter/multi-mkdocs',
+    url='https://github.com/jimporter/mkultra',
 
     author='Jim Porter',
     author_email='porterj@alum.rit.edu',
@@ -63,7 +63,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'multi-mkdocs=multi_mkdocs.driver:main',
+            'mkultra=mkultra.driver:main',
         ],
     },
 
