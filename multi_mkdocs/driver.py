@@ -2,7 +2,8 @@ import argparse
 import json
 import subprocess
 
-import git_utils
+from . import git_utils
+from .version import version
 
 versions_file = 'versions.json'
 mkdocs_site_dir = 'site'
@@ -16,7 +17,7 @@ def run_mkdocs():
     return subprocess.call(['mkdocs', 'build'])
 
 
-def get_versions(branch, filename=versions_file):
+def get_versions_json(branch, filename=versions_file):
     try:
         data = git_utils.read_file(branch, filename)
         return set(json.loads(data))
@@ -28,21 +29,24 @@ def make_versions_json(versions, filename=versions_file):
     return git_utils.FileInfo(filename, json.dumps(sorted(versions)))
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s ' + version)
     parser.add_argument('-m', '--message', default='commit',
                         help='commit message')
     parser.add_argument('-D', '--delete', action='append', default=[],
                         help='files to delete')
     parser.add_argument('-r', '--remote', default='origin',
-                        help='origin to push to [%default]')
+                        help='origin to push to [%(default)s]')
     parser.add_argument('-b', '--branch', default='gh-pages',
-                        help='branch to commit to [%default]')
+                        help='branch to commit to [%(default)s]')
     parser.add_argument('-p', '--push', action='store_true',
                         help='push to {remote}/{branch} after commit')
     parser.add_argument('-f', '--force', action='store_true',
                         help='force push when pushing')
-    parser.add_argument('version', nargs='*')
+    parser.add_argument('version', nargs='*', metavar='VERSION',
+                        help='version (directory) to deploy this build to')
     args = parser.parse_args()
 
     if not args.version and not args.delete:
@@ -51,7 +55,7 @@ if __name__ == '__main__':
     if args.version:
         run_mkdocs()
 
-    all_versions = get_versions(args.branch)
+    all_versions = get_versions_json(args.branch)
     all_versions.difference_update(args.delete)
     all_versions.update(args.version)
 
@@ -61,7 +65,7 @@ if __name__ == '__main__':
 
     for f in git_utils.walk_files(mkdocs_site_dir, args.version):
         commit.add_file_data(f)
-    commit.add_file_data(make_versions(all_versions))
+    commit.add_file_data(make_versions_json(all_versions))
     commit.add_file_data(make_nojekyll())
 
     commit.finish()
