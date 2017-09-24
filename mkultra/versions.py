@@ -1,7 +1,13 @@
 import json
-from six import iteritems
+from packaging.version import LegacyVersion as Version
+from six import iterkeys
 
 from . import git_utils
+
+def _ensure_version(version):
+    if not isinstance(version, Version):
+        return Version(version)
+    return version
 
 class Versions(object):
     versions_file = 'versions.json'
@@ -14,25 +20,26 @@ class Versions(object):
         result = Versions.__new__(Versions)
         try:
             data = json.loads(git_utils.read_file(branch, filename))
-            result._data = {i['version']: i['aliases'] for i in data}
+            result._data = {Version(i['version']): i['aliases'] for i in data}
         except:
             result._data = {}
         return result
 
     def add(self, version, aliases=[]):
-        self._data[version] = aliases
+        self._data[_ensure_version(version)] = aliases
 
     def remove(self, version):
-        del self._data[version]
+        del self._data[_ensure_version(version)]
 
     def difference_update(self, versions):
         for i in versions:
             self.remove(i)
 
     def to_json(self):
-        return json.dumps(sorted([
-            {"version": k, "aliases": v} for k, v in iteritems(self._data)
-        ]))
+        return json.dumps([
+            {"version": str(k), "aliases": self._data[k]}
+            for k in sorted(iterkeys(self._data), reverse=True)
+        ])
 
     def to_file_info(self, filename=versions_file):
         return git_utils.FileInfo(filename, self.to_json())

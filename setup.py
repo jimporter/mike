@@ -1,6 +1,5 @@
 import os
 from setuptools import setup, find_packages
-from six import iteritems
 
 from mkultra.app_version import version
 
@@ -57,7 +56,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=(['mkdocs', 'setuptools', 'six']),
+    install_requires=(['mkdocs', 'packaging', 'six']),
     extras_require={
         'dev': ['flake8 >= 3.0', 'pypandoc'],
     },
