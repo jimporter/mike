@@ -29,7 +29,8 @@ setup(
     name='multi-mkdocs',
     version=version,
 
-    description='Manage multiple versions your MkDocs-powered documentation',
+    description=('Manage multiple versions of your MkDocs-powered ' +
+                 'documentation'),
     long_description=long_desc,
     keywords='mkdocs multiple versions',
     url='https://github.com/jimporter/multi-mkdocs',
