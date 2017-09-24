@@ -56,7 +56,7 @@ def get_previous_commit(branch):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        return ValueError("Error getting previous commit: {}".format(stderr))
+        raise ValueError("Error getting previous commit: {}".format(stderr))
     return stdout.strip()
 
 
@@ -100,9 +100,11 @@ class Commit(object):
         self._write("data {length}\n{message}\n".format(
             length=len(message), message=message
         ))
-        head = get_previous_commit(branch)
-        if head:
+        try:
+            head = get_previous_commit(branch)
             self._write("from {}\n".format(head))
+        except ValueError:
+            pass
 
     def delete_files(self, files):
         if files == "*":
@@ -134,16 +136,18 @@ def push_branch(self, remote, branch, force=False):
         raise ValueError("Failed to push branch: {}".format(stderr))
 
 
-def walk_files(srcdir, dstdir=""):
+def walk_files(srcdir, dstdirs=[""]):
     for path, _, filenames in os.walk(srcdir):
         for f in filenames:
             inpath = os.path.join(path, f)
-            outpath = os.path.join(
-                dstdir, os.path.relpath(inpath, start=srcdir)
-            )
             with open(inpath, "rb") as fd:
                 mode = "100755" if os.access(inpath, os.X_OK) else "100644"
-                yield FileInfo(outpath, fd.read(), mode)
+                data = fd.read()
+            for d in dstdirs:
+                outpath = os.path.join(
+                    d, os.path.relpath(inpath, start=srcdir)
+                )
+                yield FileInfo(outpath, data, mode)
 
 
 def read_file(branch, filename):
