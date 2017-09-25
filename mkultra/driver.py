@@ -1,19 +1,13 @@
 import argparse
-import subprocess
 
 from . import git_utils
+from . import mkdocs
 from .app_version import version as app_version
 from .versions import Versions
-
-mkdocs_site_dir = 'site'
 
 
 def make_nojekyll():
     return git_utils.FileInfo('.nojekyll', '')
-
-
-def run_mkdocs():
-    return subprocess.call(['mkdocs', 'build'])
 
 
 def add_git_arguments(parser, commit=True):
@@ -22,7 +16,7 @@ def add_git_arguments(parser, commit=True):
     parser.add_argument('-b', '--branch', default='gh-pages',
                         help='branch to commit to (default: %(default)s)')
     if (commit):
-        parser.add_argument('-m', '--message', default='commit',
+        parser.add_argument('-m', '--message',
                             help='commit message')
         parser.add_argument('-p', '--push', action='store_true',
                             help='push to {remote}/{branch} after commit')
@@ -31,17 +25,30 @@ def add_git_arguments(parser, commit=True):
 
 
 def deploy(args):
+    if args.message:
+        message = args.message
+    else:
+        message = (
+            'Deployed {rev} to {doc_version} with MkDocs {mkdocs_version} ' +
+            'and mkultra {mkultra_version}'
+        ).format(
+            rev=git_utils.get_latest_commit('HEAD'),
+            doc_version=args.version,
+            mkdocs_version=mkdocs.version(),
+            mkultra_version=app_version
+        )
+
     git_utils.update_branch(args.remote, args.branch)
-    run_mkdocs()
+    mkdocs.build()
     destdirs = [args.version] + args.alias
 
     all_versions = Versions.load_from_git(args.branch)
     all_versions.add(args.version, args.alias)
 
-    commit = git_utils.Commit(args.branch, args.message)
+    commit = git_utils.Commit(args.branch, message)
     commit.delete_files(destdirs)
 
-    for f in git_utils.walk_files(mkdocs_site_dir, destdirs):
+    for f in git_utils.walk_files(mkdocs.site_dir, destdirs):
         commit.add_file_data(f)
     commit.add_file_data(all_versions.to_file_info())
     commit.add_file_data(make_nojekyll())
@@ -53,9 +60,19 @@ def deploy(args):
 
 
 def delete(args):
+    if args.message:
+        message = args.message
+    else:
+        message = (
+            'Removed {doc_version} with mkultra {mkultra_version}'
+        ).format(
+            doc_version=args.version,
+            mkultra_version=app_version
+        )
+
     git_utils.update_branch(args.remote, args.branch)
     if args.all:
-        commit = git_utils.Commit(args.branch, args.message)
+        commit = git_utils.Commit(args.branch, message)
         commit.delete_files('*')
         commit.finish()
     else:

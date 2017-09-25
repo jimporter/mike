@@ -52,7 +52,7 @@ def get_config(key):
 
 
 def get_latest_commit(branch):
-    cmd = ['git', 'rev-list', '--max-count=1', branch, '--']
+    cmd = ['git', 'rev-parse', branch]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
