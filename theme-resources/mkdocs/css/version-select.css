@@ -1,0 +1,12 @@
+#version-panel {
+  position: fixed;
+  bottom: 1em;
+  font-size: 12px;
+}
+
+#version-panel select {
+  display: inline;
+  width: unset;
+  height: unset;
+  padding: 2px;
+}
