@@ -1,6 +1,6 @@
 import json
 from packaging.version import LegacyVersion as Version
-from six import iterkeys
+from six import iteritems
 
 from . import git_utils
 
@@ -25,6 +25,9 @@ class Versions(object):
             result._data = {}
         return result
 
+    def __iter__(self):
+        return iter(sorted(iteritems(self._data), reverse=True))
+
     def add(self, version, aliases=[]):
         self._data[_ensure_version(version)] = aliases
 
@@ -36,10 +39,8 @@ class Versions(object):
             self.remove(i)
 
     def to_json(self):
-        return json.dumps([
-            {'version': str(k), 'aliases': self._data[k]}
-            for k in sorted(iterkeys(self._data), reverse=True)
-        ])
+        return json.dumps([{'version': str(v), 'aliases': a}
+                           for v, a in iter(self)])
 
     def to_file_info(self, filename=versions_file):
         return git_utils.FileInfo(filename, self.to_json())
