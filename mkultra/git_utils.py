@@ -51,24 +51,24 @@ def get_config(key):
     return stdout.strip()
 
 
-def get_previous_commit(branch):
+def get_latest_commit(branch):
     cmd = ['git', 'rev-list', '--max-count=1', branch, '--']
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise ValueError('Error getting previous commit: {}'.format(stderr))
+        raise ValueError('Error getting latest commit: {}'.format(stderr))
     return stdout.strip()
 
 
 def update_branch(remote, branch):
     try:
-        rev = get_previous_commit(branch)
+        rev = get_latest_commit(branch)
         cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), rev]
         if sp.call(cmd) != 0:
             raise ValueError('Failed to update branch')
     except ValueError:
-        # Couldn't get previous commits, so there's probably no branch (which
-        # is fine).
+        # Couldn't get any commits, so there's probably no branch (which is
+        # fine).
         pass
 
 
@@ -101,7 +101,7 @@ class Commit(object):
             length=len(message), message=message
         ))
         try:
-            head = get_previous_commit(branch)
+            head = get_latest_commit(branch)
             self._write('from {}\n'.format(head))
         except ValueError:
             pass
