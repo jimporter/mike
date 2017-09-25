@@ -56,7 +56,7 @@ made a mistake or you're pruning unsupported versions. You can do this via the
 mkultra delete [version-or-alias]...
 ```
 
-If you'd like to completely wipe your docs branch, just run
+If you'd like to completely wipe the contents of your docs branch, just run
 `mkultra delete --all`.
 
 ### Listing Docs
