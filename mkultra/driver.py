@@ -66,7 +66,7 @@ def delete(args):
         message = (
             'Removed {doc_version} with mkultra {mkultra_version}'
         ).format(
-            doc_version=args.version,
+            doc_version='everything' if args.all else ', '.join(args.version),
             mkultra_version=app_version
         )
 
