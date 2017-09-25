@@ -4,10 +4,12 @@ from six import iteritems
 
 from . import git_utils
 
+
 def _ensure_version(version):
     if not isinstance(version, Version):
         return Version(version)
     return version
+
 
 class Versions(object):
     versions_file = 'versions.json'
@@ -44,5 +46,3 @@ class Versions(object):
 
     def to_file_info(self, filename=versions_file):
         return git_utils.FileInfo(filename, self.to_json())
-
-
