@@ -1,18 +1,9 @@
 import argparse
-from pkg_resources import iter_entry_points
-import ruamel.yaml as yaml
-from ruamel.yaml.util import load_yaml_guess_indent
-import os
-import shutil
 
+from . import commands
 from . import git_utils
 from . import mkdocs
 from .app_version import version as app_version
-from .versions import Versions
-
-
-def make_nojekyll():
-    return git_utils.FileInfo('.nojekyll', '')
 
 
 def add_git_arguments(parser, commit=True):
@@ -30,72 +21,24 @@ def add_git_arguments(parser, commit=True):
 
 
 def deploy(args):
-    if args.message:
-        message = args.message
-    else:
-        message = (
-            'Deployed {rev} to {doc_version} with MkDocs {mkdocs_version} ' +
-            'and mkultra {mkultra_version}'
-        ).format(
-            rev=git_utils.get_latest_commit('HEAD'),
-            doc_version=args.version,
-            mkdocs_version=mkdocs.version(),
-            mkultra_version=app_version
-        )
-
     git_utils.update_branch(args.remote, args.branch)
     mkdocs.build()
-    destdirs = [args.version] + args.alias
-
-    all_versions = Versions.load_from_git(args.branch)
-    all_versions.add(args.version, args.alias)
-
-    commit = git_utils.Commit(args.branch, message)
-    commit.delete_files(destdirs)
-
-    for f in git_utils.walk_files(mkdocs.site_dir, destdirs):
-        commit.add_file_data(f)
-    commit.add_file_data(all_versions.to_file_info())
-    commit.add_file_data(make_nojekyll())
-
-    commit.finish()
-
+    commands.deploy(mkdocs.site_dir, args.version, args.alias, args.branch,
+                    args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
 def delete(args):
-    if args.message:
-        message = args.message
-    else:
-        message = (
-            'Removed {doc_version} with mkultra {mkultra_version}'
-        ).format(
-            doc_version='everything' if args.all else ', '.join(args.version),
-            mkultra_version=app_version
-        )
-
     git_utils.update_branch(args.remote, args.branch)
-    if args.all:
-        commit = git_utils.Commit(args.branch, message)
-        commit.delete_files('*')
-        commit.finish()
-    else:
-        all_versions = Versions.load_from_git(args.branch)
-        all_versions.difference_update(args.version)
-
-        commit = git_utils.Commit(args.branch, args.message)
-        commit.delete_files(args.version)
-        commit.add_file_data(all_versions.to_file_info())
-        commit.finish()
-
+    commands.delete(args.version, args.all, args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
 def list_versions(args):
     git_utils.update_branch(args.remote, args.branch)
-    all_versions = Versions.load_from_git(args.branch)
+    all_versions = commands.list_versions(args.branch)
     for version, aliases in all_versions:
         if aliases:
             print("{version} ({aliases})".format(
@@ -105,38 +48,8 @@ def list_versions(args):
             print("{version}".format(version=version))
 
 
-def get_theme_dir(theme_name):
-    if theme_name is None:
-        raise ValueError('no theme specified')
-    themes = list(iter_entry_points('mkultra.themes', theme_name))
-    if len(themes) == 0:
-        raise ValueError('no theme found')
-    return os.path.dirname(themes[0].load().__file__)
-
-
 def install_extras(args):
-    with open('mkdocs.yml') as f:
-        config, indent, bsi = load_yaml_guess_indent(f)
-        if not args.theme and 'theme' not in config:
-            raise ValueError('no theme specified in mkdocs.yml; pass ' +
-                             '--theme instead')
-        theme_dir = get_theme_dir(config.get('theme', args.theme))
-        docs_dir = config.get('docs_dir', 'docs')
-
-        for path, prop in [('css', 'extra_css'), ('js', 'extra_javascript')]:
-            files = os.listdir(os.path.join(theme_dir, path))
-            if not files:
-                continue
-
-            extras = config.setdefault(prop, [])
-            for f in files:
-                relpath = os.path.join(path, f)
-                shutil.copyfile(os.path.join(theme_dir, relpath),
-                                os.path.join(docs_dir, relpath))
-                if relpath not in extras:
-                    extras.append(relpath)
-    yaml.round_trip_dump(config, open('mkdocs.yml', 'w'), indent=indent,
-                         block_seq_indent=bsi)
+    commands.install_extras('mkdocs.yml', args.theme)
 
 
 def main():
