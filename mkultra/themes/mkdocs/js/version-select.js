@@ -49,7 +49,7 @@ window.addEventListener("DOMContentLoaded", function() {
              i.aliases.includes(CURRENT_VERSION);
     }).version;
 
-    var versionPanel = document.createElement("div");
+    var versionPanel = document.createElement("small");
     versionPanel.id = "version-panel";
     versionPanel.textContent = "Version: ";
 
@@ -61,7 +61,7 @@ window.addEventListener("DOMContentLoaded", function() {
     });
     versionPanel.appendChild(select);
 
-    var left = document.querySelector("div.col-md-3");
+    var left = document.querySelector("body > div.container");
     left.appendChild(versionPanel);
   };
   xhr.send();

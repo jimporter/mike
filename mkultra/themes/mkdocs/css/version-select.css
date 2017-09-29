@@ -1,6 +1,6 @@
 #version-panel {
-  position: fixed;
-  bottom: 1em;
+  position: sticky;
+  bottom: 20px;
   font-size: 12px;
 }
 
@@ -9,4 +9,8 @@
   width: unset;
   height: unset;
   padding: 2px;
+}
+
+footer {
+  margin-top: 0;
 }

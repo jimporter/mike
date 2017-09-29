@@ -56,7 +56,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=(['mkdocs', 'packaging', 'six']),
+    install_requires=(['mkdocs', 'packaging', 'ruamel.yaml<0.15', 'six']),
     extras_require={
         'dev': ['flake8 >= 3.0', 'pypandoc'],
     },
@@ -64,6 +64,21 @@ setup(
     entry_points={
         'console_scripts': [
             'mkultra=mkultra.driver:main',
+        ],
+        'mkultra.themes': [
+            'mkdocs = mkultra.themes.mkdocs',
+            'amelia = mkultra.themes.mkdocs',
+            'cerulean = mkultra.themes.mkdocs',
+            'cosmo = mkultra.themes.mkdocs',
+            'cyborg = mkultra.themes.mkdocs',
+            'flatly = mkultra.themes.mkdocs',
+            'journal = mkultra.themes.mkdocs',
+            'readable = mkultra.themes.mkdocs',
+            'simplex = mkultra.themes.mkdocs',
+            'slate = mkultra.themes.mkdocs',
+            'spacelab = mkultra.themes.mkdocs',
+            'united = mkultra.themes.mkdocs',
+            'yeti = mkultra.themes.mkdocs',
         ],
     },
 

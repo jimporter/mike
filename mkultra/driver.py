@@ -1,4 +1,9 @@
 import argparse
+from pkg_resources import iter_entry_points
+import ruamel.yaml as yaml
+from ruamel.yaml.util import load_yaml_guess_indent
+import os
+import shutil
 
 from . import git_utils
 from . import mkdocs
@@ -100,6 +105,40 @@ def list_versions(args):
             print("{version}".format(version=version))
 
 
+def get_theme_dir(theme_name):
+    if theme_name is None:
+        raise ValueError('no theme specified')
+    themes = list(iter_entry_points('mkultra.themes', theme_name))
+    if len(themes) == 0:
+        raise ValueError('no theme found')
+    return os.path.dirname(themes[0].load().__file__)
+
+
+def install_extras(args):
+    with open('mkdocs.yml') as f:
+        config, indent, bsi = load_yaml_guess_indent(f)
+        if not args.theme and 'theme' not in config:
+            raise ValueError('no theme specified in mkdocs.yml; pass ' +
+                             '--theme instead')
+        theme_dir = get_theme_dir(config.get('theme', args.theme))
+        docs_dir = config.get('docs_dir', 'docs')
+
+        for path, prop in [('css', 'extra_css'), ('js', 'extra_javascript')]:
+            files = os.listdir(os.path.join(theme_dir, path))
+            if not files:
+                continue
+
+            extras = config.setdefault(prop, [])
+            for f in files:
+                relpath = os.path.join(path, f)
+                shutil.copyfile(os.path.join(theme_dir, relpath),
+                                os.path.join(docs_dir, relpath))
+                if relpath not in extras:
+                    extras.append(relpath)
+    yaml.round_trip_dump(config, open('mkdocs.yml', 'w'), indent=indent,
+                         block_seq_indent=bsi)
+
+
 def main():
     parser = argparse.ArgumentParser(prog='mkultra')
     subparsers = parser.add_subparsers()
@@ -133,5 +172,17 @@ def main():
     list_p.set_defaults(func=list_versions)
     add_git_arguments(list_p, commit=False)
 
+    install_extras_p = subparsers.add_parser(
+        'install-extras', help='install extra files to your docs'
+    )
+    install_extras_p.set_defaults(func=install_extras)
+    install_extras_p.add_argument('-t', '--theme',
+                                  help='the theme to use for your docs')
+
     args = parser.parse_args()
-    return args.func(args)
+    try:
+        return args.func(args)
+    except Exception as e:
+        parser.exit(1, '{prog}: {error}\n'.format(
+            prog=parser.prog, error=str(e)
+        ))
