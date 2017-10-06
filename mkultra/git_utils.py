@@ -128,11 +128,11 @@ class Commit(object):
             raise ValueError('Failed to process commit')
 
 
-def push_branch(self, remote, branch, force=False):
+def push_branch(remote, branch, force=False):
     cmd = ['git', 'push'] + (['--force'] if force else []) + [remote, branch]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
-    if self._pipe.wait() != 0:
+    if p.wait() != 0:
         raise ValueError('Failed to push branch: {}'.format(stderr))
 
 
