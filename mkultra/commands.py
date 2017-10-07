@@ -47,7 +47,7 @@ def delete(version=None, all=False, branch='gh-pages', message=None):
         message = (
             'Removed {doc_version} with mkultra {mkultra_version}'
         ).format(
-            doc_version='everything' if args.all else ', '.join(version),
+            doc_version='everything' if all else ', '.join(version),
             mkultra_version=app_version
         )
 
