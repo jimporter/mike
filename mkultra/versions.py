@@ -1,8 +1,9 @@
+from __future__ import unicode_literals
+
 import json
+from itertools import chain
 from packaging.version import LegacyVersion as Version
 from six import iteritems
-
-from . import git_utils
 
 
 def _ensure_version(version):
@@ -11,38 +12,94 @@ def _ensure_version(version):
     return version
 
 
-class Versions(object):
-    versions_file = 'versions.json'
+def _version_pair(version):
+    return _ensure_version(version), str(version)
 
+
+class VersionInfo(object):
+    def __init__(self, version, title=None, aliases=[]):
+        self.version, name = _version_pair(version)
+        self.title = name if title is None else title
+        self.aliases = set(aliases)
+
+        if name in self.aliases:
+            raise ValueError('duplicated version and alias')
+
+    def __eq__(self, rhs):
+        return (self.version == rhs.version and self.title == rhs.title and
+                self.aliases == rhs.aliases)
+
+
+class Versions(object):
     def __init__(self):
         self._data = {}
 
     @staticmethod
-    def load_from_git(branch, filename=versions_file):
-        result = Versions.__new__(Versions)
-        try:
-            data = json.loads(git_utils.read_file(branch, filename))
-            result._data = {Version(i['version']): i['aliases'] for i in data}
-        except ValueError:
-            result._data = {}
+    def loads(data):
+        result = Versions()
+        for i in json.loads(data):
+            result.add(i['version'], i['title'], i['aliases'])
         return result
 
-    def __iter__(self):
-        return iter(sorted(iteritems(self._data), reverse=True))
+    def dumps(self):
+        return json.dumps([{
+            'version': str(i.version),
+            'title': i.title,
+            'aliases': list(i.aliases),
+        } for i in iter(self)])
 
-    def add(self, version, aliases=[]):
-        self._data[_ensure_version(version)] = aliases
+    def __iter__(self):
+        return (i for _, i in sorted(iteritems(self._data), reverse=True))
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, k):
+        return self._data[_ensure_version(k)]
+
+    def find(self, version):
+        version, name = _version_pair(version)
+        if version in self._data:
+            return (version,)
+        for k, v in iteritems(self._data):
+            if name in v.aliases:
+                return (k, name)
+        return None
+
+    def add(self, version, title=None, aliases=[], strict=False):
+        info = VersionInfo(version, title, aliases)
+
+        if info.version in self._data:
+            old = self._data[info.version].aliases
+            added = info.aliases - old
+            removed = old - info.aliases
+        else:
+            added = set(chain(info.aliases, [str(info.version)]))
+            removed = set()
+
+        if removed and strict:
+            raise ValueError('orphaned aliases')
+        for i in added:
+            key = self.find(i)
+            if key:
+                if strict:
+                    raise ValueError('overwriting version')
+                self._remove(key)
+
+        self._data[info.version] = info
+
+    def _remove(self, key):
+        if len(key) == 1:
+            del self._data[key[0]]
+            return
+        self._data[key[0]].aliases.remove(key[1])
 
     def remove(self, version):
-        del self._data[_ensure_version(version)]
+        key = self.find(version)
+        if key is None:
+            raise KeyError(version)
+        self._remove(key)
 
     def difference_update(self, versions):
         for i in versions:
             self.remove(i)
-
-    def to_json(self):
-        return json.dumps([{'version': str(v), 'aliases': a}
-                           for v, a in iter(self)])
-
-    def to_file_info(self, filename=versions_file):
-        return git_utils.FileInfo(filename, self.to_json())

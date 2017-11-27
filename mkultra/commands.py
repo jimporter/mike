@@ -9,12 +9,28 @@ from . import mkdocs
 from .app_version import version as app_version
 from .versions import Versions
 
+versions_file = 'versions.json'
+
+
+def list_versions(branch='gh-pages'):
+    try:
+        return Versions.loads(git_utils.read_file(
+            branch, versions_file, universal_newlines=True
+        ))
+    except ValueError:
+        return Versions()
+
+
+def versions_to_file_info(versions):
+    return git_utils.FileInfo(versions_file, versions.dumps())
+
 
 def make_nojekyll():
     return git_utils.FileInfo('.nojekyll', '')
 
 
-def deploy(site_dir, version, aliases=[], branch='gh-pages', message=None):
+def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
+           message=None):
     if message is None:
         message = (
             'Deployed {rev} to {doc_version} with MkDocs {mkdocs_version} ' +
@@ -28,26 +44,26 @@ def deploy(site_dir, version, aliases=[], branch='gh-pages', message=None):
 
     destdirs = [version] + aliases
 
-    all_versions = Versions.load_from_git(branch)
-    all_versions.add(version, aliases)
+    all_versions = list_versions(branch)
+    all_versions.add(version, title, aliases)
 
     commit = git_utils.Commit(branch, message)
     commit.delete_files(destdirs)
 
     for f in git_utils.walk_files(site_dir, destdirs):
-        commit.add_file_data(f)
-    commit.add_file_data(all_versions.to_file_info())
-    commit.add_file_data(make_nojekyll())
+        commit.add_file(f)
+    commit.add_file(versions_to_file_info(all_versions))
+    commit.add_file(make_nojekyll())
 
     commit.finish()
 
 
-def delete(version=None, all=False, branch='gh-pages', message=None):
+def delete(versions=None, all=False, branch='gh-pages', message=None):
     if message is None:
         message = (
             'Removed {doc_version} with mkultra {mkultra_version}'
         ).format(
-            doc_version='everything' if all else ', '.join(version),
+            doc_version='everything' if all else ', '.join(versions),
             mkultra_version=app_version
         )
 
@@ -55,20 +71,16 @@ def delete(version=None, all=False, branch='gh-pages', message=None):
         commit = git_utils.Commit(branch, message)
         commit.delete_files('*')
         commit.finish()
-    elif version:
-        all_versions = Versions.load_from_git(branch)
-        all_versions.difference_update(version)
+    elif versions:
+        all_versions = list_versions(branch)
+        all_versions.difference_update(versions)
 
         commit = git_utils.Commit(branch, message)
-        commit.delete_files(version)
-        commit.add_file_data(all_versions.to_file_info())
+        commit.delete_files(versions)
+        commit.add_file(versions_to_file_info(all_versions))
         commit.finish()
     else:
         raise ValueError('specify `version` or `all`')
-
-
-def list_versions(branch='gh-pages'):
-    return Versions.load_from_git(branch)
 
 
 def get_theme_dir(theme_name):

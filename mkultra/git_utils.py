@@ -120,7 +120,7 @@ class Commit(object):
             for f in files:
                 self._write('D {}\n'.format(f))
 
-    def add_file_data(self, file_info):
+    def add_file(self, file_info):
         self._write('M {mode} inline {path}\n'.format(
             path=git_path(file_info.path), mode=file_info.mode
         ))
@@ -157,12 +157,13 @@ def walk_files(srcdir, dstdirs=['']):
                 yield FileInfo(outpath, data, mode)
 
 
-def read_file(branch, filename):
+def read_file(branch, filename, universal_newlines=False):
     cmd = ['git', 'show', '{branch}:{filename}'.format(
         branch=branch, filename=filename
     )]
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE,
+                 universal_newlines=universal_newlines)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
         raise ValueError('Unable to read file: {}'.format(stderr))
-    return stdout.decode('utf-8')
+    return stdout

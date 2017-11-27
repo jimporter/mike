@@ -39,13 +39,16 @@ def delete(args):
 def list_versions(args):
     git_utils.update_branch(args.remote, args.branch)
     all_versions = commands.list_versions(args.branch)
-    for version, aliases in all_versions:
-        if aliases:
-            print("{version} ({aliases})".format(
-                version=version, aliases=", ".join(aliases)
+    for i in all_versions:
+        aliases = (' [{}]'.format(', '.join(i.aliases)) if i.aliases else '')
+        if i.title != str(i.version):
+            print('{title} ({version}){aliases}'.format(
+                title=i.title, version=i.version, aliases=aliases
             ))
         else:
-            print("{version}".format(version=version))
+            print('{version}{aliases}'.format(
+                version=i.version, aliases=aliases
+            ))
 
 
 def install_extras(args):
@@ -64,6 +67,8 @@ def main():
     )
     deploy_p.set_defaults(func=deploy)
     add_git_arguments(deploy_p)
+    deploy_p.add_argument('-t', '--title',
+                          help='short descriptive title for this version')
     deploy_p.add_argument('version', metavar='VERSION',
                           help='version (directory) to deploy this build to')
     deploy_p.add_argument('alias', nargs='*', metavar='ALIAS',

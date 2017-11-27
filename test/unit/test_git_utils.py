@@ -105,7 +105,7 @@ class TestCommit(unittest.TestCase):
 
     def _add_file(self, name, branch='master'):
         commit = git_utils.Commit(branch, 'add file')
-        commit.add_file_data(git_utils.FileInfo(name, 'this is some text'))
+        commit.add_file(git_utils.FileInfo(name, 'this is some text'))
         commit.finish()
 
     def test_add_file(self):
@@ -204,13 +204,18 @@ class TestReadFile(unittest.TestCase):
         os.chdir(self.stage)
         git_init()
         commit = git_utils.Commit('branch', 'add file')
-        commit.add_file_data(git_utils.FileInfo(
+        commit.add_file(git_utils.FileInfo(
             'file.txt', 'this is some text'
         ))
         commit.finish()
 
     def test_read_file(self):
         self.assertEqual(git_utils.read_file('branch', 'file.txt'),
+                         b'this is some text')
+
+    def test_read_file_as_text(self):
+        self.assertEqual(git_utils.read_file('branch', 'file.txt',
+                                             universal_newlines=True),
                          'this is some text')
 
     def test_nonexistent_file(self):

@@ -32,7 +32,8 @@ window.addEventListener("DOMContentLoaded", function() {
     select.classList.add("form-control");
 
     options.forEach(function(i) {
-      var option = new Option(i, undefined, undefined, i === selected);
+      var option = new Option(i.title, i.value, undefined,
+                              i.value === selected);
       select.add(option);
     });
 
@@ -54,7 +55,7 @@ window.addEventListener("DOMContentLoaded", function() {
     versionPanel.textContent = "Version: ";
 
     var select = makeSelect(versions.map(function(i) {
-      return i.version;
+      return {text: i.title, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
       window.location.href = REL_BASE_URL + "/../" + this.value;
