@@ -23,7 +23,7 @@ class Versions(object):
         try:
             data = json.loads(git_utils.read_file(branch, filename))
             result._data = {Version(i['version']): i['aliases'] for i in data}
-        except:
+        except ValueError:
             result._data = {}
         return result
 

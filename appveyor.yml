@@ -1,0 +1,13 @@
+build: false
+version: "{branch}-{build}"
+
+environment:
+  PYTHON_PATH: C:\Python27
+
+install:
+  - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%PATH%
+  - pip install codecov .[test]
+test_script:
+  - python setup.py coverage -q
+on_success:
+  - codecov

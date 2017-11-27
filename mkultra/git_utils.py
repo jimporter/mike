@@ -13,7 +13,7 @@
 
 #   0. opan saurce LOL
 
-from __future__ import unicode_literals
+from __future__ import division, unicode_literals
 
 import os
 import subprocess as sp
@@ -26,9 +26,9 @@ from six import binary_type, text_type
 
 def git_path(path):
     path = os.path.normpath(path)
-    # Fix unicode pathnames on OS X; see
+    # Fix unicode pathnames on macOS; see
     # <http://stackoverflow.com/a/5582439/44289>.
-    if sys.platform == 'darwin':
+    if sys.platform == 'darwin':  # pragma: no cover
         if isinstance(path, binary_type):
             path = path.decode('utf-8')
         path = unicodedata.normalize('NFKC', path)
@@ -38,7 +38,7 @@ def git_path(path):
 def make_when(timestamp=None):
     if timestamp is None:
         timestamp = int(time.time())
-    timezone = '{:+05d}'.format(-1 * time.timezone / 3600 * 100)
+    timezone = '{:+05d}'.format(-1 * time.timezone // 3600 * 100)
     return '{} {}'.format(timestamp, timezone)
 
 
@@ -52,7 +52,7 @@ def get_config(key):
 
 
 def get_latest_commit(branch):
-    cmd = ['git', 'rev-parse', branch]
+    cmd = ['git', 'rev-list', '--max-count=1', branch, '--']
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
@@ -62,9 +62,9 @@ def get_latest_commit(branch):
 
 def update_branch(remote, branch):
     try:
-        rev = get_latest_commit(branch)
+        rev = get_latest_commit('{}/{}'.format(remote, branch))
         cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), rev]
-        if sp.call(cmd) != 0:
+        if sp.call(cmd) != 0:  # pragma: no cover
             raise ValueError('Failed to update branch')
     except ValueError:
         # Couldn't get any commits, so there's probably no branch (which is
@@ -78,6 +78,13 @@ class FileInfo(object):
         self.mode = mode
         self.data = data
 
+    def __eq__(self, rhs):
+        return (self.path == rhs.path and self.mode == rhs.mode and
+                self.data == rhs.data)
+
+    def __repr__(self):
+        return '<FileInfo({!r})>'.format(self.path)
+
 
 class Commit(object):
     def __init__(self, branch, message):
@@ -86,7 +93,7 @@ class Commit(object):
         self._start_commit(branch, message)
 
     def _write(self, data):
-        if isinstance(data, text_type):
+        if isinstance(data, text_type):  # pragma: no branch
             data = data.encode('utf-8')
         return self._pipe.stdin.write(data)
 
@@ -109,7 +116,7 @@ class Commit(object):
     def delete_files(self, files):
         if files == '*':
             self._write('deleteall\n')
-        elif files:
+        else:
             for f in files:
                 self._write('D {}\n'.format(f))
 
@@ -124,7 +131,7 @@ class Commit(object):
     def finish(self):
         self._write('\n')
         self._pipe.stdin.close()
-        if self._pipe.wait() != 0:
+        if self._pipe.wait() != 0:  # pragma: no cover
             raise ValueError('Failed to process commit')
 
 

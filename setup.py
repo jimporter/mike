@@ -1,9 +1,49 @@
 import os
-from setuptools import setup, find_packages
+import subprocess
+from setuptools import setup, find_packages, Command
 
 from mkultra.app_version import version
 
-custom_cmds = {}
+root_dir = os.path.abspath(os.path.dirname(__file__))
+
+
+class Coverage(Command):
+    description = 'run tests with code coverage'
+    user_options = [
+        ('test-suite=', 's',
+         "test suite to run (e.g. 'some_module.test_suite')"),
+    ]
+
+    def initialize_options(self):
+        self.test_suite = None
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        env = dict(os.environ)
+        pythonpath = os.path.join(root_dir, 'test', 'scripts')
+        if env.get('PYTHONPATH'):
+            pythonpath += os.pathsep + env['PYTHONPATH']
+        env.update({
+            'PYTHONPATH': pythonpath,
+            'COVERAGE_FILE': os.path.join(root_dir, '.coverage'),
+            'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
+        })
+
+        subprocess.check_call(['coverage', 'erase'])
+        subprocess.check_call(
+            ['coverage', 'run', 'setup.py', 'test'] +
+            (['-q'] if self.verbose == 0 else []) +
+            (['-s', self.test_suite] if self.test_suite else []),
+            env=env
+        )
+        subprocess.check_call(['coverage', 'combine'])
+
+
+custom_cmds = {
+    'coverage': Coverage,
+}
 
 try:
     from flake8.main.setuptools_command import Flake8
@@ -13,7 +53,7 @@ try:
             return ['setup.py', 'mkultra']
 
     custom_cmds['lint'] = LintCommand
-except:
+except ImportError:
     pass
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as f:
@@ -58,7 +98,8 @@ setup(
 
     install_requires=(['mkdocs', 'packaging', 'ruamel.yaml<0.15', 'six']),
     extras_require={
-        'dev': ['flake8 >= 3.0', 'pypandoc'],
+        'dev': ['coverage', 'flake8 >= 3.0', 'pypandoc'],
+        'test': ['coverage', 'flake8 >= 3.0'],
     },
 
     entry_points={
@@ -82,5 +123,6 @@ setup(
         ],
     },
 
+    test_suite='test',
     cmdclass=custom_cmds,
 )

@@ -1,0 +1,45 @@
+language: python
+sudo: false
+
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+os:
+  - linux
+env:
+  global:
+    - PYTHON=python
+    - PIP=pip
+    - TEST_COMMAND="coverage -q"
+
+matrix:
+  include:
+    - language: generic
+      python: 2.7
+      os: osx
+    - language: generic
+      python: 3.5
+      os: osx
+      env: PYTHON=python3 PIP=pip3
+    - python: 2.7
+      os: linux
+      env: TEST_COMMAND=lint
+
+before_install:
+  - set -e
+  - |
+    if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+      shell_session_update() { :; }
+      brew update
+      if [ "${PYTHON}" = "python3" ]; then
+        brew install ${PYTHON}
+        cp test/scripts/sitecustomize.py .
+      fi
+    fi
+install:
+  - ${PIP} install codecov .[test]
+script:
+  - ${PYTHON} setup.py ${TEST_COMMAND}
+after_success:
+  - codecov
