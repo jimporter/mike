@@ -202,7 +202,7 @@ class TestInstallExtras(unittest.TestCase):
             'docs/index.md',
         })
 
-        with open('mkdocs.yml') as f:
+        with open(self.mkdocs_yml) as f:
             config = yaml.safe_load(f)
             self.assertTrue(os.path.join('css', 'version-select.css') in
                             config['extra_css'])
