@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+import errno
 import os
 from pkg_resources import iter_entry_points
 import ruamel.yaml as yaml
@@ -59,6 +62,9 @@ def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
 
 
 def delete(versions=None, all=False, branch='gh-pages', message=None):
+    if not all and versions is None:
+        raise ValueError('specify `version` or `all`')
+
     if message is None:
         message = (
             'Removed {doc_version} with mkultra {mkultra_version}'
@@ -71,7 +77,7 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
         commit = git_utils.Commit(branch, message)
         commit.delete_files('*')
         commit.finish()
-    elif versions:
+    else:
         all_versions = list_versions(branch)
         all_versions.difference_update(versions)
 
@@ -79,8 +85,6 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
         commit.delete_files(versions)
         commit.add_file(versions_to_file_info(all_versions))
         commit.finish()
-    else:
-        raise ValueError('specify `version` or `all`')
 
 
 def get_theme_dir(theme_name):
@@ -90,6 +94,14 @@ def get_theme_dir(theme_name):
     if len(themes) == 0:
         raise ValueError('no theme found')
     return os.path.dirname(themes[0].load().__file__)
+
+
+def _makedirs(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST or not os.path.isdir(path):
+            raise
 
 
 def install_extras(mkdocs_yml, theme=None):
@@ -103,15 +115,19 @@ def install_extras(mkdocs_yml, theme=None):
 
         for path, prop in [('css', 'extra_css'), ('js', 'extra_javascript')]:
             files = os.listdir(os.path.join(theme_dir, path))
-            if not files:
+            if not files:  # pragma: no cover
                 continue
 
             extras = config.setdefault(prop, [])
             for f in files:
                 relpath = os.path.join(path, f)
-                shutil.copyfile(os.path.join(theme_dir, relpath),
-                                os.path.join(docs_dir, relpath))
+                src = os.path.join(theme_dir, relpath)
+                dst = os.path.join(docs_dir, relpath)
+
+                _makedirs(os.path.dirname(dst))
+                shutil.copyfile(src, dst)
                 if relpath not in extras:
                     extras.append(relpath)
-    yaml.round_trip_dump(config, open(mkdocs_yml, 'w'), indent=indent,
-                         block_seq_indent=bsi)
+
+    with open(mkdocs_yml, 'w') as f:
+        yaml.round_trip_dump(config, f, indent=indent, block_seq_indent=bsi)

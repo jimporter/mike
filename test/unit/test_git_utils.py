@@ -11,22 +11,6 @@ from .. import *
 from mkultra import git_utils
 
 
-def git_config():
-    check_call_silent(['git', 'config', 'user.name', 'username'])
-    check_call_silent(['git', 'config', 'user.email', 'user@site.tld'])
-
-
-def git_init():
-    check_call_silent(['git', 'init'])
-    git_config()
-
-
-def commit_file(filename, message='add file'):
-    open(filename, 'w').close()
-    check_call_silent(['git', 'add', filename])
-    check_call_silent(['git', 'commit', '-m', message])
-
-
 class TestMakeWhen(unittest.TestCase):
     def test_default(self):
         assertRegex(self, git_utils.make_when(), r'\d+ (\+|-)\d{4}')
@@ -180,15 +164,18 @@ class TestPushBranch(unittest.TestCase):
 class TestWalkFiles(unittest.TestCase):
     mode = '100755' if sys.platform == 'win32' else '100644'
 
+    def setUp(self):
+        self.directory = os.path.join(test_data_dir, 'directory')
+
     def test_walk(self):
-        files = sorted(git_utils.walk_files(test_data_dir),
+        files = sorted(git_utils.walk_files(self.directory),
                        key=lambda x: x.path)
         self.assertEqual(files, [
             git_utils.FileInfo('file.txt', b'hello there\n', self.mode),
         ])
 
     def test_multiple_dests(self):
-        files = sorted(git_utils.walk_files(test_data_dir, ['foo', 'bar']),
+        files = sorted(git_utils.walk_files(self.directory, ['foo', 'bar']),
                        key=lambda x: x.path)
         self.assertEqual(files, [
             git_utils.FileInfo(os.path.join('bar', 'file.txt'),

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import re
 import subprocess
 
@@ -9,6 +11,8 @@ def build():
 
 
 def version():
-    output = subprocess.check_output(['mkdocs', '--version'])
+    output = subprocess.check_output(
+        ['mkdocs', '--version'], universal_newlines=True
+    ).rstrip()
     m = re.search('^mkdocs, version (.*)$', output)
     return m.group(1)

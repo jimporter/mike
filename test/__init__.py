@@ -7,7 +7,8 @@ from contextlib import contextmanager
 from itertools import chain
 
 __all__ = ['this_dir', 'test_data_dir', 'test_stage_dir', 'stage_dir', 'pushd',
-           'check_call_silent', 'assertDirectory']
+           'copytree', 'check_call_silent', 'git_config', 'git_init',
+           'commit_file', 'assertDirectory']
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, 'data')
@@ -32,8 +33,34 @@ def pushd(dirname):
     os.chdir(old)
 
 
+def copytree(src, dst):
+    for i in os.listdir(src):
+        curr_src = os.path.join(src, i)
+        curr_dst = os.path.join(dst, i)
+        if os.path.isdir(curr_src):
+            shutil.copytree(curr_src, curr_dst)
+        else:
+            shutil.copy2(curr_src, curr_dst)
+
+
 def check_call_silent(args):
     subprocess.check_output(args, stderr=subprocess.STDOUT)
+
+
+def git_config():
+    check_call_silent(['git', 'config', 'user.name', 'username'])
+    check_call_silent(['git', 'config', 'user.email', 'user@site.tld'])
+
+
+def git_init():
+    check_call_silent(['git', 'init'])
+    git_config()
+
+
+def commit_file(filename, message='add file'):
+    open(filename, 'w').close()
+    check_call_silent(['git', 'add', filename])
+    check_call_silent(['git', 'commit', '-m', message])
 
 
 def remove_in_place(x, func):

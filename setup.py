@@ -98,7 +98,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=(['mkdocs', 'packaging', 'ruamel.yaml<0.15', 'six']),
+    install_requires=(['mkdocs', 'packaging', 'ruamel.yaml < 0.15', 'six']),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'pypandoc'],
         'test': ['coverage', 'flake8 >= 3.0'],
@@ -127,4 +127,5 @@ setup(
 
     test_suite='test',
     cmdclass=custom_cmds,
+    zip_safe=False,
 )

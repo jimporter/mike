@@ -1,0 +1,4 @@
+site_name: test
+
+pages:
+  - Home: index.md

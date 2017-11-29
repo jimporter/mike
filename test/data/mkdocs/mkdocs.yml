@@ -1,0 +1,5 @@
+site_name: test
+theme: mkdocs
+
+pages:
+  - Home: index.md
