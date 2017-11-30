@@ -25,8 +25,8 @@ def add_git_arguments(parser, commit=True):
 def deploy(args):
     git_utils.update_branch(args.remote, args.branch)
     mkdocs.build()
-    commands.deploy(mkdocs.site_dir, args.version, args.alias, args.branch,
-                    args.message)
+    commands.deploy(mkdocs.site_dir, args.version, args.title, args.alias,
+                    args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -42,7 +42,8 @@ def list_versions(args):
     git_utils.update_branch(args.remote, args.branch)
     all_versions = commands.list_versions(args.branch)
     for i in all_versions:
-        aliases = (' [{}]'.format(', '.join(i.aliases)) if i.aliases else '')
+        aliases = (' [{}]'.format(', '.join(sorted(i.aliases)))
+                   if i.aliases else '')
         if i.title != str(i.version):
             print('{title} ({version}){aliases}'.format(
                 title=i.title, version=i.version, aliases=aliases
@@ -102,7 +103,7 @@ def main():
     args = parser.parse_args()
     try:
         return args.func(args)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         parser.exit(1, '{prog}: {error}\n'.format(
             prog=parser.prog, error=str(e)
         ))

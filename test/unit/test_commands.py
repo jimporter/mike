@@ -39,7 +39,7 @@ class TestDeploy(unittest.TestCase):
         commit_file('file.txt')
 
     def _test_deploy(self, expected_message=None,
-               version=versions.VersionInfo('1.0')):
+                     version=versions.VersionInfo('1.0')):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
         if expected_message:

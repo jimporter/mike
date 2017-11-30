@@ -77,15 +77,29 @@ def walk(top, include_hidden):
         yield base, dirs, files
 
 
-def assertDirectory(path, contents, include_hidden=False):
+def relpaths(paths, base):
+    return [os.path.relpath(i, base) for i in paths]
+
+
+def assertDirectory(path, contents, include_hidden=False, allow_extra=False):
     path = os.path.normpath(path)
     actual = set(os.path.normpath(os.path.join(path, base, f))
                  for base, dirs, files in walk(path, include_hidden)
                  for f in chain(files, dirs))
     expected = set(os.path.normpath(os.path.join(path, i)) for i in contents)
-    if actual != expected:
-        missing = [os.path.relpath(i, path) for i in (expected - actual)]
-        extra = [os.path.relpath(i, path) for i in (actual - expected)]
-        raise unittest.TestCase.failureException(
-            'missing: {}, extra: {}'.format(missing, extra)
-        )
+    extra = actual - expected
+
+    if allow_extra:
+        missing = expected - actual
+        if missing:
+            raise unittest.TestCase.failureException(
+                'missing: {}'.format(relpaths(missing, path))
+            )
+    else:
+        if actual != expected:
+            missing = expected - actual
+            extra = actual - expected
+            raise unittest.TestCase.failureException(
+                'missing: {}, extra: {}'.format(relpaths(missing, path),
+                                                relpaths(extra, path))
+            )
