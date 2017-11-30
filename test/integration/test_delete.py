@@ -7,6 +7,7 @@ from six import assertRegex
 
 from . import assertPopen
 from .. import *
+from mkultra import git_utils
 
 
 class TestDelete(unittest.TestCase):
@@ -72,3 +73,8 @@ class TestDelete(unittest.TestCase):
         git_config()
 
         assertPopen(['mkultra', 'delete', '-p', '1.0'])
+        clone_rev = git_utils.get_latest_commit('gh-pages')
+
+        with pushd(self.stage):
+            origin_rev = git_utils.get_latest_commit('gh-pages')
+            self.assertEqual(origin_rev, clone_rev)

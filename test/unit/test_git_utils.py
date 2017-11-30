@@ -141,12 +141,16 @@ class TestPushBranch(unittest.TestCase):
 
     def test_push(self):
         commit_file('file2.txt', 'add file2')
+        clone_rev = git_utils.get_latest_commit('master')
         git_utils.push_branch('origin', 'master')
+
+        with pushd(self.origin):
+            origin_rev = git_utils.get_latest_commit('master')
+            self.assertEqual(origin_rev, clone_rev)
 
     def test_push_fails(self):
         with pushd(self.origin):
             commit_file('file2.txt', 'add file2')
-            git_utils.get_latest_commit('master')
 
         commit_file('file2.txt', 'add file2 from clone')
         self.assertRaises(ValueError, git_utils.push_branch, 'origin',
@@ -155,10 +159,14 @@ class TestPushBranch(unittest.TestCase):
     def test_force_push(self):
         with pushd(self.origin):
             commit_file('file2.txt', 'add file2')
-            git_utils.get_latest_commit('master')
 
         commit_file('file2.txt', 'add file2 from clone')
+        clone_rev = git_utils.get_latest_commit('master')
         git_utils.push_branch('origin', 'master', force=True)
+
+        with pushd(self.origin):
+            origin_rev = git_utils.get_latest_commit('master')
+            self.assertEqual(origin_rev, clone_rev)
 
 
 class TestWalkFiles(unittest.TestCase):
