@@ -18,6 +18,7 @@ matrix:
     - language: generic
       python: 2.7
       os: osx
+      env: PYTHON=python2 PIP=pip2
     - language: generic
       python: 3.5
       os: osx
@@ -32,10 +33,8 @@ before_install:
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       shell_session_update() { :; }
       brew update
-      if [ "${PYTHON}" = "python3" ]; then
-        brew install ${PYTHON}
-        cp test/scripts/sitecustomize.py .
-      fi
+      brew install ${PYTHON}
+      cp test/scripts/sitecustomize.py .
     fi
 install:
   - ${PIP} install codecov .[test]
