@@ -85,13 +85,13 @@ this:
 
 ```js
 [
-  {"version": "1.0", "aliases": ["latest"]},
-  {"version": "0.9", "aliases": []}
+  {"version": "1.0", "title": "1.0.1", "aliases": ["latest"]},
+  {"version": "0.9", "title": "0.9", "aliases": []}
 ]
 ```
 
 To see an example of how to work with this, check the
-[`theme-resources`](theme-resources) directory..
+[`mkultra/themes/mkdocs`](mkultra/themes/mkdocs) directory.
 
 ## License
 
