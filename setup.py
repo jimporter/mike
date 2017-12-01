@@ -98,7 +98,8 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=(['mkdocs', 'packaging', 'ruamel.yaml < 0.15', 'six']),
+    install_requires=(['mkdocs', 'jinja2', 'packaging', 'ruamel.yaml < 0.15',
+                       'six']),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'pypandoc'],
         'test': ['coverage', 'flake8 >= 3.0'],

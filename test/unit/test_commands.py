@@ -152,6 +152,53 @@ class TestDelete(unittest.TestCase):
         self.assertRaises(KeyError, commands.delete, ['1.0'], branch='branch')
 
 
+class TestSetDefault(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('set_default')
+        git_init()
+        commit_file('file.txt')
+
+    def _deploy(self, branch='gh-pages'):
+        commands.deploy(self.stage, '1.0', branch=branch)
+
+    def _test_default(self, expected_message=None):
+        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
+                                          universal_newlines=True).rstrip()
+        if expected_message:
+            self.assertEqual(message, expected_message)
+        else:
+            assertRegex(self, message,
+                        r'^Setting default version to \S+ with mkultra \S+$')
+
+        with open('index.html') as f:
+            assertRegex(self, f.read(),
+                        r'window\.location\.replace\("1\.0"\)')
+
+    def test_set_default(self):
+        self._deploy()
+        commands.set_default('1.0')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default()
+
+    def test_branch(self):
+        self._deploy('branch')
+        commands.set_default('1.0', branch='branch')
+        check_call_silent(['git', 'checkout', 'branch'])
+        self._test_default()
+
+    def test_commit_message(self):
+        self._deploy()
+        commands.set_default('1.0', message='commit message')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default('commit message')
+
+    def test_set_invalid_default(self):
+        self._deploy()
+        self.assertRaises(ValueError, commands.set_default, '2.0')
+        self.assertRaises(ValueError, commands.set_default, '1.0',
+                          branch='branch')
+
+
 class TestGetThemeDir(unittest.TestCase):
     def test_mkdocs_theme(self):
         theme_dir = commands.get_theme_dir('mkdocs')

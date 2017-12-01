@@ -54,6 +54,13 @@ def list_versions(args):
             ))
 
 
+def set_default(args):
+    git_utils.update_branch(args.remote, args.branch)
+    commands.set_default(args.version, args.branch, args.message)
+    if args.push:
+        git_utils.push_branch(args.remote, args.branch, args.force)
+
+
 def install_extras(args):
     commands.install_extras('mkdocs.yml', args.theme)
 
@@ -92,6 +99,14 @@ def main():
     )
     list_p.set_defaults(func=list_versions)
     add_git_arguments(list_p, commit=False)
+
+    set_default_p = subparsers.add_parser(
+        'set-default', help='set the default version for your docs'
+    )
+    set_default_p.set_defaults(func=set_default)
+    add_git_arguments(set_default_p)
+    set_default_p.add_argument('version', metavar='VERSION',
+                               help='version to set as default')
 
     install_extras_p = subparsers.add_parser(
         'install-extras', help='install extra files to your docs'

@@ -23,10 +23,12 @@ python setup.py install
 ### Building Your Docs
 
 Before your first build, you'll probably want to add the version selector to
-your MkDocs config. Simply copy the contents of the subdirectory of
-[`theme-resources`](theme-resources) that matches your theme to your `docs` dir
-and add the appropriate `extra_css` and `extra_javascript` lines to your
-`mkdocs.yml`.
+your MkDocs config. Simply run the following command in the directory with your
+`mkdocs.yml` file to install the extra CSS and JS files to your docs:
+
+```sh
+mkultra install-extras
+```
 
 mkultra is designed to produce one version of your docs at a time. That way, you
 can easily deploy a new version without touching any older versions of your
@@ -61,7 +63,8 @@ mkultra delete [version-or-alias]...
 ```
 
 If you'd like to completely wipe the contents of your docs branch, just run
-`mkultra delete --all`.
+`mkultra delete --all`. Like `deploy` above, you can specify `-p`/`--push` to
+push this commit as well.
 
 ### Listing Docs
 
@@ -71,6 +74,19 @@ run:
 ```sh
 mkultra list
 ```
+
+### Setting the Default Version
+
+With all the versions of docs you have, you may want to set a *default* version
+so that people going to the root of your site are redirected to the latest
+version of the docs:
+
+```sh
+mkultra set-default [version-or-alias]
+```
+
+Like `deploy` and `delete` above, you can specify `-p`/`--push` to` push this
+commit as well.
 
 ### More Details
 

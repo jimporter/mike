@@ -2,10 +2,11 @@ from __future__ import unicode_literals
 
 import errno
 import os
-from pkg_resources import iter_entry_points
 import ruamel.yaml as yaml
-from ruamel.yaml.util import load_yaml_guess_indent
 import shutil
+from jinja2 import Template
+from pkg_resources import iter_entry_points, resource_stream
+from ruamel.yaml.util import load_yaml_guess_indent
 
 from . import git_utils
 from . import mkdocs
@@ -73,18 +74,36 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
             mkultra_version=app_version
         )
 
+    commit = git_utils.Commit(branch, message)
     if all:
-        commit = git_utils.Commit(branch, message)
         commit.delete_files('*')
-        commit.finish()
     else:
         all_versions = list_versions(branch)
         all_versions.difference_update(versions)
 
-        commit = git_utils.Commit(branch, message)
         commit.delete_files(versions)
         commit.add_file(versions_to_file_info(all_versions))
-        commit.finish()
+    commit.finish()
+
+
+def set_default(version, branch='gh-pages', message=None):
+    if message is None:
+        message = (
+            'Setting default version to {version} with mkultra ' +
+            '{mkultra_version}'
+        ).format(version=version, mkultra_version=app_version)
+
+    all_versions = list_versions(branch)
+    if not all_versions.find(version):
+        raise ValueError('version {} not found'.format(version))
+
+    commit = git_utils.Commit(branch, message)
+    with resource_stream(__name__, 'templates/index.html') as f:
+        t = Template(f.read().decode('utf-8'))
+        commit.add_file(git_utils.FileInfo(
+            'index.html', t.render(version=version)
+        ))
+    commit.finish()
 
 
 def get_theme_dir(theme_name):
