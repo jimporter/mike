@@ -32,7 +32,7 @@ window.addEventListener("DOMContentLoaded", function() {
     select.classList.add("form-control");
 
     options.forEach(function(i) {
-      var option = new Option(i.title, i.value, undefined,
+      var option = new Option(i.text, i.value, undefined,
                               i.value === selected);
       select.add(option);
     });
