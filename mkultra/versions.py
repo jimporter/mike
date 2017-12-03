@@ -91,8 +91,8 @@ class Versions(object):
     def _remove(self, key):
         if len(key) == 1:
             del self._data[key[0]]
-            return
-        self._data[key[0]].aliases.remove(key[1])
+        else:
+            self._data[key[0]].aliases.remove(key[1])
 
     def remove(self, version):
         key = self.find(version)
@@ -103,3 +103,9 @@ class Versions(object):
     def difference_update(self, versions):
         for i in versions:
             self.remove(i)
+
+    def rename(self, version, title):
+        key = self.find(version)
+        if key is None:
+            raise KeyError(version)
+        self._data[key[0]].title = title

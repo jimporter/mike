@@ -152,6 +152,59 @@ class TestDelete(unittest.TestCase):
         self.assertRaises(KeyError, commands.delete, ['1.0'], branch='branch')
 
 
+class TestRename(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('rename')
+        git_init()
+        commit_file('file.txt')
+
+    def _deploy(self, branch='gh-pages'):
+        commands.deploy(self.stage, '1.0', branch=branch)
+
+    def _test_rename(self, expected_message=None):
+        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
+                                          universal_newlines=True).rstrip()
+        if expected_message:
+            self.assertEqual(message, expected_message)
+        else:
+            assertRegex(self, message, r'^Set title of version \S+ to ' +
+                        r'1\.0\.1 with mkultra \S+$')
+
+        assertDirectory('.', {
+            'versions.json',
+            '1.0',
+            '1.0/file.txt'
+        })
+        with open('versions.json') as f:
+            self.assertEqual(list(versions.Versions.loads(f.read())), [
+                versions.VersionInfo('1.0', '1.0.1'),
+            ])
+
+    def test_rename(self):
+        self._deploy()
+        commands.rename('1.0', '1.0.1')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_rename()
+
+    def test_branch(self):
+        self._deploy('branch')
+        commands.rename('1.0', '1.0.1', branch='branch')
+        check_call_silent(['git', 'checkout', 'branch'])
+        self._test_rename()
+
+    def test_commit_message(self):
+        self._deploy()
+        commands.rename('1.0', '1.0.1', message='commit message')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_rename('commit message')
+
+    def test_rename_invalid(self):
+        self._deploy()
+        self.assertRaises(KeyError, commands.rename, '2.0', '2.0.2')
+        self.assertRaises(KeyError, commands.rename, '1.0', '1.0.1',
+                          branch='branch')
+
+
 class TestSetDefault(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('set_default')
@@ -168,7 +221,7 @@ class TestSetDefault(unittest.TestCase):
             self.assertEqual(message, expected_message)
         else:
             assertRegex(self, message,
-                        r'^Setting default version to \S+ with mkultra \S+$')
+                        r'^Set default version to \S+ with mkultra \S+$')
 
         with open('index.html') as f:
             assertRegex(self, f.read(),

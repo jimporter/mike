@@ -86,10 +86,24 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
     commit.finish()
 
 
+def rename(version, title, branch='gh-pages', message=None):
+    if message is None:
+        message = (
+            'Set title of version {version} to {title} with mkultra ' +
+            '{mkultra_version}'
+        ).format(version=version, title=title, mkultra_version=app_version)
+
+    commit = git_utils.Commit(branch, message)
+    all_versions = list_versions(branch)
+    all_versions.rename(version, title)
+    commit.add_file(versions_to_file_info(all_versions))
+    commit.finish()
+
+
 def set_default(version, branch='gh-pages', message=None):
     if message is None:
         message = (
-            'Setting default version to {version} with mkultra ' +
+            'Set default version to {version} with mkultra ' +
             '{mkultra_version}'
         ).format(version=version, mkultra_version=app_version)
 

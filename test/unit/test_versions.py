@@ -74,6 +74,27 @@ class TestVersions(unittest.TestCase):
         with self.assertRaises(ValueError):
             v.add('1.0', aliases=['1.0'])
 
+    def test_rename_version(self):
+        v = Versions()
+        v.add('1.0', '1.0.0')
+        v.rename('1.0', '1.0.1')
+        self.assertEqual(list(v), [
+            VersionInfo('1.0', '1.0.1'),
+        ])
+
+    def test_rename_alias(self):
+        v = Versions()
+        v.add('1.0', '1.0.0', ['latest'])
+        v.rename('latest', '1.0.1')
+        self.assertEqual(list(v), [
+            VersionInfo('1.0', '1.0.1', ['latest']),
+        ])
+
+    def test_rename_invalid(self):
+        v = Versions()
+        with self.assertRaises(KeyError):
+            v.rename('1.0', '1.0.0')
+
     def test_len(self):
         v = Versions()
         v.add('1.0')

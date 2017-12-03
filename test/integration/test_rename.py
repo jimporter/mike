@@ -7,12 +7,12 @@ from six import assertRegex
 
 from . import assertPopen
 from .. import *
-from mkultra import git_utils
+from mkultra import git_utils, versions
 
 
 class TestSetDefault(unittest.TestCase):
     def setUp(self):
-        self.stage = stage_dir('set_default')
+        self.stage = stage_dir('rename')
         git_init()
         copytree(os.path.join(test_data_dir, 'mkdocs'), self.stage)
         check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
@@ -21,36 +21,43 @@ class TestSetDefault(unittest.TestCase):
     def _deploy(self, branch='gh-pages'):
         assertPopen(['mkultra', 'deploy', '-b', branch, '1.0'])
 
-    def _test_default(self, expected_message=None):
+    def _test_rename(self, expected_message=None):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message,
-                        r'^Set default version to \S+ with mkultra \S+$')
+            assertRegex(self, message, r'^Set title of version \S+ to ' +
+                        r'1\.0\.1 with mkultra \S+$')
 
-        with open('index.html') as f:
-            assertRegex(self, f.read(),
-                        r'window\.location\.replace\("1\.0"\)')
+        assertDirectory('.', {
+            'versions.json',
+            '1.0/index.html',
+        }, allow_extra=True)
 
-    def test_set_default(self):
+        with open('versions.json') as f:
+            self.assertEqual(list(versions.Versions.loads(f.read())), [
+                versions.VersionInfo('1.0', '1.0.1'),
+            ])
+
+    def test_rename(self):
         self._deploy()
-        assertPopen(['mkultra', 'set-default', '1.0'])
+        assertPopen(['mkultra', 'rename', '1.0', '1.0.1'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_default()
+        self._test_rename()
 
     def test_branch(self):
         self._deploy('branch')
-        assertPopen(['mkultra', 'set-default', '-b', 'branch', '1.0'])
+        assertPopen(['mkultra', 'rename', '1.0', '1.0.1', '-b', 'branch'])
         check_call_silent(['git', 'checkout', 'branch'])
-        self._test_default()
+        self._test_rename()
 
     def test_commit_message(self):
         self._deploy()
-        assertPopen(['mkultra', 'set-default', '-m', 'commit message', '1.0'])
+        assertPopen(['mkultra', 'rename', '1.0', '1.0.1', '-m',
+                     'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_default('commit message')
+        self._test_rename('commit message')
 
     def test_push(self):
         self._deploy()
@@ -60,7 +67,7 @@ class TestSetDefault(unittest.TestCase):
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
-        assertPopen(['mkultra', 'set-default', '-p', '1.0'])
+        assertPopen(['mkultra', 'rename', '1.0', '1.0.1', '-p'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
 
         with pushd(self.stage):

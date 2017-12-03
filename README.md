@@ -49,6 +49,9 @@ particularly-relevant version of your docs somewhere special (e.g. `latest`):
 mkultra deploy [version] [alias]...
 ```
 
+If you'd like to specify a title for this version that doesn't match the version
+string, you can pass `-t TITLE`/`--title=TITLE` as well.
+
 Finally, to push your docs to a remote branch, simply add `-p`/`--push` to your
 command. (Note: this will likely become the default eventually.)
 
@@ -87,6 +90,17 @@ mkultra set-default [version-or-alias]
 
 Like `deploy` and `delete` above, you can specify `-p`/`--push` to` push this
 commit as well.
+
+### Renaming a Version
+
+As you update your docs, you may want to rename the title of a particular
+version. For example, your `1.0` docs might have the title `1.0.0`, and when you
+release a new patch, you want to update the title to `1.0.1`. You can do this
+with the rename command:
+
+```sh
+mkultra rename [version-or-alias] [title]
+```
 
 ### More Details
 
