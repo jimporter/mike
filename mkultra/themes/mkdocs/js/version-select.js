@@ -50,20 +50,22 @@ window.addEventListener("DOMContentLoaded", function() {
              i.aliases.includes(CURRENT_VERSION);
     }).version;
 
-    var versionPanel = document.createElement("small");
-    versionPanel.id = "version-panel";
-    versionPanel.textContent = "Version: ";
-
     var select = makeSelect(versions.map(function(i) {
       return {text: i.title, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
       window.location.href = REL_BASE_URL + "/../" + this.value;
     });
-    versionPanel.appendChild(select);
 
-    var left = document.querySelector("body > div.container");
-    left.appendChild(versionPanel);
+    var container = document.createElement("div");
+    container.id = "version-selector";
+    container.appendChild(select);
+
+    var title = document.querySelector("div.navbar-header");
+    var height = window.getComputedStyle(title).getPropertyValue("height");
+    container.style.height = height;
+
+    title.appendChild(container);
   };
   xhr.send();
 });

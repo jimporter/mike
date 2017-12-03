@@ -1,16 +1,12 @@
-#version-panel {
-  position: sticky;
-  bottom: 20px;
-  font-size: 12px;
+#version-selector {
+  float: left;
+  display: flex;
+  align-items: center;
+  margin: 0 10px;
 }
 
-#version-panel select {
-  display: inline;
-  width: unset;
-  height: unset;
-  padding: 2px;
-}
-
-footer {
-  margin-top: 0;
+#version-selector > select {
+  width: auto;
+  height: auto;
+  padding: 1px;
 }
