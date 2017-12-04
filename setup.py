@@ -97,6 +97,7 @@ setup(
     ],
 
     packages=find_packages(exclude=['test', 'test.*']),
+    include_package_data=True,
 
     install_requires=(['mkdocs >= 0.17.0', 'jinja2', 'packaging',
                        'ruamel.yaml < 0.15', 'six']),
@@ -107,7 +108,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'mkultra=mkultra.driver:main',
+            'mkultra = mkultra.driver:main',
         ],
         'mkultra.themes': [
             'mkdocs = mkultra.themes.mkdocs',
