@@ -1,21 +1,21 @@
 # mkultra
 
+[![PyPi version][pypi-image]][pypi-link]
 [![Travis build status][travis-image]][travis-link]
 [![Appveyor build status][appveyor-image]][appveyor-link]
 [![Coverage status][codecov-image]][codecov-link]
 
-**mkultra** is a work-in-progress Python utility to easily deploy multiple
-versions of your [MkDocs](http://www.mkdocs.org)-powered docs to a Git branch,
-suitable for deploying to Github via `gh-pages`.
+**mkultra** is a Python utility to easily deploy multiple versions of your
+[MkDocs](http://www.mkdocs.org)-powered docs to a Git branch, suitable for
+deploying to Github via `gh-pages`.
 
 ## Installation
 
 Like most Python projects, mkultra uses [setuptools][setuptools], so you can
-install it by downloading the source and running the following (PyPI hosting
-coming soon!):
+install it like most any other Python package:
 
 ```sh
-python setup.py install
+pip install mkultra
 ```
 
 ## Usage
@@ -127,10 +127,12 @@ To see an example of how to work with this, check the
 
 This project is licensed under the [BSD 3-clause license](LICENSE).
 
-[setuptools]: https://pythonhosted.org/setuptools/
+[pypi-image]: https://img.shields.io/pypi/v/mkultra.svg
+[pypi-link]: https://pypi.python.org/pypi/mkultra
 [travis-image]: https://travis-ci.org/jimporter/mkultra.svg?branch=master
 [travis-link]: https://travis-ci.org/jimporter/mkultra
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/rq4ycpphei6rnfkx/branch/master?svg=true
 [appveyor-link]: https://ci.appveyor.com/project/jimporter/mkultra/branch/master
 [codecov-image]: https://codecov.io/gh/jimporter/mkultra/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/mkultra
+[setuptools]: https://pythonhosted.org/setuptools/
