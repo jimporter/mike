@@ -125,7 +125,7 @@ To see an example of how to work with this, check the
 
 ## License
 
-This project is licensed under the BSD 3-clause [license](LICENSE).
+This project is licensed under the [BSD 3-clause license](LICENSE).
 
 [setuptools]: https://pythonhosted.org/setuptools/
 [travis-image]: https://travis-ci.org/jimporter/mkultra.svg?branch=master
