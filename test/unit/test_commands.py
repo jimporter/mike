@@ -8,7 +8,7 @@ from itertools import chain
 from six import assertRegex
 
 from .. import *
-from mkultra import commands, git_utils, versions
+from mike import commands, git_utils, versions
 
 
 class TestListVersions(unittest.TestCase):
@@ -47,7 +47,7 @@ class TestDeploy(unittest.TestCase):
         else:
             assertRegex(
                 self, message,
-                r'^Deployed \S+ to 1.0 with MkDocs \S+ and mkultra \S+$'
+                r'^Deployed \S+ to 1.0 with MkDocs \S+ and mike \S+$'
             )
 
         dirs = {str(version.version)} | version.aliases
@@ -105,7 +105,7 @@ class TestDelete(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message, r'^Removed \S+ with mkultra \S+$')
+            assertRegex(self, message, r'^Removed \S+ with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',
@@ -130,7 +130,7 @@ class TestDelete(unittest.TestCase):
 
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
-        assertRegex(self, message, r'^Removed everything with mkultra \S+$')
+        assertRegex(self, message, r'^Removed everything with mike \S+$')
         assertDirectory('.', set())
 
     def test_branch(self):
@@ -168,7 +168,7 @@ class TestRename(unittest.TestCase):
             self.assertEqual(message, expected_message)
         else:
             assertRegex(self, message, r'^Set title of version \S+ to ' +
-                        r'1\.0\.1 with mkultra \S+$')
+                        r'1\.0\.1 with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',
@@ -221,7 +221,7 @@ class TestSetDefault(unittest.TestCase):
             self.assertEqual(message, expected_message)
         else:
             assertRegex(self, message,
-                        r'^Set default version to \S+ with mkultra \S+$')
+                        r'^Set default version to \S+ with mike \S+$')
 
         with open('index.html') as f:
             assertRegex(self, f.read(),

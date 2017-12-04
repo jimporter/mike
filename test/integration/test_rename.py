@@ -7,7 +7,7 @@ from six import assertRegex
 
 from . import assertPopen
 from .. import *
-from mkultra import git_utils, versions
+from mike import git_utils, versions
 
 
 class TestSetDefault(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestSetDefault(unittest.TestCase):
         check_call_silent(['git', 'commit', '-m', 'initial commit'])
 
     def _deploy(self, branch='gh-pages'):
-        assertPopen(['mkultra', 'deploy', '-b', branch, '1.0'])
+        assertPopen(['mike', 'deploy', '-b', branch, '1.0'])
 
     def _test_rename(self, expected_message=None):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
@@ -28,7 +28,7 @@ class TestSetDefault(unittest.TestCase):
             self.assertEqual(message, expected_message)
         else:
             assertRegex(self, message, r'^Set title of version \S+ to ' +
-                        r'1\.0\.1 with mkultra \S+$')
+                        r'1\.0\.1 with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',
@@ -42,19 +42,19 @@ class TestSetDefault(unittest.TestCase):
 
     def test_rename(self):
         self._deploy()
-        assertPopen(['mkultra', 'rename', '1.0', '1.0.1'])
+        assertPopen(['mike', 'rename', '1.0', '1.0.1'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_rename()
 
     def test_branch(self):
         self._deploy('branch')
-        assertPopen(['mkultra', 'rename', '1.0', '1.0.1', '-b', 'branch'])
+        assertPopen(['mike', 'rename', '1.0', '1.0.1', '-b', 'branch'])
         check_call_silent(['git', 'checkout', 'branch'])
         self._test_rename()
 
     def test_commit_message(self):
         self._deploy()
-        assertPopen(['mkultra', 'rename', '1.0', '1.0.1', '-m',
+        assertPopen(['mike', 'rename', '1.0', '1.0.1', '-m',
                      'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_rename('commit message')
@@ -67,7 +67,7 @@ class TestSetDefault(unittest.TestCase):
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
-        assertPopen(['mkultra', 'rename', '1.0', '1.0.1', '-p'])
+        assertPopen(['mike', 'rename', '1.0', '1.0.1', '-p'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
 
         with pushd(self.stage):

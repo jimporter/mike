@@ -25,9 +25,9 @@ class TestInstallExtras(unittest.TestCase):
         })
 
     def test_default(self):
-        assertPopen(['mkultra', 'install-extras'])
+        assertPopen(['mike', 'install-extras'])
         self._test_extras()
 
     def test_explicit_theme(self):
-        assertPopen(['mkultra', 'install-extras', '-t', 'mkdocs'])
+        assertPopen(['mike', 'install-extras', '-t', 'mkdocs'])
         self._test_extras()

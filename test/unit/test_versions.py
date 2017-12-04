@@ -4,7 +4,7 @@ import json
 import unittest
 from packaging.version import LegacyVersion as Version
 
-from mkultra.versions import VersionInfo, Versions
+from mike.versions import VersionInfo, Versions
 
 
 class TestVersions(unittest.TestCase):

@@ -1,2 +1,2 @@
 include README.md
-recursive-include mkultra/themes *.js *.css
+recursive-include mike/themes *.js *.css

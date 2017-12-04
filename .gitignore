@@ -1,7 +1,8 @@
 *.pyc
 /.coverage
 /.coverage.*
-/mkultra.egg-info/
+/mike.egg-info/
+/build/
 /dist/
 /htmlcov/
 /test/stage/

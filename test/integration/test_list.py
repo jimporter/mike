@@ -5,7 +5,7 @@ import unittest
 
 from . import assertPopen
 from .. import *
-from mkultra import git_utils, versions
+from mike import git_utils, versions
 
 
 class TestList(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestList(unittest.TestCase):
 
     def test_list(self):
         self.assertEqual(
-            assertPopen(['mkultra', 'list']),
+            assertPopen(['mike', 'list']),
             '4.0 [dev, latest]\n' +
             '3.0.3 (3.0) [stable]\n' +
             '2.0.2 (2.0)\n' +

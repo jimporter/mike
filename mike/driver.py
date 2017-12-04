@@ -73,7 +73,7 @@ def install_extras(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='mkultra')
+    parser = argparse.ArgumentParser(prog='mike')
     subparsers = parser.add_subparsers()
 
     parser.add_argument('--version', action='version',

@@ -8,7 +8,7 @@ import unittest
 from six import assertRegex
 
 from .. import *
-from mkultra import git_utils
+from mike import git_utils
 
 
 class TestMakeWhen(unittest.TestCase):

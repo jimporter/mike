@@ -3,7 +3,7 @@ import re
 import subprocess
 from setuptools import setup, find_packages, Command
 
-from mkultra.app_version import version
+from mike.app_version import version
 
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -51,7 +51,7 @@ try:
 
     class LintCommand(Flake8):
         def distribution_files(self):
-            return ['setup.py', 'mkultra']
+            return ['setup.py', 'mike']
 
     custom_cmds['lint'] = LintCommand
 except ImportError:
@@ -59,7 +59,7 @@ except ImportError:
 
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
-    long_desc = re.sub(r'(^# mkultra)\n\n(.+\n)*', r'\1', f.read())
+    long_desc = re.sub(r'(^# mike)\n\n(.+\n)*', r'\1', f.read())
 
 try:
     import pypandoc
@@ -68,14 +68,14 @@ except ImportError:
     pass
 
 setup(
-    name='mkultra',
+    name='mike',
     version=version,
 
     description=('Manage multiple versions of your MkDocs-powered ' +
                  'documentation'),
     long_description=long_desc,
     keywords='mkdocs multiple versions',
-    url='https://github.com/jimporter/mkultra',
+    url='https://github.com/jimporter/mike',
 
     author='Jim Porter',
     author_email='porterj@alum.rit.edu',
@@ -108,23 +108,23 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'mkultra = mkultra.driver:main',
+            'mike = mike.driver:main',
         ],
-        'mkultra.themes': [
-            'mkdocs = mkultra.themes.mkdocs',
-            'readthedocs = mkultra.themes.readthedocs',
-            'amelia = mkultra.themes.mkdocs',
-            'cerulean = mkultra.themes.mkdocs',
-            'cosmo = mkultra.themes.mkdocs',
-            'cyborg = mkultra.themes.mkdocs',
-            'flatly = mkultra.themes.mkdocs',
-            'journal = mkultra.themes.mkdocs',
-            'readable = mkultra.themes.mkdocs',
-            'simplex = mkultra.themes.mkdocs',
-            'slate = mkultra.themes.mkdocs',
-            'spacelab = mkultra.themes.mkdocs',
-            'united = mkultra.themes.mkdocs',
-            'yeti = mkultra.themes.mkdocs',
+        'mike.themes': [
+            'mkdocs = mike.themes.mkdocs',
+            'readthedocs = mike.themes.readthedocs',
+            'amelia = mike.themes.mkdocs',
+            'cerulean = mike.themes.mkdocs',
+            'cosmo = mike.themes.mkdocs',
+            'cyborg = mike.themes.mkdocs',
+            'flatly = mike.themes.mkdocs',
+            'journal = mike.themes.mkdocs',
+            'readable = mike.themes.mkdocs',
+            'simplex = mike.themes.mkdocs',
+            'slate = mike.themes.mkdocs',
+            'spacelab = mike.themes.mkdocs',
+            'united = mike.themes.mkdocs',
+            'yeti = mike.themes.mkdocs',
         ],
     },
 

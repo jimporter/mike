@@ -5,7 +5,7 @@ import unittest
 from six import assertRegex
 
 from .. import *
-from mkultra import mkdocs
+from mike import mkdocs
 
 
 class TestMkDocs(unittest.TestCase):

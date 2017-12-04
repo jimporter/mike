@@ -38,12 +38,12 @@ def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
     if message is None:
         message = (
             'Deployed {rev} to {doc_version} with MkDocs {mkdocs_version} ' +
-            'and mkultra {mkultra_version}'
+            'and mike {mike_version}'
         ).format(
             rev=git_utils.get_latest_commit('HEAD'),
             doc_version=version,
             mkdocs_version=mkdocs.version(),
-            mkultra_version=app_version
+            mike_version=app_version
         )
 
     destdirs = [version] + aliases
@@ -68,10 +68,10 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
 
     if message is None:
         message = (
-            'Removed {doc_version} with mkultra {mkultra_version}'
+            'Removed {doc_version} with mike {mike_version}'
         ).format(
             doc_version='everything' if all else ', '.join(versions),
-            mkultra_version=app_version
+            mike_version=app_version
         )
 
     commit = git_utils.Commit(branch, message)
@@ -89,9 +89,9 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
 def rename(version, title, branch='gh-pages', message=None):
     if message is None:
         message = (
-            'Set title of version {version} to {title} with mkultra ' +
-            '{mkultra_version}'
-        ).format(version=version, title=title, mkultra_version=app_version)
+            'Set title of version {version} to {title} with mike ' +
+            '{mike_version}'
+        ).format(version=version, title=title, mike_version=app_version)
 
     commit = git_utils.Commit(branch, message)
     all_versions = list_versions(branch)
@@ -103,9 +103,9 @@ def rename(version, title, branch='gh-pages', message=None):
 def set_default(version, branch='gh-pages', message=None):
     if message is None:
         message = (
-            'Set default version to {version} with mkultra ' +
-            '{mkultra_version}'
-        ).format(version=version, mkultra_version=app_version)
+            'Set default version to {version} with mike ' +
+            '{mike_version}'
+        ).format(version=version, mike_version=app_version)
 
     all_versions = list_versions(branch)
     if not all_versions.find(version):
@@ -123,7 +123,7 @@ def set_default(version, branch='gh-pages', message=None):
 def get_theme_dir(theme_name):
     if theme_name is None:
         raise ValueError('no theme specified')
-    themes = list(iter_entry_points('mkultra.themes', theme_name))
+    themes = list(iter_entry_points('mike.themes', theme_name))
     if len(themes) == 0:
         raise ValueError('no theme found')
     return os.path.dirname(themes[0].load().__file__)

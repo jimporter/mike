@@ -1,12 +1,12 @@
 [run]
-source = mkultra
+source = mike
 parallel = True
 branch = True
 
 [paths]
 source =
-  mkultra/
-  /usr/local/lib/*/site-packages/mkultra/
+  mike/
+  /usr/local/lib/*/site-packages/mike/
 
 [report]
 exclude_lines =

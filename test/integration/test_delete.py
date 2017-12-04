@@ -7,7 +7,7 @@ from six import assertRegex
 
 from . import assertPopen
 from .. import *
-from mkultra import git_utils
+from mike import git_utils
 
 
 class TestDelete(unittest.TestCase):
@@ -19,8 +19,8 @@ class TestDelete(unittest.TestCase):
         check_call_silent(['git', 'commit', '-m', 'initial commit'])
 
     def _deploy(self, branch='gh-pages'):
-        assertPopen(['mkultra', 'deploy', '-b', branch, '1.0'])
-        assertPopen(['mkultra', 'deploy', '-b', branch, '2.0'])
+        assertPopen(['mike', 'deploy', '-b', branch, '1.0'])
+        assertPopen(['mike', 'deploy', '-b', branch, '2.0'])
 
     def _test_delete(self, expected_message=None):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
@@ -28,7 +28,7 @@ class TestDelete(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message, r'^Removed \S+ with mkultra \S+$')
+            assertRegex(self, message, r'^Removed \S+ with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',
@@ -38,29 +38,29 @@ class TestDelete(unittest.TestCase):
 
     def test_delete_versions(self):
         self._deploy()
-        assertPopen(['mkultra', 'delete', '1.0'])
+        assertPopen(['mike', 'delete', '1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete()
 
     def test_delete_all(self):
         self._deploy()
-        assertPopen(['mkultra', 'delete', '--all'])
+        assertPopen(['mike', 'delete', '--all'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
 
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
-        assertRegex(self, message, r'^Removed everything with mkultra \S+$')
+        assertRegex(self, message, r'^Removed everything with mike \S+$')
         self.assertFalse(os.path.exists('version.json'))
 
     def test_branch(self):
         self._deploy('branch')
-        assertPopen(['mkultra', 'delete', '-b', 'branch', '1.0'])
+        assertPopen(['mike', 'delete', '-b', 'branch', '1.0'])
         check_call_silent(['git', 'checkout', 'branch'])
         self._test_delete()
 
     def test_commit_message(self):
         self._deploy()
-        assertPopen(['mkultra', 'delete', '-m', 'commit message', '1.0'])
+        assertPopen(['mike', 'delete', '-m', 'commit message', '1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete('commit message')
 
@@ -72,7 +72,7 @@ class TestDelete(unittest.TestCase):
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
-        assertPopen(['mkultra', 'delete', '-p', '1.0'])
+        assertPopen(['mike', 'delete', '-p', '1.0'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
 
         with pushd(self.stage):
