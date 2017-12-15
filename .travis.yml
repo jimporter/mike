@@ -5,6 +5,7 @@ python:
   - 2.7
   - 3.4
   - 3.5
+  - 3.6
 os:
   - linux
 env:
@@ -20,7 +21,7 @@ matrix:
       os: osx
       env: PYTHON=python2 PIP=pip2
     - language: generic
-      python: 3.5
+      python: 3.6
       os: osx
       env: PYTHON=python3 PIP=pip3
     - python: 2.7
