@@ -33,8 +33,10 @@ before_install:
   - |
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       shell_session_update() { :; }
-      brew update
-      brew install ${PYTHON}
+      if [ "${PYTHON}" = "python3" ]; then
+        brew update
+        brew install ${PYTHON}
+      fi
       cp test/scripts/sitecustomize.py .
     fi
 install:
