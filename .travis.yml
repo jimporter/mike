@@ -35,7 +35,7 @@ before_install:
       shell_session_update() { :; }
       if [ "${PYTHON}" = "python3" ]; then
         brew update
-        brew install ${PYTHON}
+        brew install ${PYTHON} || brew upgrade ${PYTHON}
       fi
       cp test/scripts/sitecustomize.py .
     fi
