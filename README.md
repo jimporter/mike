@@ -131,7 +131,7 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [pypi-link]: https://pypi.python.org/pypi/mike
 [travis-image]: https://travis-ci.org/jimporter/mike.svg?branch=master
 [travis-link]: https://travis-ci.org/jimporter/mike
-[appveyor-image]: https://ci.appveyor.com/api/projects/status/rq4ycpphei6rnfkx/branch/master?svg=true
+[appveyor-image]: https://ci.appveyor.com/api/projects/status/rj8e3xa1r7nh22u2/branch/master?svg=true
 [appveyor-link]: https://ci.appveyor.com/project/jimporter/mike/branch/master
 [codecov-image]: https://codecov.io/gh/jimporter/mike/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/mike
