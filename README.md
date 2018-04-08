@@ -55,6 +55,18 @@ string, you can pass `-t TITLE`/`--title=TITLE` as well.
 Finally, to push your docs to a remote branch, simply add `-p`/`--push` to your
 command. (Note: this will likely become the default eventually.)
 
+### Viewing Your Docs
+
+To test that your docs have been built as expected, you can serve them locally
+from a dev server:
+
+```sh
+mike serve
+```
+
+By default, this serves the docs on `http://localhost:8000`, but you can
+change this with `-a`/`--dev-addr`.
+
 ### Deleting Docs
 
 Sometimes you need to delete an old version of your docs, either because you

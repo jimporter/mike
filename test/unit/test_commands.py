@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import mock
 import os
 import ruamel.yaml as yaml
 import subprocess
@@ -8,6 +9,7 @@ from itertools import chain
 from six import assertRegex
 
 from .. import *
+from .mock_server import MockRequest, MockServer
 from mike import commands, git_utils, versions
 
 
@@ -325,3 +327,30 @@ class TestInstallExtras(unittest.TestCase):
         commands.install_extras(self.mkdocs_yml)
         commands.install_extras(self.mkdocs_yml)
         self._test_extras()
+
+
+class TestServe(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('serve')
+        git_init()
+        commit = git_utils.Commit('branch', 'add file')
+        commit.add_file(git_utils.FileInfo(
+            'index.html', 'main page'
+        ))
+        commit.add_file(git_utils.FileInfo(
+            'dir/index.html', 'sub page'
+        ))
+        commit.finish()
+
+    def test_serve(self):
+        class MyMockServer(MockServer):
+            def serve_forever(self):
+                self.handle_request(MockRequest())
+                raise KeyboardInterrupt()
+
+        handler_name = 'mike.server.GitBranchHTTPHandler'
+        with mock.patch('six.moves.BaseHTTPServer.HTTPServer', MyMockServer), \
+             mock.patch(handler_name + '.wbufsize', -1), \
+             mock.patch(handler_name + '.log_message') as m:  # noqa
+            commands.serve(branch='branch', verbose=False)
+            self.assertEqual(m.call_args[0][1:3], ('GET / HTTP/1.1', '200'))

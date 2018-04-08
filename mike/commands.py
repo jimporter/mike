@@ -7,9 +7,11 @@ import shutil
 from jinja2 import Template
 from pkg_resources import iter_entry_points, resource_stream
 from ruamel.yaml.util import load_yaml_guess_indent
+from six.moves import BaseHTTPServer
 
 from . import git_utils
 from . import mkdocs
+from . import server
 from .app_version import version as app_version
 from .versions import Versions
 
@@ -21,7 +23,7 @@ def list_versions(branch='gh-pages'):
         return Versions.loads(git_utils.read_file(
             branch, versions_file, universal_newlines=True
         ))
-    except ValueError:
+    except git_utils.GitError:
         return Versions()
 
 
@@ -164,3 +166,22 @@ def install_extras(mkdocs_yml, theme=None):
 
     with open(mkdocs_yml, 'w') as f:
         yaml.round_trip_dump(config, f, indent=indent, block_seq_indent=bsi)
+
+
+def serve(address='localhost:8000', branch='gh-pages', verbose=True):
+    my_branch = branch
+
+    class Handler(server.GitBranchHTTPHandler):
+        branch = my_branch
+
+    host, port = address.split(':')
+    httpd = BaseHTTPServer.HTTPServer((host, int(port)), Handler)
+
+    if verbose:  # pragma: no cover
+        print('Starting server at http://{}/'.format(address))
+        print('Press Ctrl+C to quit.')
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        if verbose:  # pragma: no cover
+            print('Stopping server...')

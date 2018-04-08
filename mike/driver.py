@@ -72,6 +72,11 @@ def install_extras(args):
     commands.install_extras('mkdocs.yml', args.theme)
 
 
+def serve(args):
+    git_utils.update_branch(args.remote, args.branch)
+    commands.serve(args.dev_addr, args.branch)
+
+
 def main():
     parser = argparse.ArgumentParser(prog='mike')
     subparsers = parser.add_subparsers()
@@ -131,6 +136,16 @@ def main():
     install_extras_p.set_defaults(func=install_extras)
     install_extras_p.add_argument('-t', '--theme',
                                   help='the theme to use for your docs')
+
+    serve_p = subparsers.add_parser(
+        'serve', help='serve docs locally for testing'
+    )
+    serve_p.set_defaults(func=serve)
+    add_git_arguments(serve_p)
+    serve_p.add_argument('-a', '--dev-addr', default='localhost:8000',
+                         metavar='IP:PORT',
+                         help=('IP address and port to serve from ' +
+                               '(default: %(default)s)'))
 
     args = parser.parse_args()
     try:

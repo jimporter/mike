@@ -31,7 +31,7 @@ class TestGetConfig(unittest.TestCase):
         self.assertEqual(git_utils.get_config('user.email'), 'user@site.tld')
 
     def test_get_unknown(self):
-        self.assertRaises(ValueError, git_utils.get_config, 'nonexist')
+        self.assertRaises(git_utils.GitError, git_utils.get_config, 'nonexist')
 
 
 class TestGetLatestCommit(unittest.TestCase):
@@ -48,7 +48,8 @@ class TestGetLatestCommit(unittest.TestCase):
         self.assertEqual(rev, expected_rev)
 
     def test_nonexistent_branch(self):
-        self.assertRaises(ValueError, git_utils.get_latest_commit, 'nonexist')
+        self.assertRaises(git_utils.GitError, git_utils.get_latest_commit,
+                          'nonexist')
 
 
 class TestUpdateBranch(unittest.TestCase):
@@ -80,6 +81,12 @@ class TestUpdateBranch(unittest.TestCase):
         new_rev = git_utils.get_latest_commit('master')
 
         self.assertEqual(old_rev, new_rev)
+
+    def test_nonexistent_remote_strict(self):
+        old_rev = git_utils.get_latest_commit('master')
+        check_call_silent(['git', 'fetch', 'origin'])
+        self.assertRaises(git_utils.GitError, git_utils.update_branch,
+                          'upstream', 'master', True)
 
 
 class TestCommit(unittest.TestCase):
@@ -153,7 +160,7 @@ class TestPushBranch(unittest.TestCase):
             commit_file('file2.txt', 'add file2')
 
         commit_file('file2.txt', 'add file2 from clone')
-        self.assertRaises(ValueError, git_utils.push_branch, 'origin',
+        self.assertRaises(git_utils.GitError, git_utils.push_branch, 'origin',
                           'master')
 
     def test_force_push(self):
@@ -170,7 +177,7 @@ class TestPushBranch(unittest.TestCase):
 
 
 class TestWalkFiles(unittest.TestCase):
-    mode = '100755' if sys.platform == 'win32' else '100644'
+    mode = 0o100755 if sys.platform == 'win32' else 0o100644
 
     def setUp(self):
         self.directory = os.path.join(test_data_dir, 'directory')
@@ -193,9 +200,40 @@ class TestWalkFiles(unittest.TestCase):
         ])
 
 
+class TestFileMode(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('file_mode')
+        os.chdir(self.stage)
+        git_init()
+        commit = git_utils.Commit('branch', 'add file')
+        commit.add_file(git_utils.FileInfo(
+            'dir/file.txt', 'this is some text'
+        ))
+        commit.finish()
+
+    def test_file_mode(self):
+        self.assertEqual(git_utils.file_mode('branch', 'dir/file.txt'),
+                         0o100644)
+
+    def test_directory_mode(self):
+        self.assertEqual(git_utils.file_mode('branch', 'dir'), 0o040000)
+        self.assertEqual(git_utils.file_mode('branch', 'dir/'), 0o040000)
+
+    def test_root_mode(self):
+        self.assertEqual(git_utils.file_mode('branch', ''), 0o040000)
+
+    def test_nonexistent_file(self):
+        self.assertRaises(git_utils.GitError, git_utils.file_mode, 'branch',
+                          'nonexist.txt')
+
+    def test_nonexistent_branch(self):
+        self.assertRaises(git_utils.GitError, git_utils.file_mode, 'nonexist',
+                          'dir/file.txt')
+
+
 class TestReadFile(unittest.TestCase):
     def setUp(self):
-        self.stage = stage_dir('commit')
+        self.stage = stage_dir('read_file')
         os.chdir(self.stage)
         git_init()
         commit = git_utils.Commit('branch', 'add file')
@@ -214,9 +252,9 @@ class TestReadFile(unittest.TestCase):
                          'this is some text')
 
     def test_nonexistent_file(self):
-        self.assertRaises(ValueError, git_utils.read_file, 'branch',
+        self.assertRaises(git_utils.GitError, git_utils.read_file, 'branch',
                           'nonexist.txt')
 
     def test_nonexistent_branch(self):
-        self.assertRaises(ValueError, git_utils.read_file, 'nonexist',
+        self.assertRaises(git_utils.GitError, git_utils.read_file, 'nonexist',
                           'file.txt')
