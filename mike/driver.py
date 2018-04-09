@@ -24,7 +24,7 @@ def add_git_arguments(parser, commit=True):
 
 def deploy(args):
     git_utils.update_branch(args.remote, args.branch)
-    mkdocs.build()
+    mkdocs.build(args.config_file)
     commands.deploy(mkdocs.site_dir, args.version, args.title, args.alias,
                     args.branch, args.message)
     if args.push:
@@ -91,6 +91,8 @@ def main():
     add_git_arguments(deploy_p)
     deploy_p.add_argument('-t', '--title',
                           help='short descriptive title for this version')
+    deploy_p.add_argument('-F', '--config-file',
+                          help='the MkDocs configuration file to use')
     deploy_p.add_argument('version', metavar='VERSION',
                           help='version (directory) to deploy this build to')
     deploy_p.add_argument('alias', nargs='*', metavar='ALIAS',
