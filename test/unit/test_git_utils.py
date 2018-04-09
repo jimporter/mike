@@ -95,9 +95,8 @@ class TestCommit(unittest.TestCase):
         git_init()
 
     def _add_file(self, name, branch='master'):
-        commit = git_utils.Commit(branch, 'add file')
-        commit.add_file(git_utils.FileInfo(name, 'this is some text'))
-        commit.finish()
+        with git_utils.Commit(branch, 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(name, 'this is some text'))
 
     def test_add_file(self):
         self._add_file('file.txt')
@@ -116,9 +115,8 @@ class TestCommit(unittest.TestCase):
     def test_delete_files(self):
         self._add_file('file.txt')
         self._add_file('file2.txt')
-        commit = git_utils.Commit('master', 'delete file')
-        commit.delete_files(['file.txt'])
-        commit.finish()
+        with git_utils.Commit('master', 'delete file') as commit:
+            commit.delete_files(['file.txt'])
 
         check_call_silent(['git', 'checkout', 'master'])
         assertDirectory('.', {'file2.txt'})
@@ -126,13 +124,57 @@ class TestCommit(unittest.TestCase):
     def test_delete_all_files(self):
         self._add_file('file.txt')
         self._add_file('file2.txt')
-        commit = git_utils.Commit('master', 'delete all files')
-        commit.delete_files('*')
-        commit.finish()
+        with git_utils.Commit('master', 'delete all files') as commit:
+            commit.delete_files('*')
 
         check_call_silent(['git', 'checkout', 'master'])
         assertDirectory('.', set())
 
+    def test_finish(self):
+        commit = git_utils.Commit('master', 'add file')
+        commit.add_file(git_utils.FileInfo('file.txt', 'this is some text'))
+        commit.finish()
+        self.assertRaises(git_utils.GitError, commit.finish)
+        self.assertRaises(git_utils.GitError, commit.abort)
+
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'file.txt'})
+
+    def test_abort(self):
+        self._add_file('file.txt')
+
+        commit = git_utils.Commit('master', 'add file')
+        commit.add_file(git_utils.FileInfo('file2.txt', 'this is some text'))
+        commit.abort()
+        self.assertRaises(git_utils.GitError, commit.finish)
+        self.assertRaises(git_utils.GitError, commit.abort)
+
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'file.txt'})
+
+    def test_context_already_finished(self):
+        with git_utils.Commit('master', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file.txt', 'this is some text'
+            ))
+            commit.finish()
+
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'file.txt'})
+
+    def test_handle_exception(self):
+        self._add_file('file.txt')
+        try:
+            with git_utils.Commit('master', 'add file') as commit:
+                commit.add_file(git_utils.FileInfo(
+                    'file2.txt', 'this is some text'
+                ))
+                raise ValueError('bad')
+        except ValueError:
+            pass
+
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'file.txt'})
 
 class TestPushBranch(unittest.TestCase):
     def setUp(self):
@@ -205,11 +247,10 @@ class TestFileMode(unittest.TestCase):
         self.stage = stage_dir('file_mode')
         os.chdir(self.stage)
         git_init()
-        commit = git_utils.Commit('branch', 'add file')
-        commit.add_file(git_utils.FileInfo(
-            'dir/file.txt', 'this is some text'
-        ))
-        commit.finish()
+        with git_utils.Commit('branch', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'dir/file.txt', 'this is some text'
+            ))
 
     def test_file_mode(self):
         self.assertEqual(git_utils.file_mode('branch', 'dir/file.txt'),
@@ -236,11 +277,10 @@ class TestReadFile(unittest.TestCase):
         self.stage = stage_dir('read_file')
         os.chdir(self.stage)
         git_init()
-        commit = git_utils.Commit('branch', 'add file')
-        commit.add_file(git_utils.FileInfo(
-            'file.txt', 'this is some text'
-        ))
-        commit.finish()
+        with git_utils.Commit('branch', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file.txt', 'this is some text'
+            ))
 
     def test_read_file(self):
         self.assertEqual(git_utils.read_file('branch', 'file.txt'),

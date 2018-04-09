@@ -53,15 +53,13 @@ def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
     all_versions = list_versions(branch)
     all_versions.add(version, title, aliases)
 
-    commit = git_utils.Commit(branch, message)
-    commit.delete_files(destdirs)
+    with git_utils.Commit(branch, message) as commit:
+        commit.delete_files(destdirs)
 
-    for f in git_utils.walk_files(site_dir, destdirs):
-        commit.add_file(f)
-    commit.add_file(versions_to_file_info(all_versions))
-    commit.add_file(make_nojekyll())
-
-    commit.finish()
+        for f in git_utils.walk_files(site_dir, destdirs):
+            commit.add_file(f)
+        commit.add_file(versions_to_file_info(all_versions))
+        commit.add_file(make_nojekyll())
 
 
 def delete(versions=None, all=False, branch='gh-pages', message=None):
@@ -76,16 +74,15 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
             mike_version=app_version
         )
 
-    commit = git_utils.Commit(branch, message)
-    if all:
-        commit.delete_files('*')
-    else:
-        all_versions = list_versions(branch)
-        all_versions.difference_update(versions)
+    with git_utils.Commit(branch, message) as commit:
+        if all:
+            commit.delete_files('*')
+        else:
+            all_versions = list_versions(branch)
+            all_versions.difference_update(versions)
 
-        commit.delete_files(versions)
-        commit.add_file(versions_to_file_info(all_versions))
-    commit.finish()
+            commit.delete_files(versions)
+            commit.add_file(versions_to_file_info(all_versions))
 
 
 def rename(version, title, branch='gh-pages', message=None):
@@ -95,11 +92,10 @@ def rename(version, title, branch='gh-pages', message=None):
             '{mike_version}'
         ).format(version=version, title=title, mike_version=app_version)
 
-    commit = git_utils.Commit(branch, message)
-    all_versions = list_versions(branch)
-    all_versions.rename(version, title)
-    commit.add_file(versions_to_file_info(all_versions))
-    commit.finish()
+    with git_utils.Commit(branch, message) as commit:
+        all_versions = list_versions(branch)
+        all_versions.rename(version, title)
+        commit.add_file(versions_to_file_info(all_versions))
 
 
 def set_default(version, branch='gh-pages', message=None):
@@ -113,13 +109,12 @@ def set_default(version, branch='gh-pages', message=None):
     if not all_versions.find(version):
         raise ValueError('version {} not found'.format(version))
 
-    commit = git_utils.Commit(branch, message)
-    with resource_stream(__name__, 'templates/index.html') as f:
+    with git_utils.Commit(branch, message) as commit, \
+         resource_stream(__name__, 'templates/index.html') as f:  # noqa
         t = Template(f.read().decode('utf-8'))
         commit.add_file(git_utils.FileInfo(
             'index.html', t.render(version=version)
         ))
-    commit.finish()
 
 
 def get_theme_dir(theme_name):

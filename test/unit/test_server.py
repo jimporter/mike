@@ -17,14 +17,9 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('server')
         git_init()
-        commit = git_utils.Commit('branch', 'add file')
-        commit.add_file(git_utils.FileInfo(
-            'index.html', 'main page'
-        ))
-        commit.add_file(git_utils.FileInfo(
-            'dir/index.html', 'sub page'
-        ))
-        commit.finish()
+        with git_utils.Commit('branch', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo('index.html', 'main page'))
+            commit.add_file(git_utils.FileInfo('dir/index.html', 'sub page'))
 
         class Handler(server.GitBranchHTTPHandler):
             branch = 'branch'

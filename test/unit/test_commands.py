@@ -19,12 +19,11 @@ class TestListVersions(unittest.TestCase):
         git_init()
 
     def test_versions_exist(self):
-        commit = git_utils.Commit('gh-pages', 'add versions.json')
-        commit.add_file(git_utils.FileInfo(
-            'versions.json',
-            '[{"version": "1.0", "title": "1.0", "aliases": []}]',
-        ))
-        commit.finish()
+        with git_utils.Commit('gh-pages', 'add versions.json') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'versions.json',
+                '[{"version": "1.0", "title": "1.0", "aliases": []}]',
+            ))
 
         self.assertEqual(list(commands.list_versions()), [
             versions.VersionInfo('1.0'),
@@ -333,14 +332,9 @@ class TestServe(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('serve')
         git_init()
-        commit = git_utils.Commit('branch', 'add file')
-        commit.add_file(git_utils.FileInfo(
-            'index.html', 'main page'
-        ))
-        commit.add_file(git_utils.FileInfo(
-            'dir/index.html', 'sub page'
-        ))
-        commit.finish()
+        with git_utils.Commit('branch', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo('index.html', 'main page'))
+            commit.add_file(git_utils.FileInfo('dir/index.html', 'sub page'))
 
     def test_serve(self):
         class MyMockServer(MockServer):

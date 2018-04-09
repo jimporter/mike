@@ -96,6 +96,17 @@ class Commit(object):
         cmd = ['git', 'fast-import', '--date-format=raw', '--quiet']
         self._pipe = sp.Popen(cmd, stdin=sp.PIPE, universal_newlines=False)
         self._start_commit(branch, message)
+        self._finished = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if not self._finished:
+            if exc_type:
+                self.abort()
+            else:
+                self.finish()
 
     def _write(self, data):
         if isinstance(data, text_type):  # pragma: no branch
@@ -134,10 +145,23 @@ class Commit(object):
         self._write('\n')
 
     def finish(self):
+        if self._finished:
+            raise GitError('Commit already finalized')
+        self._finished = True
+
         self._write('\n')
         self._pipe.stdin.close()
         if self._pipe.wait() != 0:  # pragma: no cover
             raise GitError('Failed to process commit')
+
+    def abort(self):
+        if self._finished:
+            raise GitError('Commit already finalized')
+        self._finished = True
+
+        self._pipe.stdin.close()
+        self._pipe.terminate()
+        self._pipe.wait()
 
 
 def push_branch(remote, branch, force=False):

@@ -18,12 +18,10 @@ class TestList(unittest.TestCase):
         all_versions.add('3.0', '3.0.3', ['stable'])
         all_versions.add('4.0', aliases=['latest', 'dev'])
 
-        commit = git_utils.Commit('gh-pages', 'commit message')
-        commit.add_file(git_utils.FileInfo(
-            'versions.json', all_versions.dumps()
-        ))
-        commit.finish()
-
+        with git_utils.Commit('gh-pages', 'commit message') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'versions.json', all_versions.dumps()
+            ))
     def test_list(self):
         self.assertEqual(
             assertPopen(['mike', 'list']),

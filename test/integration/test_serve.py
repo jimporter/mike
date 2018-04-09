@@ -15,14 +15,9 @@ class TestList(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('serve')
         git_init()
-        commit = git_utils.Commit('gh-pages', 'add file')
-        commit.add_file(git_utils.FileInfo(
-            'index.html', 'main page'
-        ))
-        commit.add_file(git_utils.FileInfo(
-            'dir/index.html', 'sub page'
-        ))
-        commit.finish()
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo('index.html', 'main page'))
+            commit.add_file(git_utils.FileInfo('dir/index.html', 'sub page'))
 
     @unittest.skipIf(platform.system() == 'Windows',
                      "SIGINT doesn't work on windows")
