@@ -11,8 +11,8 @@ deploying to Github via `gh-pages`.
 
 ## Installation
 
-Like most Python projects, mike uses [setuptools][setuptools], so you can
-install it like most any other Python package:
+Like most Python projects, mike uses [setuptools][setuptools], so installation
+is what you might expect:
 
 ```sh
 pip install mike
