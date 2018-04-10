@@ -176,6 +176,7 @@ class TestCommit(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'master'])
         assertDirectory('.', {'file.txt'})
 
+
 class TestPushBranch(unittest.TestCase):
     def setUp(self):
         self.origin = stage_dir('update_branch_origin')

@@ -10,7 +10,7 @@ from .. import *
 from mike import git_utils, versions
 
 
-class TestSetDefault(unittest.TestCase):
+class TestRename(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('rename')
         git_init()
