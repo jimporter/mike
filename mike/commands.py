@@ -79,7 +79,10 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
             commit.delete_files('*')
         else:
             all_versions = list_versions(branch)
-            all_versions.difference_update(versions)
+            try:
+                all_versions.difference_update(versions)
+            except KeyError as e:
+                raise ValueError('version {} does not exist'.format(e))
 
             commit.delete_files(versions)
             commit.add_file(versions_to_file_info(all_versions))
@@ -94,7 +97,10 @@ def rename(version, title, branch='gh-pages', message=None):
 
     with git_utils.Commit(branch, message) as commit:
         all_versions = list_versions(branch)
-        all_versions.rename(version, title)
+        try:
+            all_versions.rename(version, title)
+        except KeyError:
+            raise ValueError('version {} does not exist'.format(version))
         commit.add_file(versions_to_file_info(all_versions))
 
 
@@ -107,7 +113,7 @@ def set_default(version, branch='gh-pages', message=None):
 
     all_versions = list_versions(branch)
     if not all_versions.find(version):
-        raise ValueError('version {} not found'.format(version))
+        raise ValueError('version {} does not exist'.format(version))
 
     with git_utils.Commit(branch, message) as commit, \
          resource_stream(__name__, 'templates/index.html') as f:  # noqa

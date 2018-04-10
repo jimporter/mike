@@ -149,8 +149,9 @@ class TestDelete(unittest.TestCase):
     def test_delete_invalid(self):
         self._deploy()
         self.assertRaises(ValueError, commands.delete)
-        self.assertRaises(KeyError, commands.delete, ['3.0'])
-        self.assertRaises(KeyError, commands.delete, ['1.0'], branch='branch')
+        self.assertRaises(ValueError, commands.delete, ['3.0'])
+        self.assertRaises(ValueError, commands.delete, ['1.0'],
+                          branch='branch')
 
 
 class TestRename(unittest.TestCase):
@@ -201,8 +202,8 @@ class TestRename(unittest.TestCase):
 
     def test_rename_invalid(self):
         self._deploy()
-        self.assertRaises(KeyError, commands.rename, '2.0', '2.0.2')
-        self.assertRaises(KeyError, commands.rename, '1.0', '1.0.1',
+        self.assertRaises(ValueError, commands.rename, '2.0', '2.0.2')
+        self.assertRaises(ValueError, commands.rename, '1.0', '1.0.1',
                           branch='branch')
 
 
