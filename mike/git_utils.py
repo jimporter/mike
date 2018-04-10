@@ -51,7 +51,7 @@ def get_config(key):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('Error getting config: {}'.format(stderr))
+        raise GitError('error getting config: {}'.format(stderr))
     return stdout.strip()
 
 
@@ -60,7 +60,7 @@ def get_latest_commit(rev):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('Error getting latest commit: {}'.format(stderr))
+        raise GitError('error getting latest commit: {}'.format(stderr))
     return stdout.strip()
 
 
@@ -69,7 +69,7 @@ def update_branch(remote, branch, strict=False):
         rev = get_latest_commit('{}/{}'.format(remote, branch))
         cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), rev]
         if sp.call(cmd) != 0:  # pragma: no cover
-            raise GitError('Failed to update branch')
+            raise GitError('failed to update branch')
     except GitError:
         # Couldn't get any commits, so there's probably no branch (which is
         # usually ok).
@@ -146,17 +146,17 @@ class Commit(object):
 
     def finish(self):
         if self._finished:
-            raise GitError('Commit already finalized')
+            raise GitError('commit already finalized')
         self._finished = True
 
         self._write('\n')
         self._pipe.stdin.close()
         if self._pipe.wait() != 0:  # pragma: no cover
-            raise GitError('Failed to process commit')
+            raise GitError('failed to process commit')
 
     def abort(self):
         if self._finished:
-            raise GitError('Commit already finalized')
+            raise GitError('commit already finalized')
         self._finished = True
 
         self._pipe.stdin.close()
@@ -170,7 +170,7 @@ def push_branch(remote, branch, force=False):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('Failed to push branch: {}'.format(stderr))
+        raise GitError('failed to push branch: {}'.format(stderr))
 
 
 def walk_files(srcdir, dstdirs=['']):
@@ -197,9 +197,9 @@ def file_mode(branch, filename):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('Unable to read file: {}'.format(stderr))
+        raise GitError('unable to read file: {}'.format(stderr))
     if not stdout:
-        raise GitError('File not found')
+        raise GitError('file not found')
 
     return int(stdout.split(' ', 1)[0], 8)
 
@@ -212,5 +212,5 @@ def read_file(branch, filename, universal_newlines=False):
                  universal_newlines=universal_newlines)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('Unable to read file: {}'.format(stderr))
+        raise GitError('unable to read file: {}'.format(stderr))
     return stdout
