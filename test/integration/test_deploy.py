@@ -6,7 +6,7 @@ import unittest
 from itertools import chain
 from six import assertRegex
 
-from . import assertPopen
+from . import assertPopen, assertOutput
 from .. import *
 from mike import git_utils, versions
 
@@ -80,5 +80,115 @@ class TestDeploy(unittest.TestCase):
         clone_rev = git_utils.get_latest_commit('gh-pages')
 
         with pushd(self.stage):
+            self.assertEqual(git_utils.get_latest_commit('gh-pages'),
+                             clone_rev)
+
+    def test_remote_empty(self):
+        stage_dir('deploy_clone')
+        check_call_silent(['git', 'clone', self.stage, '.'])
+        git_config()
+
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file.txt', 'this is some text'
+            ))
+        old_rev = git_utils.get_latest_commit('gh-pages')
+
+        assertPopen(['mike', 'deploy', '1.0'])
+        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), old_rev)
+
+    def test_local_empty(self):
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file.txt', 'this is some text'
+            ))
+        origin_rev = git_utils.get_latest_commit('gh-pages')
+
+        stage_dir('deploy_clone')
+        check_call_silent(['git', 'clone', self.stage, '.'])
+        git_config()
+
+        assertPopen(['mike', 'deploy', '1.0'])
+        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
+
+    def test_ahead_remote(self):
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file.txt', 'this is some text'
+            ))
+        origin_rev = git_utils.get_latest_commit('gh-pages')
+
+        stage_dir('deploy_clone')
+        check_call_silent(['git', 'clone', self.stage, '.'])
+        check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
+        git_config()
+
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file2.txt', 'this is some text'
+            ))
+        old_rev = git_utils.get_latest_commit('gh-pages')
+
+        assertPopen(['mike', 'deploy', '1.0'])
+        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), old_rev)
+        self.assertEqual(git_utils.get_latest_commit('gh-pages^^'), origin_rev)
+
+    def test_behind_remote(self):
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file.txt', 'this is some text'
+            ))
+
+        stage_dir('deploy_clone')
+        check_call_silent(['git', 'clone', self.stage, '.'])
+        check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
+        git_config()
+
+        with pushd(self.stage):
+            with git_utils.Commit('gh-pages', 'add file') as commit:
+                commit.add_file(git_utils.FileInfo(
+                    'file2.txt', 'this is some text'
+                ))
             origin_rev = git_utils.get_latest_commit('gh-pages')
-            self.assertEqual(origin_rev, clone_rev)
+        check_call_silent(['git', 'fetch', 'origin'])
+
+        assertPopen(['mike', 'deploy', '1.0'])
+        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
+
+    def test_diverged_remote(self):
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file.txt', 'this is some text'
+            ))
+
+        stage_dir('deploy_clone')
+        check_call_silent(['git', 'clone', self.stage, '.'])
+        check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
+        git_config()
+
+        with pushd(self.stage):
+            with git_utils.Commit('gh-pages', 'add file') as commit:
+                commit.add_file(git_utils.FileInfo(
+                    'file2-origin.txt', 'this is some text'
+                ))
+            origin_rev = git_utils.get_latest_commit('gh-pages')
+
+        with git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file2.txt', 'this is some text'
+            ))
+        clone_rev = git_utils.get_latest_commit('gh-pages')
+        check_call_silent(['git', 'fetch', 'origin'])
+
+        assertOutput(self, ['mike', 'deploy', '1.0'], output=(
+            'mike: gh-pages has diverged from origin/gh-pages\n' +
+            '  Pass --ignore to ignore this or --rebase to rebase onto ' +
+            'remote\n'
+        ), returncode=1)
+        self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
+
+        assertPopen(['mike', 'deploy', '--ignore', '1.0'])
+        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
+
+        assertPopen(['mike', 'deploy', '--rebase', '1.0'])
+        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)

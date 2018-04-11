@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import sys
 
 from . import commands
 from . import git_utils
@@ -13,7 +14,14 @@ def add_git_arguments(parser, commit=True):
                         help='origin to push to (default: %(default)s)')
     parser.add_argument('-b', '--branch', default='gh-pages',
                         help='branch to commit to (default: %(default)s)')
-    if (commit):
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--rebase', action='store_true',
+                       help='rebase with remote')
+    group.add_argument('--ignore', action='store_true',
+                       help='ignore remote status')
+
+    if commit:
         parser.add_argument('-m', '--message',
                             help='commit message')
         parser.add_argument('-p', '--push', action='store_true',
@@ -22,8 +30,24 @@ def add_git_arguments(parser, commit=True):
                             help='force push when pushing')
 
 
+def check_remote_status(args, strict=False):
+    if args.ignore:
+        return
+
+    try:
+        git_utils.try_rebase_branch(args.remote, args.branch,
+                                    force=args.rebase)
+    except (git_utils.GitBranchDiverged, git_utils.GitRevUnrelated) as e:
+        msg = (str(e) + '\n  Pass --ignore to ignore this or --rebase to ' +
+               'rebase onto remote')
+        if strict:
+            raise ValueError(msg)
+        else:
+            sys.stderr.write('warning: {}\n'.format(msg))
+
+
 def deploy(args):
-    git_utils.update_branch(args.remote, args.branch)
+    check_remote_status(args, strict=True)
     mkdocs.build(args.config_file)
     commands.deploy(mkdocs.site_dir, args.version, args.title, args.alias,
                     args.branch, args.message)
@@ -32,21 +56,21 @@ def deploy(args):
 
 
 def delete(args):
-    git_utils.update_branch(args.remote, args.branch)
+    check_remote_status(args, strict=True)
     commands.delete(args.version, args.all, args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
 def rename(args):
-    git_utils.update_branch(args.remote, args.branch)
+    check_remote_status(args, strict=True)
     commands.rename(args.version, args.title, args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
 def list_versions(args):
-    git_utils.update_branch(args.remote, args.branch)
+    check_remote_status(args)
     all_versions = commands.list_versions(args.branch)
     for i in all_versions:
         aliases = (' [{}]'.format(', '.join(sorted(i.aliases)))
@@ -62,7 +86,7 @@ def list_versions(args):
 
 
 def set_default(args):
-    git_utils.update_branch(args.remote, args.branch)
+    check_remote_status(args, strict=True)
     commands.set_default(args.version, args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
@@ -73,7 +97,7 @@ def install_extras(args):
 
 
 def serve(args):
-    git_utils.update_branch(args.remote, args.branch)
+    check_remote_status(args)
     commands.serve(args.dev_addr, args.branch)
 
 
@@ -152,7 +176,7 @@ def main():
     args = parser.parse_args()
     try:
         return args.func(args)
-    except Exception as e:  # pragma: no cover
+    except Exception as e:
         parser.exit(1, '{prog}: {error}\n'.format(
             prog=parser.prog, error=str(e)
         ))

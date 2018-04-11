@@ -21,11 +21,28 @@ import sys
 import time
 import unicodedata
 
+from enum import Enum
 from six import binary_type, text_type
+
+BranchStatus = Enum('BranchState', ['even', 'ahead', 'behind', 'diverged'])
 
 
 class GitError(OSError):
     pass
+
+
+class GitBranchDiverged(GitError):
+    def __init__(self, branch1, branch2):
+        GitError.__init__(self, '{} has diverged from {}'.format(
+            branch1, branch2
+        ))
+
+
+class GitRevUnrelated(GitError):
+    def __init__(self, branch1, branch2):
+        GitError.__init__(self, '{} is unrelated to {}'.format(
+            branch1, branch2
+        ))
 
 
 def git_path(path):
@@ -64,17 +81,59 @@ def get_latest_commit(rev):
     return stdout.strip()
 
 
-def update_branch(remote, branch, strict=False):
+def has_branch(branch):
     try:
-        rev = get_latest_commit('{}/{}'.format(remote, branch))
-        cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), rev]
-        if sp.call(cmd) != 0:  # pragma: no cover
-            raise GitError('failed to update branch')
+        get_latest_commit(branch)
+        return True
     except GitError:
-        # Couldn't get any commits, so there's probably no branch (which is
-        # usually ok).
-        if strict:
-            raise
+        return False
+
+
+def get_merge_base(rev1, rev2):
+    cmd = ['git', 'merge-base', rev1, rev2]
+    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    stdout, stderr = p.communicate()
+    result = p.wait()
+
+    if result == 0:
+        return stdout.strip()
+    elif result == 1:
+        raise GitRevUnrelated(rev1, rev2)
+    raise GitError('error getting merge-base: {}'.format(stderr))
+
+
+def compare_branches(branch1, branch2):
+    base = get_merge_base(branch1, branch2)
+    latest1 = get_latest_commit(branch1)
+    latest2 = get_latest_commit(branch2)
+
+    if base == latest1:
+        return BranchStatus.even if base == latest2 else BranchStatus.behind
+    else:
+        return BranchStatus.ahead if base == latest2 else BranchStatus.diverged
+
+
+def update_ref(branch, new_ref):
+    cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), new_ref]
+    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    stderr = p.communicate()[1]
+    if p.wait() != 0:
+        raise GitError('error updating ref: {}'.format(stderr))
+
+
+def try_rebase_branch(remote, branch, force=False):
+    remote_branch = '{}/{}'.format(remote, branch)
+    if not has_branch(remote_branch):
+        return
+
+    if force or not has_branch(branch):
+        update_ref(branch, get_latest_commit(remote_branch))
+    else:
+        status = compare_branches(branch, remote_branch)
+        if status == BranchStatus.behind:
+            update_ref(branch, get_latest_commit(remote_branch))
+        if status == BranchStatus.diverged:
+            raise GitBranchDiverged(branch, remote_branch)
 
 
 class FileInfo(object):
