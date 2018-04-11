@@ -72,8 +72,8 @@ def get_config(key):
     return stdout.strip()
 
 
-def get_latest_commit(rev):
-    cmd = ['git', 'rev-list', '--max-count=1', rev, '--']
+def get_latest_commit(rev, short=False):
+    cmd = ['git', 'rev-parse'] + (['--short'] if short else []) + [rev]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:

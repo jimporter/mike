@@ -42,7 +42,7 @@ def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
             'Deployed {rev} to {doc_version} with MkDocs {mkdocs_version} ' +
             'and mike {mike_version}'
         ).format(
-            rev=git_utils.get_latest_commit('HEAD'),
+            rev=git_utils.get_latest_commit('HEAD', short=True),
             doc_version=version,
             mkdocs_version=mkdocs.version(),
             mike_version=app_version

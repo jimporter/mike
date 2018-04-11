@@ -39,12 +39,19 @@ class TestGetLatestCommit(unittest.TestCase):
         git_init()
         commit_file('file.txt', 'initial commit')
 
-    def test_master(self):
+    def test_latest_commit(self):
         rev = git_utils.get_latest_commit('master')
         expected_rev = (subprocess.check_output(
             ['git', 'rev-parse', 'master'], universal_newlines=True
         ).rstrip())
         self.assertEqual(rev, expected_rev)
+
+    def test_short(self):
+        rev = git_utils.get_latest_commit('master', short=True)
+        expected_rev = (subprocess.check_output(
+            ['git', 'rev-parse', 'master'], universal_newlines=True
+        ).rstrip())
+        self.assertEqual(rev, expected_rev[0:len(rev)])
 
     def test_nonexistent_branch(self):
         self.assertRaises(git_utils.GitError, git_utils.get_latest_commit,

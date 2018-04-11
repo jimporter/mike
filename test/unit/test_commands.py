@@ -41,6 +41,7 @@ class TestDeploy(unittest.TestCase):
 
     def _test_deploy(self, expected_message=None,
                      version=versions.VersionInfo('1.0')):
+        rev = git_utils.get_latest_commit('master', short=True)
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
         if expected_message:
@@ -48,7 +49,8 @@ class TestDeploy(unittest.TestCase):
         else:
             assertRegex(
                 self, message,
-                r'^Deployed \S+ to 1.0 with MkDocs \S+ and mike \S+$'
+                r'^Deployed {} to 1.0 with MkDocs \S+ and mike \S+$'
+                .format(rev)
             )
 
         dirs = {str(version.version)} | version.aliases
