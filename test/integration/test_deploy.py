@@ -72,7 +72,7 @@ class TestDeploy(unittest.TestCase):
     def test_push(self):
         check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
                            'ignore'])
-        clone = stage_dir('deploy_clone')
+        stage_dir('deploy_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 

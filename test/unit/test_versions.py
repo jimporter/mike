@@ -157,4 +157,3 @@ class TestVersions(unittest.TestCase):
             {'version': '2.0', 'title': '2.0.2', 'aliases': ['latest']},
             {'version': '1.0', 'title': '1.0.1', 'aliases': ['stable']}
         ])
-

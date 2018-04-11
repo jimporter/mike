@@ -19,6 +19,7 @@ if os.path.exists(test_stage_dir):
     shutil.rmtree(test_stage_dir)
 os.makedirs(test_stage_dir)
 
+
 def stage_dir(name):
     stage = tempfile.mkdtemp(prefix=name + '-', dir=test_stage_dir)
     os.chdir(stage)

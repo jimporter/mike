@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import os
-import re
 import subprocess
 import sys
 import unittest
@@ -87,6 +86,9 @@ class TestUpdateBranch(unittest.TestCase):
         check_call_silent(['git', 'fetch', 'origin'])
         self.assertRaises(git_utils.GitError, git_utils.update_branch,
                           'upstream', 'master', True)
+        new_rev = git_utils.get_latest_commit('master')
+
+        self.assertEqual(old_rev, new_rev)
 
 
 class TestCommit(unittest.TestCase):

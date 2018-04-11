@@ -68,7 +68,7 @@ class TestDelete(unittest.TestCase):
         self._deploy()
         check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
                            'ignore'])
-        clone = stage_dir('delete_clone')
+        stage_dir('delete_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 

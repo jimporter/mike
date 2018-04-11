@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import os
 import unittest
 
 from . import assertPopen
@@ -22,6 +21,7 @@ class TestList(unittest.TestCase):
             commit.add_file(git_utils.FileInfo(
                 'versions.json', all_versions.dumps()
             ))
+
     def test_list(self):
         self.assertEqual(
             assertPopen(['mike', 'list']),

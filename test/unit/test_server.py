@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-import os
-import re
-import subprocess
 import sys
 import unittest
 from six import assertRegex

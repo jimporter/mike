@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from six import BytesIO
 
+
 class MockRequest(object):
     class LoggingBytesIO(BytesIO):
         def __init__(self, parent):

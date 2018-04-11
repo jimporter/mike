@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import os
 import platform
 import signal
 import subprocess
@@ -8,7 +7,7 @@ import time
 import unittest
 
 from .. import *
-from mike import git_utils, versions
+from mike import git_utils
 
 
 class TestList(unittest.TestCase):

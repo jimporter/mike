@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import sys
 from setuptools import setup, find_packages, Command
 
 from mike.app_version import version
@@ -51,11 +52,16 @@ try:
 
     class LintCommand(Flake8):
         def distribution_files(self):
-            return ['setup.py', 'mike']
+            return ['setup.py', 'mike', 'test']
 
     custom_cmds['lint'] = LintCommand
 except ImportError:
     pass
+
+more_requires = []
+
+if sys.version_info < (3, 4):
+    more_requires.append('enum34')
 
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
@@ -100,7 +106,7 @@ setup(
     include_package_data=True,
 
     install_requires=(['mkdocs >= 0.17.0', 'jinja2', 'packaging',
-                       'ruamel.yaml < 0.15', 'six']),
+                       'ruamel.yaml < 0.15', 'six'] + more_requires),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'mock', 'pypandoc'],
         'test': ['coverage', 'flake8 >= 3.0', 'mock'],

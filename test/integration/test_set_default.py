@@ -56,7 +56,7 @@ class TestSetDefault(unittest.TestCase):
         self._deploy()
         check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
                            'ignore'])
-        clone = stage_dir('set_default_clone')
+        stage_dir('set_default_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
