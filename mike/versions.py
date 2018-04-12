@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import json
-from itertools import chain
 from packaging.version import LegacyVersion as Version
 from six import iteritems
 
@@ -28,6 +27,20 @@ class VersionInfo(object):
     def __eq__(self, rhs):
         return (self.version == rhs.version and self.title == rhs.title and
                 self.aliases == rhs.aliases)
+
+    def __repr__(self):
+        return '<VersionInfo({!r}, {!r}, {{{}}})>'.format(
+            self.version, self.title, ', '.join(repr(i) for i in self.aliases)
+        )
+
+    def update(self, title=None, aliases=[]):
+        if title is not None:
+            self.title = title
+
+        aliases = set(aliases)
+        added = aliases - self.aliases
+        self.aliases |= aliases
+        return added
 
 
 class Versions(object):
@@ -66,43 +79,39 @@ class Versions(object):
                 return (k, name)
         return None
 
-    def add(self, version, title=None, aliases=[], strict=False):
-        info = VersionInfo(version, title, aliases)
+    def add(self, version, title=None, aliases=[]):
+        for i in aliases:
+            if self.find(i):
+                raise ValueError("'{}' already exists".format(i))
 
-        if info.version in self._data:
-            old = self._data[info.version].aliases
-            added = info.aliases - old
-            removed = old - info.aliases
+        v = _ensure_version(version)
+        if v in self._data:
+            self._data[v].update(title, aliases)
         else:
-            added = set(chain(info.aliases, [str(info.version)]))
-            removed = set()
+            if self.find(version):
+                raise ValueError("'{}' already exists".format(version))
+            self._data[v] = VersionInfo(version, title, aliases)
 
-        if removed and strict:
-            raise ValueError('orphaned aliases')
-        for i in added:
-            key = self.find(i)
-            if key:
-                if strict:
-                    raise ValueError('overwriting version')
-                self._remove(key)
-
-        self._data[info.version] = info
-
-    def _remove(self, key):
-        if len(key) == 1:
-            del self._data[key[0]]
-        else:
-            self._data[key[0]].aliases.remove(key[1])
+        return self._data[v]
 
     def remove(self, version):
         key = self.find(version)
         if key is None:
             raise KeyError(version)
-        self._remove(key)
+        elif len(key) == 1:
+            item = self._data[key[0]]
+            del self._data[key[0]]
+        else:
+            item = key[1]
+            self._data[key[0]].aliases.remove(key[1])
+        return item
 
     def difference_update(self, versions):
+        versions = list(versions)
         for i in versions:
-            self.remove(i)
+            if self.find(i) is None:
+                raise KeyError(i)
+        return [self.remove(i) for i in versions]
 
     def rename(self, version, title):
         key = self.find(version)

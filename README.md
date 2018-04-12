@@ -50,7 +50,8 @@ mike deploy [version] [alias]...
 ```
 
 If you'd like to specify a title for this version that doesn't match the version
-string, you can pass `-t TITLE`/`--title=TITLE` as well.
+string, you can pass `-t TITLE`/`--title=TITLE` as well. If `version` already
+exists, this command will *also* update all of the pre-existing aliases for it.
 
 Finally, to push your docs to a remote branch, simply add `-p`/`--push` to your
 command. (Note: this will likely become the default eventually.)
@@ -77,7 +78,10 @@ made a mistake or you're pruning unsupported versions. You can do this via the
 mike delete [version-or-alias]...
 ```
 
-If you'd like to completely wipe the contents of your docs branch, just run
+If `version-or-alias` is a version, this will delete the version and all its
+aliases from the branch; if it's an alias, it will only delete that alias.
+
+If you'd like to *completely* wipe the contents of your docs branch, just run
 `mike delete --all`. Like `deploy` above, you can specify `-p`/`--push` to
 push this commit as well.
 

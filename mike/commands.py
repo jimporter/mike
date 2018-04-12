@@ -48,10 +48,9 @@ def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
             mike_version=app_version
         )
 
-    destdirs = [version] + aliases
-
     all_versions = list_versions(branch)
-    all_versions.add(version, title, aliases)
+    info = all_versions.add(version, title, aliases)
+    destdirs = [str(info.version)] + list(info.aliases)
 
     with git_utils.Commit(branch, message) as commit:
         commit.delete_files(destdirs)
@@ -80,11 +79,15 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
         else:
             all_versions = list_versions(branch)
             try:
-                all_versions.difference_update(versions)
+                removed = all_versions.difference_update(versions)
             except KeyError as e:
                 raise ValueError('version {} does not exist'.format(e))
 
-            commit.delete_files(versions)
+            for i in removed:
+                if isinstance(i, str):
+                    commit.delete_files([i])
+                else:
+                    commit.delete_files([str(i.version)] + list(i.aliases))
             commit.add_file(versions_to_file_info(all_versions))
 
 

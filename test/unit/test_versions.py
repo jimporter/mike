@@ -9,151 +9,159 @@ from mike.versions import VersionInfo, Versions
 
 class TestVersions(unittest.TestCase):
     def test_add(self):
-        v = Versions()
-        v.add('1.0')
-        self.assertEqual(list(v), [
+        versions = Versions()
+        v = versions.add('1.0')
+        self.assertEqual(v, VersionInfo('1.0'))
+        self.assertEqual(list(versions), [
             VersionInfo('1.0'),
         ])
 
     def test_add_title(self):
-        v = Versions()
-        v.add('1.0', '1.0.0')
-        self.assertEqual(list(v), [
+        versions = Versions()
+        v = versions.add('1.0', '1.0.0')
+        self.assertEqual(v, VersionInfo('1.0', '1.0.0'))
+        self.assertEqual(list(versions), [
             VersionInfo('1.0', '1.0.0'),
         ])
 
     def test_add_aliases(self):
-        v = Versions()
-        v.add('1.0', aliases=['latest'])
-        self.assertEqual(list(v), [
+        versions = Versions()
+        v = versions.add('1.0', aliases=['latest'])
+        self.assertEqual(v, VersionInfo('1.0', aliases={'latest'}))
+        self.assertEqual(list(versions), [
             VersionInfo('1.0', aliases={'latest'}),
         ])
 
     def test_add_overwrite(self):
-        v = Versions()
-        v.add('1.0', '1.0.0', ['latest'])
-        v.add('1.0', '1.0.1', ['greatest'])
-        self.assertEqual(list(v), [
-            VersionInfo('1.0', '1.0.1', aliases={'greatest'}),
+        versions = Versions()
+        versions.add('1.0', '1.0.0', ['latest'])
+        v = versions.add('1.0', '1.0.1', ['greatest'])
+        self.assertEqual(v, VersionInfo('1.0', '1.0.1',
+                                        {'latest', 'greatest'}))
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0', '1.0.1', {'latest', 'greatest'}),
         ])
 
-    def test_add_overwrite_other_alias(self):
-        v = Versions()
-        v.add('1.0', aliases=['latest'])
-        v.add('2.0', aliases=['latest'])
-        self.assertEqual(list(v), [
-            VersionInfo('2.0', aliases={'latest'}),
-            VersionInfo('1.0'),
-        ])
-
-    def test_add_overwrite_other_version(self):
-        v = Versions()
-        v.add('1.0b1')
-        v.add('1.0', aliases=['1.0b1'])
-        self.assertEqual(list(v), [
-            VersionInfo('1.0', aliases={'1.0b1'}),
-        ])
-
-    def test_add_strict(self):
-        v = Versions()
-        v.add('2.0', aliases=['latest'])
-        v.add('1.0', aliases=['greatest'])
-        v.add('1.0', aliases=['greatest'], strict=True)
-        self.assertEqual(list(v), [
-            VersionInfo('2.0', aliases={'latest'}),
-            VersionInfo('1.0', aliases={'greatest'}),
-        ])
-
+    def test_add_overwrite_alias(self):
+        versions = Versions()
+        versions.add('1.0', aliases=['latest'])
         with self.assertRaises(ValueError):
-            v.add('1.0', aliases=['latest', 'greatest'], strict=True)
+            versions.add('2.0', aliases=['latest'])
+
+    def test_add_overwrite_version_with_alias(self):
+        versions = Versions()
+        versions.add('1.0b1')
         with self.assertRaises(ValueError):
-            v.add('1.0', strict=True)
+            versions.add('1.0', aliases=['1.0b1'])
+
+    def test_add_overwrite_alias_with_version(self):
+        versions = Versions()
+        versions.add('1.0b1', aliases=['1.0'])
+        with self.assertRaises(ValueError):
+            versions.add('1.0')
 
     def test_add_invalid(self):
-        v = Versions()
+        versions = Versions()
         with self.assertRaises(ValueError):
-            v.add('1.0', aliases=['1.0'])
+            versions.add('1.0', aliases=['1.0'])
 
     def test_rename_version(self):
-        v = Versions()
-        v.add('1.0', '1.0.0')
-        v.rename('1.0', '1.0.1')
-        self.assertEqual(list(v), [
+        versions = Versions()
+        versions.add('1.0', '1.0.0')
+        versions.rename('1.0', '1.0.1')
+        self.assertEqual(list(versions), [
             VersionInfo('1.0', '1.0.1'),
         ])
 
     def test_rename_alias(self):
-        v = Versions()
-        v.add('1.0', '1.0.0', ['latest'])
-        v.rename('latest', '1.0.1')
-        self.assertEqual(list(v), [
+        versions = Versions()
+        versions.add('1.0', '1.0.0', ['latest'])
+        versions.rename('latest', '1.0.1')
+        self.assertEqual(list(versions), [
             VersionInfo('1.0', '1.0.1', ['latest']),
         ])
 
     def test_rename_invalid(self):
-        v = Versions()
+        versions = Versions()
         with self.assertRaises(KeyError):
-            v.rename('1.0', '1.0.0')
+            versions.rename('1.0', '1.0.0')
 
     def test_len(self):
-        v = Versions()
-        v.add('1.0')
-        v.add('1.0')
-        v.add('2.0')
-        self.assertEqual(len(v), 2)
+        versions = Versions()
+        versions.add('1.0')
+        versions.add('1.0')
+        versions.add('2.0')
+        self.assertEqual(len(versions), 2)
 
     def test_getitem(self):
-        v = Versions()
-        v.add('1.0')
-        self.assertEqual(v['1.0'], VersionInfo('1.0'))
-        self.assertEqual(v[Version('1.0')], VersionInfo('1.0'))
+        versions = Versions()
+        versions.add('1.0')
+        self.assertEqual(versions['1.0'], VersionInfo('1.0'))
+        self.assertEqual(versions[Version('1.0')], VersionInfo('1.0'))
 
     def test_remove_version(self):
-        v = Versions()
-        v.add('1.0')
-        v.remove('1.0')
-        self.assertEqual(list(v), [])
+        versions = Versions()
+        versions.add('1.0')
+        v = versions.remove('1.0')
+        self.assertEqual(v, VersionInfo('1.0'))
+        self.assertEqual(list(versions), [])
 
     def test_remove_alias(self):
-        v = Versions()
-        v.add('1.0', aliases=['latest'])
-        v.remove('latest')
-        self.assertEqual(list(v), [
+        versions = Versions()
+        versions.add('1.0', aliases=['latest'])
+        v = versions.remove('latest')
+        self.assertEqual(v, 'latest')
+        self.assertEqual(list(versions), [
             VersionInfo('1.0'),
         ])
 
     def test_remove_nonexistent(self):
-        v = Versions()
+        versions = Versions()
         with self.assertRaises(KeyError):
-            v.remove('1.0')
+            versions.remove('1.0')
 
     def test_difference_update(self):
-        v = Versions()
-        v.add('1.0')
-        v.add('2.0')
-        v.add('3.0', aliases=['latest'])
-        v.difference_update(['1.0', '2.0', 'latest'])
-        self.assertEqual(list(v), [
+        versions = Versions()
+        versions.add('1.0')
+        versions.add('2.0')
+        versions.add('3.0', aliases=['latest'])
+        v = versions.difference_update(['1.0', '2.0', 'latest'])
+        self.assertEqual(v, [VersionInfo('1.0'), VersionInfo('2.0'), 'latest'])
+        self.assertEqual(list(versions), [
             VersionInfo('3.0'),
         ])
 
+    def test_difference_update_nonexistent(self):
+        versions = Versions()
+        versions.add('1.0')
+        versions.add('2.0')
+        versions.add('3.0', aliases=['latest'])
+
+        with self.assertRaises(KeyError):
+            versions.difference_update(['1.0', 'latest', '4.0'])
+        self.assertEqual(list(versions), [
+            VersionInfo('3.0', aliases=['latest']),
+            VersionInfo('2.0'),
+            VersionInfo('1.0'),
+        ])
+
     def test_loads(self):
-        v = Versions.loads(
+        versions = Versions.loads(
             '[' +
             '{"version": "2.0", "title": "2.0.2", "aliases": ["latest"]}, ' +
             '{"version": "1.0", "title": "1.0.1", "aliases": ["stable"]}' +
             ']'
         )
-        self.assertEqual(list(v), [
+        self.assertEqual(list(versions), [
             VersionInfo('2.0', '2.0.2', aliases={'latest'}),
             VersionInfo('1.0', '1.0.1', aliases={'stable'}),
         ])
 
     def test_dumps(self):
-        v = Versions()
-        v.add('2.0', '2.0.2', ['latest'])
-        v.add('1.0', '1.0.1', ['stable'])
-        self.assertEqual(json.loads(v.dumps()), [
+        versions = Versions()
+        versions.add('2.0', '2.0.2', ['latest'])
+        versions.add('1.0', '1.0.1', ['stable'])
+        self.assertEqual(json.loads(versions.dumps()), [
             {'version': '2.0', 'title': '2.0.2', 'aliases': ['latest']},
             {'version': '1.0', 'title': '1.0.1', 'aliases': ['stable']}
         ])

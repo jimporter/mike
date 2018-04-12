@@ -33,36 +33,41 @@ class TestListVersions(unittest.TestCase):
         self.assertEqual(list(commands.list_versions()), [])
 
 
-class TestDeploy(unittest.TestCase):
-    def setUp(self):
-        self.stage = stage_dir('deploy')
-        git_init()
-        commit_file('file.txt')
-
-    def _test_deploy(self, expected_message=None,
-                     version=versions.VersionInfo('1.0')):
-        rev = git_utils.get_latest_commit('master', short=True)
+class TestBase(unittest.TestCase):
+    def _test_state(self, expected_message, expected_versions):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
-        if expected_message:
-            self.assertEqual(message, expected_message)
-        else:
-            assertRegex(
-                self, message,
-                r'^Deployed {} to 1.0 with MkDocs \S+ and mike \S+$'
-                .format(rev)
-            )
+        assertRegex(self, message, expected_message)
 
-        dirs = {str(version.version)} | version.aliases
+        dirs = set()
+        for i in expected_versions:
+            dirs |= {str(i.version)} | i.aliases
         contents = {'versions.json'} | set(chain.from_iterable(
             (d, d + '/file.txt') for d in dirs
         ))
         assertDirectory('.', contents)
 
         with open('versions.json') as f:
-            self.assertEqual(list(versions.Versions.loads(f.read())), [
-                version,
-            ])
+            self.assertEqual(list(versions.Versions.loads(f.read())),
+                             expected_versions)
+
+
+class TestDeploy(TestBase):
+    def setUp(self):
+        self.stage = stage_dir('deploy')
+        git_init()
+        commit_file('file.txt')
+
+    def _test_deploy(self, expected_message=None,
+                     expected_versions=[versions.VersionInfo('1.0')]):
+        if not expected_message:
+            rev = git_utils.get_latest_commit('master', short=True)
+            expected_message = (
+                r'^Deployed {} to 1.0 with MkDocs \S+ and mike \S+$'
+                .format(rev)
+            )
+
+        self._test_state(expected_message, expected_versions)
 
     def test_default(self):
         commands.deploy(self.stage, '1.0')
@@ -72,14 +77,16 @@ class TestDeploy(unittest.TestCase):
     def test_title(self):
         commands.deploy(self.stage, '1.0', '1.0.0')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy(version=versions.VersionInfo('1.0', '1.0.0'))
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', '1.0.0')
+        ])
 
     def test_aliases(self):
         commands.deploy(self.stage, '1.0', aliases=['latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy(version=versions.VersionInfo(
+        self._test_deploy(expected_versions=[versions.VersionInfo(
             '1.0', aliases=['latest']
-        ))
+        )])
 
     def test_branch(self):
         commands.deploy(self.stage, '1.0', branch='branch')
@@ -89,42 +96,55 @@ class TestDeploy(unittest.TestCase):
     def test_commit_message(self):
         commands.deploy(self.stage, '1.0', message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy('commit message')
+        self._test_deploy('^commit message$')
+
+    def test_overwrite_version(self):
+        with git_utils.Commit('gh-pages', 'add versions.json') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'versions.json',
+                '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
+            ))
+            commit.add_file(git_utils.FileInfo('1.0/old-file.txt', ''))
+            commit.add_file(git_utils.FileInfo('latest/old-file.txt', ''))
+
+        commands.deploy(self.stage, '1.0', '1.0.1', ['greatest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[versions.VersionInfo(
+            '1.0', '1.0.1', ['latest', 'greatest']
+        )])
 
 
-class TestDelete(unittest.TestCase):
+class TestDelete(TestBase):
     def setUp(self):
         self.stage = stage_dir('delete')
         git_init()
         commit_file('file.txt')
 
     def _deploy(self, branch='gh-pages'):
-        commands.deploy(self.stage, '1.0', branch=branch)
+        commands.deploy(self.stage, '1.0', aliases=['stable'], branch=branch)
         commands.deploy(self.stage, '2.0', branch=branch)
 
-    def _test_delete(self, expected_message=None):
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
-        if expected_message:
-            self.assertEqual(message, expected_message)
-        else:
-            assertRegex(self, message, r'^Removed \S+ with mike \S+$')
+    def _test_delete(self, expected_message=None,
+                     expected_versions=[versions.VersionInfo('2.0')]):
+        if not expected_message:
+            expected_message = r'^Removed \S+ with mike \S+$'
 
-        assertDirectory('.', {
-            'versions.json',
-            '2.0',
-            '2.0/file.txt'
-        })
-        with open('versions.json') as f:
-            self.assertEqual(list(versions.Versions.loads(f.read())), [
-                versions.VersionInfo('2.0'),
-            ])
+        self._test_state(expected_message, expected_versions)
 
-    def test_delete_versions(self):
+    def test_delete_version(self):
         self._deploy()
         commands.delete(['1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete()
+
+    def test_delete_alias(self):
+        self._deploy()
+        commands.delete(['stable'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_delete(expected_versions=[
+            versions.VersionInfo('2.0'),
+            versions.VersionInfo('1.0'),
+        ])
 
     def test_delete_all(self):
         self._deploy()
@@ -146,7 +166,7 @@ class TestDelete(unittest.TestCase):
         self._deploy()
         commands.delete(['1.0'], message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_delete('commit message')
+        self._test_delete('^commit message$')
 
     def test_delete_invalid(self):
         self._deploy()
