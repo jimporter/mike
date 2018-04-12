@@ -176,16 +176,16 @@ class TestDelete(TestBase):
                           branch='branch')
 
 
-class TestRename(unittest.TestCase):
+class TestRetitle(unittest.TestCase):
     def setUp(self):
-        self.stage = stage_dir('rename')
+        self.stage = stage_dir('retitle')
         git_init()
         commit_file('file.txt')
 
     def _deploy(self, branch='gh-pages'):
         commands.deploy(self.stage, '1.0', branch=branch)
 
-    def _test_rename(self, expected_message=None):
+    def _test_retitle(self, expected_message=None):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
         if expected_message:
@@ -204,28 +204,28 @@ class TestRename(unittest.TestCase):
                 versions.VersionInfo('1.0', '1.0.1'),
             ])
 
-    def test_rename(self):
+    def test_retitle(self):
         self._deploy()
-        commands.rename('1.0', '1.0.1')
+        commands.retitle('1.0', '1.0.1')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_rename()
+        self._test_retitle()
 
     def test_branch(self):
         self._deploy('branch')
-        commands.rename('1.0', '1.0.1', branch='branch')
+        commands.retitle('1.0', '1.0.1', branch='branch')
         check_call_silent(['git', 'checkout', 'branch'])
-        self._test_rename()
+        self._test_retitle()
 
     def test_commit_message(self):
         self._deploy()
-        commands.rename('1.0', '1.0.1', message='commit message')
+        commands.retitle('1.0', '1.0.1', message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_rename('commit message')
+        self._test_retitle('commit message')
 
-    def test_rename_invalid(self):
+    def test_retitle_invalid(self):
         self._deploy()
-        self.assertRaises(ValueError, commands.rename, '2.0', '2.0.2')
-        self.assertRaises(ValueError, commands.rename, '1.0', '1.0.1',
+        self.assertRaises(ValueError, commands.retitle, '2.0', '2.0.2')
+        self.assertRaises(ValueError, commands.retitle, '1.0', '1.0.1',
                           branch='branch')
 
 

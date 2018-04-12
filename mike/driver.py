@@ -62,9 +62,9 @@ def delete(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
-def rename(args):
+def retitle(args):
     check_remote_status(args, strict=True)
-    commands.rename(args.version, args.title, args.branch, args.message)
+    commands.retitle(args.version, args.title, args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -132,15 +132,15 @@ def main():
     delete_p.add_argument('version', nargs='*', metavar='VERSION',
                           help='version (directory) to delete')
 
-    rename_p = subparsers.add_parser(
-        'rename', help='change the title of a version'
+    retitle_p = subparsers.add_parser(
+        'retitle', help='change the title of a version'
     )
-    rename_p.set_defaults(func=rename)
-    add_git_arguments(rename_p)
-    rename_p.add_argument('version', metavar='VERSION',
-                          help='version (or alias) to rename')
-    rename_p.add_argument('title', metavar='TITLE',
-                          help='the new title to use')
+    retitle_p.set_defaults(func=retitle)
+    add_git_arguments(retitle_p)
+    retitle_p.add_argument('version', metavar='VERSION',
+                           help='version (or alias) to retitle')
+    retitle_p.add_argument('title', metavar='TITLE',
+                           help='the new title to use')
 
     list_p = subparsers.add_parser(
         'list', help='list deployed docs on a branch'

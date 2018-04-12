@@ -107,15 +107,15 @@ mike set-default [version-or-alias]
 Like `deploy` and `delete` above, you can specify `-p`/`--push` to` push this
 commit as well.
 
-### Renaming a Version
+### Changing a Version's Title
 
-As you update your docs, you may want to rename the title of a particular
+As you update your docs, you may want to change the title of a particular
 version. For example, your `1.0` docs might have the title `1.0.0`, and when you
 release a new patch, you want to update the title to `1.0.1`. You can do this
-with the rename command:
+with the `retitle` command:
 
 ```sh
-mike rename [version-or-alias] [title]
+mike retitle [version-or-alias] [title]
 ```
 
 ### More Details

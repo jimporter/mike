@@ -91,7 +91,7 @@ def delete(versions=None, all=False, branch='gh-pages', message=None):
             commit.add_file(versions_to_file_info(all_versions))
 
 
-def rename(version, title, branch='gh-pages', message=None):
+def retitle(version, title, branch='gh-pages', message=None):
     if message is None:
         message = (
             'Set title of version {version} to {title} with mike ' +

@@ -10,9 +10,9 @@ from .. import *
 from mike import git_utils, versions
 
 
-class TestRename(unittest.TestCase):
+class TestRetitle(unittest.TestCase):
     def setUp(self):
-        self.stage = stage_dir('rename')
+        self.stage = stage_dir('retitle')
         git_init()
         copytree(os.path.join(test_data_dir, 'mkdocs'), self.stage)
         check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
@@ -22,7 +22,7 @@ class TestRename(unittest.TestCase):
         for i in versions:
             assertPopen(['mike', 'deploy', '-b', branch, i])
 
-    def _test_rename(self, expected_message=None):
+    def _test_retitle(self, expected_message=None):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
         if expected_message:
@@ -41,24 +41,24 @@ class TestRename(unittest.TestCase):
                 versions.VersionInfo('1.0', '1.0.1'),
             ])
 
-    def test_rename(self):
+    def test_retitle(self):
         self._deploy()
-        assertPopen(['mike', 'rename', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_rename()
+        self._test_retitle()
 
     def test_branch(self):
         self._deploy('branch')
-        assertPopen(['mike', 'rename', '1.0', '1.0.1', '-b', 'branch'])
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-b', 'branch'])
         check_call_silent(['git', 'checkout', 'branch'])
-        self._test_rename()
+        self._test_retitle()
 
     def test_commit_message(self):
         self._deploy()
-        assertPopen(['mike', 'rename', '1.0', '1.0.1', '-m',
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-m',
                      'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_rename('commit message')
+        self._test_retitle('commit message')
 
     def test_push(self):
         self._deploy()
@@ -68,7 +68,7 @@ class TestRename(unittest.TestCase):
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
-        assertPopen(['mike', 'rename', '1.0', '1.0.1', '-p'])
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-p'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
 
         with pushd(self.stage):
@@ -76,32 +76,32 @@ class TestRename(unittest.TestCase):
             self.assertEqual(origin_rev, clone_rev)
 
     def test_remote_empty(self):
-        stage_dir('rename_clone')
+        stage_dir('retitle_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
         self._deploy()
         old_rev = git_utils.get_latest_commit('gh-pages')
 
-        assertPopen(['mike', 'rename', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), old_rev)
 
     def test_local_empty(self):
         self._deploy()
         origin_rev = git_utils.get_latest_commit('gh-pages')
 
-        stage_dir('rename_clone')
+        stage_dir('retitle_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
-        assertPopen(['mike', 'rename', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
     def test_ahead_remote(self):
         self._deploy()
         origin_rev = git_utils.get_latest_commit('gh-pages')
 
-        stage_dir('rename_clone')
+        stage_dir('retitle_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
         git_config()
@@ -109,14 +109,14 @@ class TestRename(unittest.TestCase):
         self._deploy(versions=['2.0'])
         old_rev = git_utils.get_latest_commit('gh-pages')
 
-        assertPopen(['mike', 'rename', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), old_rev)
         self.assertEqual(git_utils.get_latest_commit('gh-pages^^'), origin_rev)
 
     def test_behind_remote(self):
         self._deploy()
 
-        stage_dir('rename_clone')
+        stage_dir('retitle_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
         git_config()
@@ -126,13 +126,13 @@ class TestRename(unittest.TestCase):
             origin_rev = git_utils.get_latest_commit('gh-pages')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        assertPopen(['mike', 'rename', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
     def test_diverged_remote(self):
         self._deploy()
 
-        stage_dir('rename_clone')
+        stage_dir('retitle_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])
         check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
         git_config()
@@ -145,15 +145,15 @@ class TestRename(unittest.TestCase):
         clone_rev = git_utils.get_latest_commit('gh-pages')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        assertOutput(self, ['mike', 'rename', '1.0', '1.0.1'], output=(
+        assertOutput(self, ['mike', 'retitle', '1.0', '1.0.1'], output=(
             'mike: gh-pages has diverged from origin/gh-pages\n' +
             '  Pass --ignore to ignore this or --rebase to rebase onto ' +
             'remote\n'
         ), returncode=1)
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        assertPopen(['mike', 'rename', '--ignore', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '--ignore', '1.0', '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
 
-        assertPopen(['mike', 'rename', '--rebase', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '--rebase', '1.0', '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
