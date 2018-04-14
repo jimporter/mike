@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import mock
 import os
+import re
 import ruamel.yaml as yaml
 import subprocess
 import unittest
@@ -176,6 +177,68 @@ class TestDelete(TestBase):
                           branch='branch')
 
 
+class TestAlias(TestBase):
+    def setUp(self):
+        self.stage = stage_dir('alias')
+        git_init()
+        commit_file('file.txt')
+
+    def _deploy(self, branch='gh-pages'):
+        commands.deploy(self.stage, '1.0', aliases=['latest'], branch=branch)
+
+    def _test_alias(self, expected_message=None, expected_src='1.0',
+                    expected_aliases=['greatest']):
+        if not expected_message:
+            expected_message = r'^Copied {} to {} with mike \S+$'.format(
+                re.escape(expected_src),
+                re.escape(', '.join(expected_aliases))
+            )
+
+        self._test_state(expected_message, [
+            versions.VersionInfo('1.0', aliases=expected_aliases + ['latest'])
+        ])
+
+    def test_alias_from_version(self):
+        self._deploy()
+        commands.alias('1.0', ['greatest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias()
+
+    def test_alias_from_alias(self):
+        self._deploy()
+        commands.alias('latest', ['greatest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(expected_src='latest')
+
+    def xtest_delete_all(self):
+        self._deploy()
+        commands.delete(all=True)
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
+                                          universal_newlines=True).rstrip()
+        assertRegex(self, message, r'^Removed everything with mike \S+$')
+        assertDirectory('.', set())
+
+    def test_branch(self):
+        self._deploy('branch')
+        commands.alias('1.0', ['greatest'], branch='branch')
+        check_call_silent(['git', 'checkout', 'branch'])
+        self._test_alias()
+
+    def test_commit_message(self):
+        self._deploy()
+        commands.alias('1.0', ['greatest'], message='commit message')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias('^commit message$')
+
+    def test_alias_invalid(self):
+        self._deploy()
+        self.assertRaises(ValueError, commands.alias, '2.0', ['alias'])
+        self.assertRaises(ValueError, commands.alias, '1.0', ['alias'],
+                          branch='branch')
+
+
 class TestRetitle(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('retitle')
@@ -191,8 +254,8 @@ class TestRetitle(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message, r'^Set title of version \S+ to ' +
-                        r'1\.0\.1 with mike \S+$')
+            assertRegex(self, message,
+                        r'^Set title of \S+ to 1\.0\.1 with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',

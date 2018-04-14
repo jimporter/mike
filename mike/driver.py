@@ -62,6 +62,13 @@ def delete(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
+def alias(args):
+    check_remote_status(args, strict=True)
+    commands.alias(args.version, args.alias, args.branch, args.message)
+    if args.push:
+        git_utils.push_branch(args.remote, args.branch, args.force)
+
+
 def retitle(args):
     check_remote_status(args, strict=True)
     commands.retitle(args.version, args.title, args.branch, args.message)
@@ -131,6 +138,16 @@ def main():
                           help='delete everything')
     delete_p.add_argument('version', nargs='*', metavar='VERSION',
                           help='version (directory) to delete')
+
+    alias_p = subparsers.add_parser(
+        'alias', help='alias docs from a branch'
+    )
+    alias_p.set_defaults(func=alias)
+    add_git_arguments(alias_p)
+    alias_p.add_argument('version', metavar='VERSION',
+                         help='version (directory) to alias')
+    alias_p.add_argument('alias', nargs='*', metavar='ALIAS',
+                         help='alias to add (e.g. "latest")')
 
     retitle_p = subparsers.add_parser(
         'retitle', help='change the title of a version'

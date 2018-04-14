@@ -231,6 +231,20 @@ class TestTryRebaseBranch(unittest.TestCase):
         self.assertEqual(old_rev, new_rev)
 
 
+class TestFileInfo(unittest.TestCase):
+    def test_copy(self):
+        f = git_utils.FileInfo(os.path.join('dir', 'file.txt'), '')
+        self.assertEqual(f.copy('destdir'), git_utils.FileInfo(
+            os.path.join('destdir', 'dir', 'file.txt'), ''
+        ))
+
+    def test_copy_start(self):
+        f = git_utils.FileInfo(os.path.join('dir', 'file.txt'), '')
+        self.assertEqual(f.copy('destdir', 'dir'), git_utils.FileInfo(
+            os.path.join('destdir', 'file.txt'), ''
+        ))
+
+
 class TestCommit(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('commit')
@@ -361,30 +375,6 @@ class TestPushBranch(unittest.TestCase):
             self.assertEqual(origin_rev, clone_rev)
 
 
-class TestWalkFiles(unittest.TestCase):
-    mode = 0o100755 if sys.platform == 'win32' else 0o100644
-
-    def setUp(self):
-        self.directory = os.path.join(test_data_dir, 'directory')
-
-    def test_walk(self):
-        files = sorted(git_utils.walk_files(self.directory),
-                       key=lambda x: x.path)
-        self.assertEqual(files, [
-            git_utils.FileInfo('file.txt', b'hello there\n', self.mode),
-        ])
-
-    def test_multiple_dests(self):
-        files = sorted(git_utils.walk_files(self.directory, ['foo', 'bar']),
-                       key=lambda x: x.path)
-        self.assertEqual(files, [
-            git_utils.FileInfo(os.path.join('bar', 'file.txt'),
-                               b'hello there\n', self.mode),
-            git_utils.FileInfo(os.path.join('foo', 'file.txt'),
-                               b'hello there\n', self.mode),
-        ])
-
-
 class TestFileMode(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('file_mode')
@@ -441,3 +431,68 @@ class TestReadFile(unittest.TestCase):
     def test_nonexistent_branch(self):
         self.assertRaises(git_utils.GitError, git_utils.read_file, 'nonexist',
                           'file.txt')
+
+
+class TestWalkFiles(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('walk_files')
+        os.chdir(self.stage)
+        git_init()
+        commit_file('file.txt', 'initial commit')
+
+        with git_utils.Commit('branch', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo('file.txt', b'text'))
+            commit.add_file(git_utils.FileInfo(
+                os.path.join('dir/file.txt'), b'more text'
+            ))
+            commit.add_file(git_utils.FileInfo(
+                os.path.join('dir', 'file 2.txt'), b'more text'
+            ))
+            commit.add_file(git_utils.FileInfo(
+                os.path.join('dir', 'subdir', 'file 3.txt'),
+                b'even more text'
+            ))
+
+    def test_root(self):
+        files = sorted(git_utils.walk_files('branch'),
+                       key=lambda x: x.path)
+        self.assertEqual(files, [
+            git_utils.FileInfo(os.path.join('dir', 'file 2.txt'),
+                               b'more text'),
+            git_utils.FileInfo(os.path.join('dir', 'file.txt'), b'more text'),
+            git_utils.FileInfo(os.path.join('dir', 'subdir', 'file 3.txt'),
+                               b'even more text'),
+            git_utils.FileInfo('file.txt', b'text'),
+        ])
+
+    def test_subdir(self):
+        files = sorted(git_utils.walk_files('branch', 'dir'),
+                       key=lambda x: x.path)
+        self.assertEqual(files, [
+            git_utils.FileInfo(os.path.join('dir', 'file 2.txt'),
+                               b'more text'),
+            git_utils.FileInfo(os.path.join('dir', 'file.txt'), b'more text'),
+            git_utils.FileInfo(os.path.join('dir', 'subdir', 'file 3.txt'),
+                               b'even more text'),
+        ])
+
+    def test_nonexistent(self):
+        with self.assertRaises(git_utils.GitError):
+            list(git_utils.walk_files('branch', 'nonexist'))
+        with self.assertRaises(git_utils.GitError):
+            list(git_utils.walk_files('nonexist'))
+
+
+class TestWalkRealFiles(unittest.TestCase):
+    mode = 0o100755 if sys.platform == 'win32' else 0o100644
+
+    def setUp(self):
+        self.directory = os.path.join(test_data_dir, 'directory')
+
+    def test_walk(self):
+        files = sorted(git_utils.walk_real_files(self.directory),
+                       key=lambda x: x.path)
+        self.assertEqual(files, [
+            git_utils.FileInfo(os.path.join(self.directory, 'file.txt'),
+                               b'hello there\n', self.mode),
+        ])

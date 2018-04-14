@@ -118,12 +118,21 @@ with the `retitle` command:
 mike retitle [version-or-alias] [title]
 ```
 
+### Adding a New Version Alias
+
+Sometimes, you might need to add a new alias for a version without rebuilding
+your documentation. You can use the `alias` command for this:
+
+```sh
+mike alias [version-or-alias] [alias]...
+```
+
 ### More Details
 
 For more details on the available options (e.g. specifying which branch to push
 to), consult the `--help` command for mike.
 
-## Staying In Sync
+## Staying in Sync
 
 mike will do its best to stay in-sync with your remote repository and will
 automatically update your local branch to match the remote's if possible (note

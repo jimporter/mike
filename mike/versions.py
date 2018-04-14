@@ -94,6 +94,13 @@ class Versions(object):
 
         return self._data[v]
 
+    def update(self, version, title=None, aliases=[]):
+        key = self.find(version)
+        if key is None:
+            raise KeyError(version)
+
+        return self._data[key[0]].update(title, aliases)
+
     def remove(self, version):
         key = self.find(version)
         if key is None:
@@ -112,9 +119,3 @@ class Versions(object):
             if self.find(i) is None:
                 raise KeyError(i)
         return [self.remove(i) for i in versions]
-
-    def rename(self, version, title):
-        key = self.find(version)
-        if key is None:
-            raise KeyError(version)
-        self._data[key[0]].title = title

@@ -16,6 +16,7 @@
 from __future__ import division, unicode_literals
 
 import os
+import re
 import subprocess as sp
 import sys
 import time
@@ -139,15 +140,21 @@ def try_rebase_branch(remote, branch, force=False):
 class FileInfo(object):
     def __init__(self, path, data, mode=0o100644):
         self.path = path
-        self.mode = mode
         self.data = data
+        self.mode = mode
 
     def __eq__(self, rhs):
-        return (self.path == rhs.path and self.mode == rhs.mode and
-                self.data == rhs.data)
+        return (self.path == rhs.path and self.data == rhs.data and
+                self.mode == rhs.mode)
 
     def __repr__(self):
-        return '<FileInfo({!r})>'.format(self.path)
+        return '<FileInfo({!r}, {:06o})>'.format(self.path, self.mode)
+
+    def copy(self, destdir='', start=''):
+        return FileInfo(
+            os.path.join(destdir, os.path.relpath(self.path, start)),
+            self.data, self.mode
+        )
 
 
 class Commit(object):
@@ -232,27 +239,13 @@ def push_branch(remote, branch, force=False):
         raise GitError('failed to push branch: {}'.format(stderr))
 
 
-def walk_files(srcdir, dstdirs=['']):
-    for path, _, filenames in os.walk(srcdir):
-        for f in filenames:
-            inpath = os.path.join(path, f)
-            with open(inpath, 'rb') as fd:
-                mode = 0o100755 if os.access(inpath, os.X_OK) else 0o100644
-                data = fd.read()
-            for d in dstdirs:
-                outpath = os.path.join(
-                    d, os.path.relpath(inpath, start=srcdir)
-                )
-                yield FileInfo(outpath, data, mode)
-
-
 def file_mode(branch, filename):
     filename = filename.rstrip('/')
     # The root directory of the repo is, well... a directory.
     if not filename:
         return 0o040000
 
-    cmd = ['git', 'ls-tree', '--', branch, filename]
+    cmd = ['git', 'ls-tree', '--', branch, git_path(filename)]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
@@ -265,7 +258,7 @@ def file_mode(branch, filename):
 
 def read_file(branch, filename, universal_newlines=False):
     cmd = ['git', 'show', '{branch}:{filename}'.format(
-        branch=branch, filename=filename
+        branch=branch, filename=git_path(filename)
     )]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE,
                  universal_newlines=universal_newlines)
@@ -273,3 +266,35 @@ def read_file(branch, filename, universal_newlines=False):
     if p.wait() != 0:
         raise GitError('unable to read file: {}'.format(stderr))
     return stdout
+
+
+def walk_files(branch, path=''):
+    cmd = ['git', 'ls-tree', '-r', '--', '{branch}:{path}'.format(
+        branch=branch, path=path
+    )]
+    with open(os.devnull, 'wb') as devnull:
+        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=devnull,
+                     universal_newlines=True)
+
+        for line in p.stdout:
+            strmode, _, _, filename = re.split(r'\s', line.rstrip(), 3)
+            mode = int(strmode, 8)
+            filepath = os.path.join(path, os.path.normpath(filename))
+            yield FileInfo(filepath, read_file(branch, filepath), mode)
+
+        p.stdout.close()
+        if p.wait() != 0:
+            # It'd be nice if we could read from stderr, but it's somewhat
+            # complex to do that while avoiding deadlocks. (select(2) does this
+            # on POSIX systems, but that doesn't work on Windows.)
+            raise GitError('unable to read files')
+
+
+def walk_real_files(srcdir):
+    for path, _, filenames in os.walk(srcdir):
+        for f in filenames:
+            filepath = os.path.join(path, f)
+            mode = 0o100755 if os.access(filepath, os.X_OK) else 0o100644
+            with open(filepath, 'rb') as fd:
+                data = fd.read()
+            yield FileInfo(filepath, data, mode)

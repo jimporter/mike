@@ -65,26 +65,46 @@ class TestVersions(unittest.TestCase):
         with self.assertRaises(ValueError):
             versions.add('1.0', aliases=['1.0'])
 
-    def test_rename_version(self):
+    def test_update_version_title(self):
         versions = Versions()
         versions.add('1.0', '1.0.0')
-        versions.rename('1.0', '1.0.1')
+        diff = versions.update('1.0', '1.0.1')
+        self.assertEqual(diff, set())
         self.assertEqual(list(versions), [
             VersionInfo('1.0', '1.0.1'),
         ])
 
-    def test_rename_alias(self):
+    def test_update_alias_title(self):
         versions = Versions()
         versions.add('1.0', '1.0.0', ['latest'])
-        versions.rename('latest', '1.0.1')
+        diff = versions.update('latest', '1.0.1')
+        self.assertEqual(diff, set())
         self.assertEqual(list(versions), [
             VersionInfo('1.0', '1.0.1', ['latest']),
         ])
 
-    def test_rename_invalid(self):
+    def test_update_version_aliases(self):
+        versions = Versions()
+        versions.add('1.0', '1.0.0')
+        diff = versions.update('1.0', aliases=['latest'])
+        self.assertEqual(diff, {'latest'})
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0', '1.0.0', ['latest']),
+        ])
+
+    def test_update_alias_aliases(self):
+        versions = Versions()
+        versions.add('1.0', '1.0.0', ['latest'])
+        diff = versions.update('latest', aliases=['greatest'])
+        self.assertEqual(diff, {'greatest'})
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0', '1.0.0', ['latest', 'greatest']),
+        ])
+
+    def test_update_invalid(self):
         versions = Versions()
         with self.assertRaises(KeyError):
-            versions.rename('1.0', '1.0.0')
+            versions.update('1.0', '1.0.0')
 
     def test_len(self):
         versions = Versions()
