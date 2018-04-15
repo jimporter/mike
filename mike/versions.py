@@ -80,11 +80,12 @@ class Versions(object):
         return None
 
     def add(self, version, title=None, aliases=[]):
+        v = _ensure_version(version)
         for i in aliases:
-            if self.find(i):
+            key = self.find(i)
+            if key and key[0] != v:
                 raise ValueError("'{}' already exists".format(i))
 
-        v = _ensure_version(version)
         if v in self._data:
             self._data[v].update(title, aliases)
         else:

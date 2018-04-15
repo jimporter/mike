@@ -42,6 +42,16 @@ class TestVersions(unittest.TestCase):
             VersionInfo('1.0', '1.0.1', {'latest', 'greatest'}),
         ])
 
+    def test_add_overwrite_duplicate_alias(self):
+        versions = Versions()
+        versions.add('1.0', '1.0.0', ['latest'])
+        v = versions.add('1.0', '1.0.1', ['latest', 'greatest'])
+        self.assertEqual(v, VersionInfo('1.0', '1.0.1',
+                                        {'latest', 'greatest'}))
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0', '1.0.1', {'latest', 'greatest'}),
+        ])
+
     def test_add_overwrite_alias(self):
         versions = Versions()
         versions.add('1.0', aliases=['latest'])
