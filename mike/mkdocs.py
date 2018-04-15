@@ -8,7 +8,7 @@ site_dir = 'site'
 
 def build(config_file=None, verbose=True):
     command = (
-        ['mkdocs', 'build'] +
+        ['mkdocs', 'build', '--clean'] +
         (['--config-file', config_file] if config_file else [])
     )
 
