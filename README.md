@@ -9,6 +9,19 @@
 [MkDocs](http://www.mkdocs.org)-powered docs to a Git branch, suitable for
 deploying to Github via `gh-pages`.
 
+## Why Use mike?
+
+mike is built around the idea that once you've generated your docs for a
+particular version, you should never need to touch that version again. This
+means you never have to worry about breaking changes in MkDocs, since your old
+docs (built with an old version of MkDocs) are already generated and sitting in
+your `gh-pages` branch.
+
+While mike is flexible, it's optimized around putting your docs in a
+`<major>.<minor>` directory, with optional aliases (e.g. `latest` or `dev`) to
+particularly notable versions. This makes it easy to make permalinks to whatever
+version of the documentation you want to direct people to.
+
 ## Installation
 
 Like most Python projects, mike uses [setuptools][setuptools], so installation
