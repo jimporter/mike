@@ -205,11 +205,11 @@ def serve(address='localhost:8000', branch='gh-pages', verbose=True):
     host, port = address.split(':')
     httpd = BaseHTTPServer.HTTPServer((host, int(port)), Handler)
 
-    if verbose:  # pragma: no cover
+    if verbose:
         print('Starting server at http://{}/'.format(address))
         print('Press Ctrl+C to quit.')
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        if verbose:  # pragma: no cover
+        if verbose:
             print('Stopping server...')

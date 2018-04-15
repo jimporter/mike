@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import os
 import platform
 import signal
 import subprocess
@@ -21,19 +22,24 @@ class TestList(unittest.TestCase):
             commit.add_file(git_utils.FileInfo('dir/index.html', 'sub page'))
 
     def _check_serve(self, options=[], err_output=''):
+        env = dict(os.environ)
+        env['PYTHONUNBUFFERED'] = '1'
         proc = subprocess.Popen(
             ['mike', 'serve', '--dev-addr=localhost:8888'] + options,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            universal_newlines=True
+            universal_newlines=True, env=env
         )
+
+        # Read the first two lines
+        stdout_start = proc.stdout.readline() + proc.stdout.readline()
         time.sleep(1)
         proc.send_signal(signal.SIGINT)
-        stdout, stderr = proc.communicate()
+        stdout_end, stderr = proc.communicate()
 
-        self.assertEqual(stdout,
+        self.assertEqual(stdout_start,
                          'Starting server at http://localhost:8888/\n' +
-                         'Press Ctrl+C to quit.\n' +
-                         'Stopping server...\n')
+                         'Press Ctrl+C to quit.\n')
+        self.assertEqual(stdout_end, 'Stopping server...\n')
         self.assertEqual(stderr, err_output)
 
     def test_serve(self):
