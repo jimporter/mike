@@ -54,7 +54,7 @@ string, you can pass `-t TITLE`/`--title=TITLE` as well. If `version` already
 exists, this command will *also* update all of the pre-existing aliases for it.
 
 Finally, to push your docs to a remote branch, simply add `-p`/`--push` to your
-command. (Note: this will likely become the default eventually.)
+command.
 
 ### Viewing Your Docs
 
@@ -118,6 +118,9 @@ with the `retitle` command:
 mike retitle [version-or-alias] [title]
 ```
 
+As with other commands that change your docs, you can specify `-p`/`--push` to
+push this commit.
+
 ### Adding a New Version Alias
 
 Sometimes, you might need to add a new alias for a version without rebuilding
@@ -126,6 +129,8 @@ your documentation. You can use the `alias` command for this:
 ```sh
 mike alias [version-or-alias] [alias]...
 ```
+
+Once again, you can specify `-p`/`--push` to push this commit.
 
 ### More Details
 

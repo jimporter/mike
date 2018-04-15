@@ -84,11 +84,11 @@ setup(
     url='https://github.com/jimporter/mike',
 
     author='Jim Porter',
-    author_email='porterj@alum.rit.edu',
+    author_email='itsjimporter@gmail.com',
     license='BSD',
 
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         'Intended Audience :: Developers',
 
@@ -100,6 +100,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     packages=find_packages(exclude=['test', 'test.*']),
