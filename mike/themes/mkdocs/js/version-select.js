@@ -25,7 +25,7 @@ window.addEventListener("DOMContentLoaded", function() {
   var REL_BASE_URL = base_url;
   var ABS_BASE_URL = normalizePath(window.location.pathname + "/" +
                                    REL_BASE_URL);
-  var CURRENT_VERSION = ABS_BASE_URL.split("/")[1];
+  var CURRENT_VERSION = ABS_BASE_URL.split("/").pop();
 
   function makeSelect(options, selected) {
     var select = document.createElement("select");
