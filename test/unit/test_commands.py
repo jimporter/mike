@@ -396,8 +396,13 @@ class TestInstallExtras(unittest.TestCase):
             self.assertTrue(os.path.join('js', 'version-select.js') in
                             config['extra_javascript'])
 
-    def test_mkdocs_theme(self):
-        copytree(os.path.join(test_data_dir, 'mkdocs'), self.stage)
+    def test_basic_theme(self):
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
+        commands.install_extras(self.mkdocs_yml)
+        self._test_extras()
+
+    def test_theme_object(self):
+        copytree(os.path.join(test_data_dir, 'theme_object'), self.stage)
         commands.install_extras(self.mkdocs_yml)
         self._test_extras()
 
@@ -408,7 +413,7 @@ class TestInstallExtras(unittest.TestCase):
         self._test_extras()
 
     def test_install_twice(self):
-        copytree(os.path.join(test_data_dir, 'mkdocs'), self.stage)
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
         commands.install_extras(self.mkdocs_yml)
         commands.install_extras(self.mkdocs_yml)
         self._test_extras()

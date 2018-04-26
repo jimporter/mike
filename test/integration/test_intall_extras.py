@@ -11,7 +11,7 @@ class TestInstallExtras(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('install_extras')
         self.mkdocs_yml = os.path.join(self.stage, 'mkdocs.yml')
-        copytree(os.path.join(test_data_dir, 'mkdocs'), self.stage)
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
 
     def _test_extras(self):
         assertDirectory('.', {

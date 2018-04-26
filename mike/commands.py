@@ -155,7 +155,7 @@ def get_theme_dir(theme_name):
         raise ValueError('no theme specified')
     themes = list(iter_entry_points('mike.themes', theme_name))
     if len(themes) == 0:
-        raise ValueError('no theme found')
+        raise ValueError("theme '{}' unsupported".format(theme_name))
     return os.path.dirname(themes[0].load().__file__)
 
 
@@ -170,10 +170,15 @@ def _makedirs(path):
 def install_extras(mkdocs_yml, theme=None):
     with open(mkdocs_yml) as f:
         config, indent, bsi = load_yaml_guess_indent(f)
-        if theme is None and 'theme' not in config:
-            raise ValueError('no theme specified in mkdocs.yml; pass ' +
-                             '--theme instead')
-        theme_dir = get_theme_dir(config.get('theme', theme))
+        if theme is None:
+            if 'theme' not in config:
+                raise ValueError('no theme specified in mkdocs.yml; pass ' +
+                                 '--theme instead')
+            theme = config['theme']
+            if isinstance(theme, dict):
+                theme = theme['name']
+
+        theme_dir = get_theme_dir(theme)
         docs_dir = config.get('docs_dir', 'docs')
 
         for path, prop in [('css', 'extra_css'), ('js', 'extra_javascript')]:

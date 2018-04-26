@@ -15,7 +15,7 @@ class TestDeploy(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('deploy')
         git_init()
-        copytree(os.path.join(test_data_dir, 'mkdocs'), self.stage)
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
         check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
         check_call_silent(['git', 'commit', '-m', 'initial commit'])
 
