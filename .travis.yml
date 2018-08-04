@@ -6,7 +6,6 @@ python:
   - 3.4
   - 3.5
   - 3.6
-  - 3.7
 os:
   - linux
 env:
@@ -17,6 +16,9 @@ env:
 
 matrix:
   include:
+    - python: 3.7
+      sudo: required
+      dist: xenial
     - language: generic
       python: 2.7
       os: osx
