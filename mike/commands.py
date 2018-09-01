@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import collections
 import errno
 import os
 import ruamel.yaml as yaml
@@ -175,7 +176,7 @@ def install_extras(mkdocs_yml, theme=None):
                 raise ValueError('no theme specified in mkdocs.yml; pass ' +
                                  '--theme instead')
             theme = config['theme']
-            if isinstance(theme, dict):
+            if isinstance(theme, collections.Mapping):
                 theme = theme['name']
 
         theme_dir = get_theme_dir(theme)
