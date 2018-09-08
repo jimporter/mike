@@ -1,2 +1,3 @@
 include README.md
+include mike/templates/index.html
 recursive-include mike/themes *.js *.css
