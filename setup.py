@@ -58,11 +58,6 @@ try:
 except ImportError:
     pass
 
-more_requires = []
-
-if sys.version_info < (3, 4):
-    more_requires.append('enum34')
-
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
     long_desc = re.sub(r'(^# mike)\n\n(.+\n)*', r'\1', f.read())
@@ -107,7 +102,7 @@ setup(
     include_package_data=True,
 
     install_requires=(['mkdocs >= 0.17.0', 'jinja2', 'packaging',
-                       'ruamel.yaml', 'six'] + more_requires),
+                       'ruamel.yaml', 'six', 'enum34;python_version<"3.4"']),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'mock', 'pypandoc'],
         'test': ['coverage', 'flake8 >= 3.0', 'mock'],
