@@ -37,7 +37,6 @@ before_install:
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       shell_session_update() { :; }
       if [ "${PYTHON}" = "python3" ]; then
-        rm /usr/local/include/c++
         brew update
         brew install ${PYTHON} || brew upgrade ${PYTHON}
       fi
