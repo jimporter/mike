@@ -1,23 +1,23 @@
 language: python
+dist: xenial
 
 python:
   - 2.7
-  - 3.4
   - 3.5
   - 3.6
+  - 3.7
 os:
   - linux
 env:
   global:
     - PYTHON=python
     - PIP=pip
-    - TEST_COMMAND="coverage -q"
 
 matrix:
   include:
-    - python: 3.7
-      sudo: required
-      dist: xenial
+
+    # macOS builds
+
     - language: generic
       python: 2.7
       os: osx
@@ -26,9 +26,13 @@ matrix:
       python: 3.7
       os: osx
       env: PYTHON=python3 PIP=pip3
-    - python: 2.7
-      os: linux
-      env: TEST_COMMAND=lint
+
+    # Linting
+
+    - python: 3.7
+      env: JOB=lint
+      script: ${PYTHON} setup.py lint
+      after_success: false
 
 before_install:
   - set -e
@@ -44,6 +48,6 @@ before_install:
 install:
   - ${PIP} install codecov .[test]
 script:
-  - ${PYTHON} setup.py ${TEST_COMMAND}
+  - ${PYTHON} setup.py coverage -q
 after_success:
   - codecov
