@@ -117,7 +117,7 @@ version of the docs:
 mike set-default [version-or-alias]
 ```
 
-Like `deploy` and `delete` above, you can specify `-p`/`--push` to` push this
+Like `deploy` and `delete` above, you can specify `-p`/`--push` to push this
 commit as well.
 
 ### Changing a Version's Title
