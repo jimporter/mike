@@ -34,8 +34,8 @@ class TestList(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(stdout,
                          '4.0 [dev, latest]\n' +
-                         '3.0.3 (3.0) [stable]\n' +
-                         '2.0.2 (2.0)\n' +
+                         '"3.0.3" (3.0) [stable]\n' +
+                         '"2.0.2" (2.0)\n' +
                          '1.0\n')
         self.assertEqual(stderr, err_output)
 

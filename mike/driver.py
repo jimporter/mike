@@ -83,7 +83,7 @@ def list_versions(args):
         aliases = (' [{}]'.format(', '.join(sorted(i.aliases)))
                    if i.aliases else '')
         if i.title != str(i.version):
-            print('{title} ({version}){aliases}'.format(
+            print('"{title}" ({version}){aliases}'.format(
                 title=i.title, version=i.version, aliases=aliases
             ))
         else:
@@ -110,7 +110,7 @@ def serve(args):
 
 def main():
     parser = argparse.ArgumentParser(prog='mike')
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(metavar='COMMAND')
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + app_version)
