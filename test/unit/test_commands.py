@@ -64,8 +64,8 @@ class TestDeploy(TestBase):
         if not expected_message:
             rev = git_utils.get_latest_commit('master', short=True)
             expected_message = (
-                r'^Deployed {} to 1.0 with MkDocs \S+ and mike \S+$'
-                .format(rev)
+                r'^Deployed {} to {} with MkDocs \S+ and mike \S+$'
+                .format(rev, expected_versions[0].version)
             )
 
         self._test_state(expected_message, expected_versions)
@@ -85,9 +85,9 @@ class TestDeploy(TestBase):
     def test_aliases(self):
         commands.deploy(self.stage, '1.0', aliases=['latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy(expected_versions=[versions.VersionInfo(
-            '1.0', aliases=['latest']
-        )])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ])
 
     def test_branch(self):
         commands.deploy(self.stage, '1.0', branch='branch')
@@ -110,9 +110,41 @@ class TestDeploy(TestBase):
 
         commands.deploy(self.stage, '1.0', '1.0.1', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy(expected_versions=[versions.VersionInfo(
-            '1.0', '1.0.1', ['latest', 'greatest']
-        )])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', '1.0.1', ['latest', 'greatest'])
+        ])
+
+    def test_overwrite_alias(self):
+        with git_utils.Commit('gh-pages', 'add versions.json') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'versions.json',
+                '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
+            ))
+            commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
+            commit.add_file(git_utils.FileInfo('latest/file.txt', ''))
+
+        with self.assertRaises(ValueError):
+            commands.deploy(self.stage, '2.0', '2.0.0', ['latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy('add versions.json', [
+            versions.VersionInfo('1.0', '1.0', ['latest'])
+        ])
+
+    def test_update_aliases(self):
+        with git_utils.Commit('gh-pages', 'add versions.json') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'versions.json',
+                '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
+            ))
+            commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
+            commit.add_file(git_utils.FileInfo('latest/file.txt', ''))
+
+        commands.deploy(self.stage, '2.0', '2.0.0', ['latest'], True)
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy('.*', [
+            versions.VersionInfo('2.0', '2.0.0', ['latest']),
+            versions.VersionInfo('1.0', '1.0', []),
+        ])
 
 
 class TestDelete(TestBase):

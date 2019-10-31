@@ -1,10 +1,16 @@
 from __future__ import unicode_literals
 
+import json
 import subprocess
 import unittest
 
 from .. import *
 from mike import git_utils, versions
+
+_default_output = ('4.0 [dev, latest]\n' +
+                   '"3.0.3" (3.0) [stable]\n' +
+                   '"2.0.2" (2.0)\n' +
+                   '1.0\n')
 
 
 class TestList(unittest.TestCase):
@@ -22,7 +28,7 @@ class TestList(unittest.TestCase):
                 'versions.json', all_versions.dumps()
             ))
 
-    def _check_list(self, options=[], err_output=''):
+    def _get_list(self, options=[]):
         proc = subprocess.Popen(
             ['mike', 'list'] + options,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -30,17 +36,46 @@ class TestList(unittest.TestCase):
         )
 
         stdout, stderr = proc.communicate()
+        return proc.returncode, stdout, stderr
 
-        self.assertEqual(proc.returncode, 0)
-        self.assertEqual(stdout,
-                         '4.0 [dev, latest]\n' +
-                         '"3.0.3" (3.0) [stable]\n' +
-                         '"2.0.2" (2.0)\n' +
-                         '1.0\n')
-        self.assertEqual(stderr, err_output)
+    def _check_list(self, options=[], stdout=_default_output, stderr='',
+                    returncode=0):
+        result = self._get_list(options)
+        self.assertEqual(result[0], returncode)
+        self.assertEqual(result[1], stdout)
+        self.assertEqual(result[2], stderr)
 
     def test_list(self):
         self._check_list()
+
+    def test_list_version(self):
+        self._check_list(['1.0'], '1.0\n')
+        self._check_list(['4.0'], '4.0 [dev, latest]\n')
+        self._check_list(['stable'], '"3.0.3" (3.0) [stable]\n')
+        self._check_list(['nonexist'], '',
+                         'mike: version nonexist does not exist\n', 1)
+
+    def test_list_json(self):
+        returncode, stdout, stderr = self._get_list(['-j'])
+        self.assertEqual(returncode, 0)
+        self.assertEqual(stderr, '')
+
+        data = json.loads(stdout)
+        data[0]['aliases'].sort()
+        self.assertEqual(data, [
+            {'version': '4.0', 'title': '4.0', 'aliases': ['dev', 'latest']},
+            {'version': '3.0', 'title': '3.0.3', 'aliases': ['stable']},
+            {'version': '2.0', 'title': '2.0.2', 'aliases': []},
+            {'version': '1.0', 'title': '1.0', 'aliases': []}
+        ])
+
+    def test_list_version_json(self):
+        returncode, stdout, stderr = self._get_list(['-j', 'stable'])
+        self.assertEqual(returncode, 0)
+        self.assertEqual(stderr, '')
+        self.assertEqual(json.loads(stdout), {
+            'version': '3.0', 'title': '3.0.3', 'aliases': ['stable']
+        })
 
     def test_local_empty(self):
         origin_rev = git_utils.get_latest_commit('gh-pages')
@@ -107,7 +142,7 @@ class TestList(unittest.TestCase):
         clone_rev = git_utils.get_latest_commit('gh-pages')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        self._check_list(err_output=(
+        self._check_list(stderr=(
             'warning: gh-pages has diverged from origin/gh-pages\n' +
             '  Pass --ignore to ignore this or --rebase to rebase onto ' +
             'remote\n'

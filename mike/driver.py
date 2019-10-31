@@ -50,7 +50,7 @@ def deploy(args):
     check_remote_status(args, strict=True)
     mkdocs.build(args.config_file)
     commands.deploy(mkdocs.site_dir, args.version, args.title, args.alias,
-                    args.branch, args.message)
+                    args.update_aliases, args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -77,19 +77,37 @@ def retitle(args):
 
 
 def list_versions(args):
-    check_remote_status(args)
-    all_versions = commands.list_versions(args.branch)
-    for i in all_versions:
-        aliases = (' [{}]'.format(', '.join(sorted(i.aliases)))
-                   if i.aliases else '')
-        if i.title != str(i.version):
+    def print_version(info):
+        version = str(info.version)
+        aliases = (' [{}]'.format(', '.join(sorted(info.aliases)))
+                   if info.aliases else '')
+        if info.title != version:
             print('"{title}" ({version}){aliases}'.format(
-                title=i.title, version=i.version, aliases=aliases
+                title=info.title, version=version, aliases=aliases
             ))
         else:
             print('{version}{aliases}'.format(
-                version=i.version, aliases=aliases
+                version=version, aliases=aliases
             ))
+
+    check_remote_status(args)
+    all_versions = commands.list_versions(args.branch)
+
+    if args.version:
+        try:
+            key = all_versions.find(args.version, strict=True)
+            info = all_versions[key[0]]
+            if args.json:
+                print(info.dumps())
+            else:
+                print_version(info)
+        except KeyError:
+            raise ValueError('version {} does not exist'.format(args.version))
+    elif args.json:
+        print(all_versions.dumps())
+    else:
+        for i in all_versions:
+            print_version(i)
 
 
 def set_default(args):
@@ -122,6 +140,8 @@ def main():
     add_git_arguments(deploy_p)
     deploy_p.add_argument('-t', '--title',
                           help='short descriptive title for this version')
+    deploy_p.add_argument('-u', '--update-aliases', action='store_true',
+                          help='allow aliases pointing to other versions')
     deploy_p.add_argument('-F', '--config-file',
                           help='the MkDocs configuration file to use')
     deploy_p.add_argument('version', metavar='VERSION',
@@ -164,6 +184,10 @@ def main():
     )
     list_p.set_defaults(func=list_versions)
     add_git_arguments(list_p, commit=False)
+    list_p.add_argument('-j', '--json', action='store_true',
+                        help='display the result as JSON')
+    list_p.add_argument('version', metavar='VERSION', nargs='?',
+                        help='version (directory) to deploy this build to')
 
     set_default_p = subparsers.add_parser(
         'set-default', help='set the default version for your docs'

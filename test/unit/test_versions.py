@@ -7,6 +7,77 @@ from packaging.version import LegacyVersion as Version
 from mike.versions import VersionInfo, Versions
 
 
+class TestVersionInfo(unittest.TestCase):
+    def test_create(self):
+        v = VersionInfo('1.0')
+        self.assertEqual(v.version, Version('1.0'))
+        self.assertEqual(v.title, '1.0')
+        self.assertEqual(v.aliases, set())
+
+        v = VersionInfo('1.0', '1.0.0')
+        self.assertEqual(v.version, Version('1.0'))
+        self.assertEqual(v.title, '1.0.0')
+        self.assertEqual(v.aliases, set())
+
+        v = VersionInfo('1.0', aliases=['latest'])
+        self.assertEqual(v.version, Version('1.0'))
+        self.assertEqual(v.title, '1.0')
+        self.assertEqual(v.aliases, {'latest'})
+
+        v = VersionInfo(Version('1.0'))
+        self.assertEqual(v.version, Version('1.0'))
+        self.assertEqual(v.title, '1.0')
+        self.assertEqual(v.aliases, set())
+
+        self.assertRaises(ValueError, VersionInfo, '1.0', aliases=['1.0'])
+
+    def test_equality(self):
+        v = VersionInfo('1.0')
+        self.assertEqual(v, VersionInfo('1.0'))
+        self.assertNotEqual(v, VersionInfo('1.1'))
+        self.assertNotEqual(v, VersionInfo('1.0', '1.0.0'))
+        self.assertNotEqual(v, VersionInfo('1.0', aliases=['latest']))
+
+        v = VersionInfo('1.0', '1.0.0')
+        self.assertNotEqual(v, VersionInfo('1.0'))
+        self.assertNotEqual(v, VersionInfo('1.1'))
+        self.assertEqual(v, VersionInfo('1.0', '1.0.0'))
+        self.assertNotEqual(v, VersionInfo('1.0', aliases=['latest']))
+
+        v = VersionInfo('1.0', aliases=['latest'])
+        self.assertNotEqual(v, VersionInfo('1.0'))
+        self.assertNotEqual(v, VersionInfo('1.1'))
+        self.assertNotEqual(v, VersionInfo('1.0', '1.0.0'))
+        self.assertEqual(v, VersionInfo('1.0', aliases=['latest']))
+
+    def test_dumps(self):
+        v = VersionInfo('1.0')
+        self.assertEqual(json.loads(v.dumps()), {
+            'version': '1.0', 'title': '1.0', 'aliases': []
+        })
+
+        v = VersionInfo('1.0', '1.0.0', ['latest'])
+        self.assertEqual(json.loads(v.dumps()), {
+            'version': '1.0', 'title': '1.0.0', 'aliases': ['latest']
+        })
+
+    def test_update(self):
+        v = VersionInfo('1.0')
+        v.update()
+        self.assertEqual(v, VersionInfo('1.0'))
+
+        v.update('1.0.0')
+        self.assertEqual(v, VersionInfo('1.0', '1.0.0'))
+
+        v.update('1.0.1', ['latest'])
+        self.assertEqual(v, VersionInfo('1.0', '1.0.1', ['latest']))
+
+        v.update(aliases=['greatest'])
+        self.assertEqual(v, VersionInfo(
+            '1.0', '1.0.1', ['latest', 'greatest']
+        ))
+
+
 class TestVersions(unittest.TestCase):
     def test_add(self):
         versions = Versions()
@@ -52,6 +123,16 @@ class TestVersions(unittest.TestCase):
             VersionInfo('1.0', '1.0.1', {'latest', 'greatest'}),
         ])
 
+    def test_add_update_alias(self):
+        versions = Versions()
+        versions.add('1.0', aliases=['latest'])
+        v = versions.add('2.0', aliases=['latest'], update_aliases=True)
+        self.assertEqual(v, VersionInfo('2.0', aliases={'latest'}))
+        self.assertEqual(list(versions), [
+            VersionInfo('2.0', aliases={'latest'}),
+            VersionInfo('1.0'),
+        ])
+
     def test_add_overwrite_alias(self):
         versions = Versions()
         versions.add('1.0', aliases=['latest'])
@@ -63,12 +144,16 @@ class TestVersions(unittest.TestCase):
         versions.add('1.0b1')
         with self.assertRaises(ValueError):
             versions.add('1.0', aliases=['1.0b1'])
+        with self.assertRaises(ValueError):
+            versions.add('1.0', aliases=['1.0b1'], update_aliases=True)
 
     def test_add_overwrite_alias_with_version(self):
         versions = Versions()
         versions.add('1.0b1', aliases=['1.0'])
         with self.assertRaises(ValueError):
             versions.add('1.0')
+        with self.assertRaises(ValueError):
+            versions.add('1.0', update_aliases=True)
 
     def test_add_invalid(self):
         versions = Versions()

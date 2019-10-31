@@ -20,7 +20,7 @@ class TestDeploy(unittest.TestCase):
         check_call_silent(['git', 'commit', '-m', 'initial commit'])
 
     def _test_deploy(self, expected_message=None,
-                     version=versions.VersionInfo('1.0')):
+                     expected_versions=[versions.VersionInfo('1.0')]):
         rev = git_utils.get_latest_commit('master', short=True)
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
@@ -29,20 +29,21 @@ class TestDeploy(unittest.TestCase):
         else:
             assertRegex(
                 self, message,
-                r'^Deployed {} to 1.0 with MkDocs \S+ and mike \S+$'
-                .format(rev)
+                r'^Deployed {} to {} with MkDocs \S+ and mike \S+$'
+                .format(rev, expected_versions[0].version)
             )
 
-        dirs = {str(version.version)} | version.aliases
+        dirs = set()
+        for i in expected_versions:
+            dirs |= {str(i.version)} | i.aliases
         contents = {'versions.json'} | set(chain.from_iterable(
             (d, d + '/index.html') for d in dirs
         ))
         assertDirectory('.', contents, allow_extra=True)
 
         with open('versions.json') as f:
-            self.assertEqual(list(versions.Versions.loads(f.read())), [
-                version,
-            ])
+            self.assertEqual(list(versions.Versions.loads(f.read())),
+                             expected_versions)
 
     def test_default(self):
         assertPopen(['mike', 'deploy', '1.0'])
@@ -52,14 +53,33 @@ class TestDeploy(unittest.TestCase):
     def test_title(self):
         assertPopen(['mike', 'deploy', '-t', '1.0.0', '1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy(version=versions.VersionInfo('1.0', '1.0.0'))
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', '1.0.0')
+        ])
 
     def test_aliases(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy(version=versions.VersionInfo(
-            '1.0', aliases=['latest']
-        ))
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ])
+
+    def test_update(self):
+        assertPopen(['mike', 'deploy', '1.0', 'latest'])
+        assertPopen(['mike', 'deploy', '-t', '1.0.1', '1.0', 'greatest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', '1.0.1', ['latest', 'greatest'])
+        ])
+
+    def test_update_aliases(self):
+        assertPopen(['mike', 'deploy', '1.0', 'latest'])
+        assertPopen(['mike', 'deploy', '-u', '2.0', 'latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('2.0', aliases=['latest']),
+            versions.VersionInfo('1.0'),
+        ])
 
     def test_branch(self):
         assertPopen(['mike', 'deploy', '-b', 'branch', '1.0'])

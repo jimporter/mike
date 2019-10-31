@@ -36,8 +36,8 @@ def make_nojekyll():
     return git_utils.FileInfo('.nojekyll', '')
 
 
-def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
-           message=None):
+def deploy(site_dir, version, title=None, aliases=[], update_aliases=False,
+           branch='gh-pages', message=None):
     if message is None:
         message = (
             'Deployed {rev} to {doc_version} with MkDocs {mkdocs_version} ' +
@@ -50,7 +50,7 @@ def deploy(site_dir, version, title=None, aliases=[], branch='gh-pages',
         )
 
     all_versions = list_versions(branch)
-    info = all_versions.add(version, title, aliases)
+    info = all_versions.add(version, title, aliases, update_aliases)
     destdirs = [str(info.version)] + list(info.aliases)
 
     with git_utils.Commit(branch, message) as commit:
@@ -124,12 +124,13 @@ def retitle(version, title, branch='gh-pages', message=None):
             'Set title of {doc_version} to {title} with mike {mike_version}'
         ).format(doc_version=version, title=title, mike_version=app_version)
 
+    all_versions = list_versions(branch)
+    try:
+        all_versions.update(version, title)
+    except KeyError:
+        raise ValueError('version {} does not exist'.format(version))
+
     with git_utils.Commit(branch, message) as commit:
-        all_versions = list_versions(branch)
-        try:
-            all_versions.update(version, title)
-        except KeyError:
-            raise ValueError('version {} does not exist'.format(version))
         commit.add_file(versions_to_file_info(all_versions))
 
 

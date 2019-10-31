@@ -65,6 +65,9 @@ mike deploy [version] [alias]...
 If you'd like to specify a title for this version that doesn't match the version
 string, you can pass `-t TITLE`/`--title=TITLE` as well. If `version` already
 exists, this command will *also* update all of the pre-existing aliases for it.
+If you want to move an alias from a previous version to this version (e.g. when
+releasing a new version and updating a `latest` alias), you can pass
+`-u`/`--update-aliases` to allow this.
 
 Finally, to push your docs to a remote branch, simply add `-p`/`--push` to your
 command.
@@ -106,6 +109,16 @@ run:
 ```sh
 mike list
 ```
+
+To list the info for a particular version, you can just pass the version or
+alias:
+
+```sh
+mike list [version-or-alias]
+```
+
+Sometimes, you need this information to be consumed by another tool. In that
+case, simply pass `-j`/`--json` to return the list of doc versions as JSON.
 
 ### Setting the Default Version
 
