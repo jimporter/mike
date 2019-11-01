@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import collections
 import errno
 import os
 import ruamel.yaml as yaml
@@ -9,6 +8,11 @@ from jinja2 import Template
 from pkg_resources import iter_entry_points, resource_stream
 from ruamel.yaml.util import load_yaml_guess_indent
 from six.moves import BaseHTTPServer
+
+try:
+    from collections import abc
+except ImportError:
+    import collections as abc
 
 from . import git_utils
 from . import mkdocs
@@ -177,7 +181,7 @@ def install_extras(mkdocs_yml, theme=None):
                 raise ValueError('no theme specified in mkdocs.yml; pass ' +
                                  '--theme instead')
             theme = config['theme']
-            if isinstance(theme, collections.Mapping):
+            if isinstance(theme, abc.Mapping):
                 theme = theme['name']
 
         theme_dir = get_theme_dir(theme)
