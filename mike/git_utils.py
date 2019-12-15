@@ -245,7 +245,7 @@ def file_mode(branch, filename):
     if not filename:
         return 0o040000
 
-    cmd = ['git', 'ls-tree', '--', branch, git_path(filename)]
+    cmd = ['git', 'ls-tree', '--full-tree', '--', branch, git_path(filename)]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
@@ -269,9 +269,8 @@ def read_file(branch, filename, universal_newlines=False):
 
 
 def walk_files(branch, path=''):
-    cmd = ['git', 'ls-tree', '-r', '--', '{branch}:{path}'.format(
-        branch=branch, path=path
-    )]
+    cmd = ['git', 'ls-tree', '--full-tree', '-r', '--',
+           '{branch}:{path}'.format(branch=branch, path=path)]
     with open(os.devnull, 'wb') as devnull:
         p = sp.Popen(cmd, stdout=sp.PIPE, stderr=devnull,
                      universal_newlines=True)
