@@ -49,8 +49,9 @@ def check_remote_status(args, strict=False):
 def deploy(args):
     check_remote_status(args, strict=True)
     mkdocs.build(args.config_file)
-    commands.deploy(mkdocs.site_dir, args.version, args.title, args.alias,
-                    args.update_aliases, args.branch, args.message)
+    commands.deploy(mkdocs.site_dir(args.config_file), args.version,
+                    args.title, args.alias, args.update_aliases, args.branch,
+                    args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 

@@ -45,6 +45,11 @@ class TestList(unittest.TestCase):
     def test_serve(self):
         self._check_serve()
 
+    def test_from_subdir(self):
+        os.mkdir('sub')
+        with pushd('sub'):
+            self._check_serve()
+
     def test_local_empty(self):
         origin_rev = git_utils.get_latest_commit('gh-pages')
 

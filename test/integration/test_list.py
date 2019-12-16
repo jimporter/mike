@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import json
+import os
 import subprocess
 import unittest
 
@@ -76,6 +77,15 @@ class TestList(unittest.TestCase):
         self.assertEqual(json.loads(stdout), {
             'version': '3.0', 'title': '3.0.3', 'aliases': ['stable']
         })
+
+    def test_from_subdir(self):
+        os.mkdir('sub')
+        with pushd('sub'):
+            self._check_list(['1.0'], '1.0\n')
+            self._check_list(['4.0'], '4.0 [dev, latest]\n')
+            self._check_list(['stable'], '"3.0.3" (3.0) [stable]\n')
+            self._check_list(['nonexist'], '',
+                             'mike: version nonexist does not exist\n', 1)
 
     def test_local_empty(self):
         origin_rev = git_utils.get_latest_commit('gh-pages')

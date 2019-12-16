@@ -52,6 +52,14 @@ class TestDelete(unittest.TestCase):
         assertRegex(self, message, r'^Removed everything with mike \S+$')
         self.assertFalse(os.path.exists('version.json'))
 
+    def test_from_subdir(self):
+        self._deploy()
+        os.mkdir('sub')
+        with pushd('sub'):
+            assertPopen(['mike', 'delete', '1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_delete()
+
     def test_branch(self):
         self._deploy('branch')
         assertPopen(['mike', 'delete', '-b', 'branch', '1.0'])

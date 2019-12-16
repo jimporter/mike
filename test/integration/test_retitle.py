@@ -53,6 +53,14 @@ class TestRetitle(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'branch'])
         self._test_retitle()
 
+    def test_from_subdir(self):
+        self._deploy()
+        os.mkdir('sub')
+        with pushd('sub'):
+            assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_retitle()
+
     def test_commit_message(self):
         self._deploy()
         assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-m',

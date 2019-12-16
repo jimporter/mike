@@ -48,6 +48,14 @@ class TestAlias(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
 
+    def test_from_subdir(self):
+        self._deploy()
+        os.mkdir('sub')
+        with pushd('sub'):
+            assertPopen(['mike', 'alias', '1.0', 'latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias()
+
     def test_branch(self):
         self._deploy('branch')
         assertPopen(['mike', 'alias', '1.0', 'latest', '-b', 'branch'])

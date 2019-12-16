@@ -1,9 +1,14 @@
 from __future__ import unicode_literals
 
+import os
 import re
 import subprocess
 
-site_dir = 'site'
+
+def site_dir(config_file=None):
+    if not config_file:
+        return 'site'
+    return os.path.join(os.path.dirname(config_file), 'site')
 
 
 def build(config_file=None, verbose=True):

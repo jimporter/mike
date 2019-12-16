@@ -81,6 +81,13 @@ class TestDeploy(unittest.TestCase):
             versions.VersionInfo('1.0'),
         ])
 
+    def test_from_subdir(self):
+        os.mkdir('sub')
+        with pushd('sub'):
+            assertPopen(['mike', 'deploy', '1.0', '-F', '../mkdocs.yml'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy()
+
     def test_branch(self):
         assertPopen(['mike', 'deploy', '-b', 'branch', '1.0'])
         check_call_silent(['git', 'checkout', 'branch'])

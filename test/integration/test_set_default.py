@@ -41,6 +41,14 @@ class TestSetDefault(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default()
 
+    def test_from_subdir(self):
+        self._deploy()
+        os.mkdir('sub')
+        with pushd('sub'):
+            assertPopen(['mike', 'set-default', '1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default()
+
     def test_branch(self):
         self._deploy('branch')
         assertPopen(['mike', 'set-default', '-b', 'branch', '1.0'])
