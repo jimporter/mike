@@ -290,7 +290,9 @@ def walk_files(branch, path=''):
 
 
 def walk_real_files(srcdir):
-    for path, _, filenames in os.walk(srcdir):
+    for path, dirs, filenames in os.walk(srcdir):
+        if '.git' in dirs:
+            dirs.remove('.git')
         for f in filenames:
             filepath = os.path.join(path, f)
             mode = 0o100755 if os.access(filepath, os.X_OK) else 0o100644
