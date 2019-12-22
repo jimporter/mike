@@ -1,5 +1,5 @@
 #version-selector {
-  float: left;
+  float: right;
   display: flex;
   align-items: center;
   margin: 0 10px;
