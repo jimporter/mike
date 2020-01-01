@@ -89,8 +89,6 @@ setup(
         'Topic :: Documentation',
         'License :: OSI Approved :: BSD License',
 
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -101,7 +99,7 @@ setup(
     include_package_data=True,
 
     install_requires=(['mkdocs >= 0.17.0', 'jinja2', 'packaging',
-                       'ruamel.yaml', 'six', 'enum34;python_version<"3.4"']),
+                       'ruamel.yaml', 'six']),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'mock', 'pypandoc'],
         'test': ['coverage', 'flake8 >= 3.0', 'mock'],

@@ -2,16 +2,11 @@ language: python
 dist: xenial
 
 python:
-  - 2.7
   - 3.5
   - 3.6
   - 3.7
 os:
   - linux
-env:
-  global:
-    - PYTHON=python
-    - PIP=pip
 
 matrix:
   include:
@@ -19,19 +14,14 @@ matrix:
     # macOS builds
 
     - language: generic
-      python: 2.7
-      os: osx
-      env: PYTHON=python2 PIP=pip2
-    - language: generic
       python: 3.7
       os: osx
-      env: PYTHON=python3 PIP=pip3
 
     # Linting
 
     - python: 3.7
       env: JOB=lint
-      script: ${PYTHON} setup.py lint
+      script: python setup.py lint
       after_success: false
 
 before_install:
@@ -39,15 +29,15 @@ before_install:
   - |
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       shell_session_update() { :; }
-      if [ "${PYTHON}" = "python3" ]; then
-        brew update
-        brew install ${PYTHON} || brew upgrade ${PYTHON}
-      fi
+      brew update
+      brew unlink python@2
+      brew upgrade python3
+      python --version
       cp test/scripts/sitecustomize.py .
     fi
 install:
-  - ${PIP} install codecov .[test]
+  - pip install codecov .[test]
 script:
-  - ${PYTHON} setup.py coverage -q
+  - python setup.py coverage -q
 after_success:
   - codecov
