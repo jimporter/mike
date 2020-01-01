@@ -1,10 +1,7 @@
-from __future__ import unicode_literals
-
 import os
 import subprocess
 import sys
 import unittest
-from six import assertRegex
 
 from .. import *
 from mike import git_utils
@@ -12,10 +9,10 @@ from mike import git_utils
 
 class TestMakeWhen(unittest.TestCase):
     def test_default(self):
-        assertRegex(self, git_utils.make_when(), r'\d+ (\+|-)\d{4}')
+        self.assertRegex(git_utils.make_when(), r'\d+ (\+|-)\d{4}')
 
     def test_timestamp(self):
-        assertRegex(self, git_utils.make_when(12345), r'12345 (\+|-)\d{4}')
+        self.assertRegex(git_utils.make_when(12345), r'12345 (\+|-)\d{4}')
 
 
 class TestGetConfig(unittest.TestCase):

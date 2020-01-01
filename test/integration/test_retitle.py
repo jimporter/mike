@@ -1,9 +1,6 @@
-from __future__ import unicode_literals
-
 import os
 import subprocess
 import unittest
-from six import assertRegex
 
 from . import assertPopen, assertOutput
 from .. import *
@@ -28,8 +25,8 @@ class TestRetitle(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message,
-                        r'^Set title of \S+ to 1\.0\.1 with mike \S+$')
+            self.assertRegex(message,
+                             r'^Set title of \S+ to 1\.0\.1 with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',

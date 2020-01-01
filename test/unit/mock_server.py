@@ -1,6 +1,4 @@
-from __future__ import unicode_literals
-
-from six import BytesIO
+from io import BytesIO
 
 
 class MockRequest(object):

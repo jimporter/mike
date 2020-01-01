@@ -13,8 +13,6 @@
 
 #   0. opan saurce LOL
 
-from __future__ import division, unicode_literals
-
 import os
 import re
 import subprocess as sp
@@ -23,7 +21,6 @@ import time
 import unicodedata
 
 from enum import Enum
-from six import binary_type, text_type
 
 BranchStatus = Enum('BranchState', ['even', 'ahead', 'behind', 'diverged'])
 
@@ -51,7 +48,7 @@ def git_path(path):
     # Fix unicode pathnames on macOS; see
     # <http://stackoverflow.com/a/5582439/44289>.
     if sys.platform == 'darwin':  # pragma: no cover
-        if isinstance(path, binary_type):
+        if isinstance(path, bytes):
             path = path.decode('utf-8')
         path = unicodedata.normalize('NFKC', path)
     return '/'.join(path.split(os.path.sep))
@@ -175,7 +172,7 @@ class Commit(object):
                 self.finish()
 
     def _write(self, data):
-        if isinstance(data, text_type):  # pragma: no branch
+        if isinstance(data, str):  # pragma: no branch
             data = data.encode('utf-8')
         return self._pipe.stdin.write(data)
 

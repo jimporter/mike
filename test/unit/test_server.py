@@ -1,8 +1,5 @@
-from __future__ import unicode_literals
-
 import sys
 import unittest
-from six import assertRegex
 
 from .. import *
 from .mock_server import MockRequest, MockServer
@@ -34,8 +31,8 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
     def test_root(self):
         req = MockRequest()
         self.server.handle_request(req)
-        assertRegex(
-            self, req.response,
+        self.assertRegex(
+            req.response,
             b'HTTP/1.0 200 OK\r\n' +
             b'Server: MikeHTTP.*\r\n' +
             b'Date: .*\r\n' +
@@ -46,8 +43,8 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
     def test_file(self):
         req = MockRequest(path=b'/index.html')
         self.server.handle_request(req)
-        assertRegex(
-            self, req.response,
+        self.assertRegex(
+            req.response,
             b'HTTP/1.0 200 OK\r\n' +
             b'Server: MikeHTTP.*\r\n' +
             b'Date: .*\r\n' +
@@ -58,8 +55,8 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
     def test_dir(self):
         req = MockRequest(path=b'/dir/')
         self.server.handle_request(req)
-        assertRegex(
-            self, req.response,
+        self.assertRegex(
+            req.response,
             b'HTTP/1.0 200 OK\r\n' +
             b'Server: MikeHTTP.*\r\n' +
             b'Date: .*\r\n' +
@@ -70,8 +67,8 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
     def test_dir_redirect(self):
         req = MockRequest(path=b'/dir')
         self.server.handle_request(req)
-        assertRegex(
-            self, req.response,
+        self.assertRegex(
+            req.response,
             b'HTTP/1.0 301 Moved Permanently\r\n' +
             b'Server: MikeHTTP.*\r\n' +
             b'Date: .*\r\n' +
@@ -81,8 +78,8 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
     def test_head(self):
         req = MockRequest(b'HEAD', b'/index.html')
         self.server.handle_request(req)
-        assertRegex(
-            self, req.response,
+        self.assertRegex(
+            req.response,
             b'HTTP/1.0 200 OK\r\n' +
             b'Server: MikeHTTP.*\r\n' +
             b'Date: .*\r\n' +
@@ -92,8 +89,8 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
     def test_404(self):
         req = MockRequest(path=b'/nonexist')
         self.server.handle_request(req)
-        assertRegex(
-            self, req.response,
+        self.assertRegex(
+            req.response,
             b'HTTP/1.0 404 File not found\r\n' +
             b'Server: MikeHTTP.*\r\n' +
             b'Date: .*\r\n'

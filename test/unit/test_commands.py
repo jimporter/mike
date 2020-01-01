@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import mock
 import os
 import re
@@ -7,7 +5,6 @@ import ruamel.yaml as yaml
 import subprocess
 import unittest
 from itertools import chain
-from six import assertRegex
 
 from .. import *
 from .mock_server import MockRequest, MockServer
@@ -38,7 +35,7 @@ class TestBase(unittest.TestCase):
     def _test_state(self, expected_message, expected_versions):
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
-        assertRegex(self, message, expected_message)
+        self.assertRegex(message, expected_message)
 
         dirs = set()
         for i in expected_versions:
@@ -186,7 +183,7 @@ class TestDelete(TestBase):
 
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
-        assertRegex(self, message, r'^Removed everything with mike \S+$')
+        self.assertRegex(message, r'^Removed everything with mike \S+$')
         assertDirectory('.', set())
 
     def test_branch(self):
@@ -249,7 +246,7 @@ class TestAlias(TestBase):
 
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
-        assertRegex(self, message, r'^Removed everything with mike \S+$')
+        self.assertRegex(message, r'^Removed everything with mike \S+$')
         assertDirectory('.', set())
 
     def test_branch(self):
@@ -286,8 +283,8 @@ class TestRetitle(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message,
-                        r'^Set title of \S+ to 1\.0\.1 with mike \S+$')
+            self.assertRegex(message,
+                             r'^Set title of \S+ to 1\.0\.1 with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',
@@ -339,12 +336,11 @@ class TestSetDefault(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message,
-                        r'^Set default version to \S+ with mike \S+$')
+            self.assertRegex(message,
+                             r'^Set default version to \S+ with mike \S+$')
 
         with open('index.html') as f:
-            assertRegex(self, f.read(),
-                        r'window\.location\.replace\("1\.0"\)')
+            self.assertRegex(f.read(), r'window\.location\.replace\("1\.0"\)')
 
     def test_set_default(self):
         self._deploy()
@@ -466,7 +462,7 @@ class TestServe(unittest.TestCase):
                 raise KeyboardInterrupt()
 
         handler_name = 'mike.server.GitBranchHTTPHandler'
-        with mock.patch('six.moves.BaseHTTPServer.HTTPServer', MyMockServer), \
+        with mock.patch('http.server.HTTPServer', MyMockServer), \
              mock.patch(handler_name + '.wbufsize', -1), \
              mock.patch(handler_name + '.log_message') as m:  # noqa
             commands.serve(branch='branch', verbose=False)

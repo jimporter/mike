@@ -1,8 +1,5 @@
-from __future__ import unicode_literals
-
 import json
 from packaging.version import LegacyVersion as Version
-from six import iteritems
 
 
 def _ensure_version(version):
@@ -66,7 +63,7 @@ class Versions(object):
         return json.dumps([i.to_json() for i in iter(self)])
 
     def __iter__(self):
-        return (i for _, i in sorted(iteritems(self._data), reverse=True))
+        return (i for _, i in sorted(self._data.items(), reverse=True))
 
     def __len__(self):
         return len(self._data)
@@ -78,7 +75,7 @@ class Versions(object):
         version, name = _version_pair(version)
         if version in self._data:
             return (version,)
-        for k, v in iteritems(self._data):
+        for k, v in self._data.items():
             if name in v.aliases:
                 return (k, name)
         if strict:

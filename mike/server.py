@@ -1,8 +1,8 @@
 import mimetypes
 import posixpath
 import stat
-from six.moves import BaseHTTPServer
-from six.moves.urllib import parse as urlparse
+import urllib.parse as urlparse
+from http.server import BaseHTTPRequestHandler
 
 from . import git_utils
 from .app_version import version
@@ -13,7 +13,7 @@ def _to_git_path(path):
     return path[1:]
 
 
-class GitBranchHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class GitBranchHTTPHandler(BaseHTTPRequestHandler):
     server_version = "MikeHTTP/" + version
 
     # Note: Set this in a subclass!

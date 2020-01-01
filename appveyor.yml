@@ -2,7 +2,7 @@ build: false
 version: "{branch}-{build}"
 
 environment:
-  PYTHON_PATH: C:\Python27
+  PYTHON_PATH: C:\Python37
 
 install:
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%PATH%

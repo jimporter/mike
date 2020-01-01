@@ -1,9 +1,6 @@
-from __future__ import unicode_literals
-
 import os
 import subprocess
 import unittest
-from six import assertRegex
 
 from . import assertPopen, assertOutput
 from .. import *
@@ -28,7 +25,7 @@ class TestDelete(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message, r'^Removed \S+ with mike \S+$')
+            self.assertRegex(message, r'^Removed \S+ with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',
@@ -49,7 +46,7 @@ class TestDelete(unittest.TestCase):
 
         message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
                                           universal_newlines=True).rstrip()
-        assertRegex(self, message, r'^Removed everything with mike \S+$')
+        self.assertRegex(message, r'^Removed everything with mike \S+$')
         self.assertFalse(os.path.exists('version.json'))
 
     def test_from_subdir(self):

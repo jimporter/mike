@@ -7,6 +7,10 @@ python:
   - 3.7
 os:
   - linux
+env:
+  global:
+    - PYTHON=python3
+    - PIP=pip3
 
 matrix:
   include:
@@ -21,7 +25,7 @@ matrix:
 
     - python: 3.7
       env: JOB=lint
-      script: python setup.py lint
+      script: ${PYTHON} setup.py lint
       after_success: false
 
 before_install:
@@ -32,12 +36,11 @@ before_install:
       brew update
       brew unlink python@2
       brew upgrade python3
-      python --version
       cp test/scripts/sitecustomize.py .
     fi
 install:
-  - pip install codecov .[test]
+  - ${PIP} install codecov .[test]
 script:
-  - python setup.py coverage -q
+  - ${PYTHON} setup.py coverage -q
 after_success:
   - codecov

@@ -1,10 +1,7 @@
-from __future__ import unicode_literals
-
 import os
 import subprocess
 import unittest
 from itertools import chain
-from six import assertRegex
 
 from . import assertPopen, assertOutput
 from .. import *
@@ -27,8 +24,8 @@ class TestDeploy(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(
-                self, message,
+            self.assertRegex(
+                message,
                 r'^Deployed {} to {} with MkDocs \S+ and mike \S+$'
                 .format(rev, expected_versions[0].version)
             )

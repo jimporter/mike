@@ -1,18 +1,12 @@
-from __future__ import unicode_literals
-
 import errno
+import http.server
 import os
 import ruamel.yaml as yaml
 import shutil
+from collections import abc
 from jinja2 import Template
 from pkg_resources import iter_entry_points, resource_stream
 from ruamel.yaml.util import load_yaml_guess_indent
-from six.moves import BaseHTTPServer
-
-try:
-    from collections import abc
-except ImportError:
-    import collections as abc
 
 from . import git_utils
 from . import mkdocs
@@ -214,7 +208,7 @@ def serve(address='localhost:8000', branch='gh-pages', verbose=True):
         branch = my_branch
 
     host, port = address.split(':')
-    httpd = BaseHTTPServer.HTTPServer((host, int(port)), Handler)
+    httpd = http.server.HTTPServer((host, int(port)), Handler)
 
     if verbose:
         print('Starting server at http://{}/'.format(address))

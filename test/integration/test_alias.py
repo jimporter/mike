@@ -1,9 +1,6 @@
-from __future__ import unicode_literals
-
 import os
 import subprocess
 import unittest
-from six import assertRegex
 
 from . import assertPopen, assertOutput
 from .. import *
@@ -28,8 +25,7 @@ class TestAlias(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message,
-                        r'^Copied \S+ to latest with mike \S+$')
+            self.assertRegex(message, r'^Copied \S+ to latest with mike \S+$')
 
         assertDirectory('.', {
             'versions.json',

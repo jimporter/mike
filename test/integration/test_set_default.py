@@ -1,9 +1,6 @@
-from __future__ import unicode_literals
-
 import os
 import subprocess
 import unittest
-from six import assertRegex
 
 from . import assertPopen, assertOutput
 from .. import *
@@ -28,12 +25,11 @@ class TestSetDefault(unittest.TestCase):
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            assertRegex(self, message,
-                        r'^Set default version to \S+ with mike \S+$')
+            self.assertRegex(message,
+                             r'^Set default version to \S+ with mike \S+$')
 
         with open('index.html') as f:
-            assertRegex(self, f.read(),
-                        r'window\.location\.replace\("1\.0"\)')
+            self.assertRegex(f.read(), r'window\.location\.replace\("1\.0"\)')
 
     def test_set_default(self):
         self._deploy()

@@ -1,8 +1,5 @@
-from __future__ import unicode_literals
-
 import os
 import unittest
-from six import assertRegex
 
 from .. import *
 from mike import mkdocs
@@ -29,4 +26,4 @@ class TestMkDocs(unittest.TestCase):
         self.assertTrue(os.path.exists('site/index.html'))
 
     def test_version(self):
-        assertRegex(self, mkdocs.version(), r'\S+')
+        self.assertRegex(mkdocs.version(), r'\S+')
