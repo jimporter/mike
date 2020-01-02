@@ -101,8 +101,8 @@ setup(
     install_requires=(['mkdocs >= 0.17.0', 'jinja2', 'packaging',
                        'ruamel.yaml']),
     extras_require={
-        'dev': ['coverage', 'flake8 >= 3.0', 'mock', 'pypandoc'],
-        'test': ['coverage', 'flake8 >= 3.0', 'mock'],
+        'dev': ['coverage', 'flake8 >= 3.0', 'pypandoc'],
+        'test': ['coverage', 'flake8 >= 3.0'],
     },
 
     entry_points={

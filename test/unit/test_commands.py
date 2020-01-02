@@ -1,10 +1,10 @@
-import mock
 import os
 import re
 import ruamel.yaml as yaml
 import subprocess
 import unittest
 from itertools import chain
+from unittest import mock
 
 from .. import *
 from .mock_server import MockRequest, MockServer
