@@ -1,7 +1,7 @@
 from io import BytesIO
 
 
-class MockRequest(object):
+class MockRequest:
     class LoggingBytesIO(BytesIO):
         def __init__(self, parent):
             BytesIO.__init__(self)
@@ -22,7 +22,7 @@ class MockRequest(object):
             return self.LoggingBytesIO(self)
 
 
-class MockServer(object):
+class MockServer:
     def __init__(self, addr, handler):
         self.addr = addr
         self.handler = handler

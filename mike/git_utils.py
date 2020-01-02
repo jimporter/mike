@@ -134,7 +134,7 @@ def try_rebase_branch(remote, branch, force=False):
             raise GitBranchDiverged(branch, remote_branch)
 
 
-class FileInfo(object):
+class FileInfo:
     def __init__(self, path, data, mode=0o100644):
         self.path = path
         self.data = data
@@ -154,7 +154,7 @@ class FileInfo(object):
         )
 
 
-class Commit(object):
+class Commit:
     def __init__(self, branch, message):
         cmd = ['git', 'fast-import', '--date-format=raw', '--quiet']
         self._pipe = sp.Popen(cmd, stdin=sp.PIPE, universal_newlines=False)

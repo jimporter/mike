@@ -12,7 +12,7 @@ def _version_pair(version):
     return _ensure_version(version), str(version)
 
 
-class VersionInfo(object):
+class VersionInfo:
     def __init__(self, version, title=None, aliases=[]):
         self.version, name = _version_pair(version)
         self.title = name if title is None else title
@@ -48,7 +48,7 @@ class VersionInfo(object):
         return added
 
 
-class Versions(object):
+class Versions:
     def __init__(self):
         self._data = {}
 
