@@ -59,6 +59,6 @@ class GitBranchHTTPHandler(BaseHTTPRequestHandler):
 
     def guess_type(self, path):
         base, ext = posixpath.splitext(path)
-        if not mimetypes.inited:
+        if not mimetypes.inited:  # pragma: no cover
             mimetypes.init()
         return mimetypes.types_map.get(ext, 'application/octet-stream')
