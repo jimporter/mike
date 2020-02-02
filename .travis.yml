@@ -26,7 +26,8 @@ matrix:
     - python: 3.7
       env: JOB=lint
       script: ${PYTHON} setup.py lint
-      after_success: false
+      after_success:
+        - true
 
 before_install:
   - set -e
