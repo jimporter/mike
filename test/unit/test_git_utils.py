@@ -489,7 +489,9 @@ class TestWalkRealFiles(unittest.TestCase):
     def test_walk(self):
         files = sorted(git_utils.walk_real_files(self.directory),
                        key=lambda x: x.path)
-        self.assertEqual(files, [
-            git_utils.FileInfo(os.path.join(self.directory, 'file.txt'),
-                               b'hello there\n', self.mode),
-        ])
+
+        path = os.path.join(self.directory, 'file.txt')
+        with open(path, 'rb') as f:
+            data = f.read()
+
+        self.assertEqual(files, [git_utils.FileInfo(path, data, self.mode)])
