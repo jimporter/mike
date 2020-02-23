@@ -156,8 +156,9 @@ class FileInfo:
 
 class Commit:
     def __init__(self, branch, message):
-        cmd = ['git', 'fast-import', '--date-format=raw', '--quiet']
-        self._pipe = sp.Popen(cmd, stdin=sp.PIPE, universal_newlines=False)
+        cmd = ['git', 'fast-import', '--date-format=raw', '--quiet', '--done']
+        self._pipe = sp.Popen(cmd, stdin=sp.PIPE, stderr=sp.DEVNULL,
+                              universal_newlines=False)
         self._start_commit(branch, message)
         self._finished = False
 
@@ -212,7 +213,7 @@ class Commit:
             raise GitError('commit already finalized')
         self._finished = True
 
-        self._write('\n')
+        self._write('done\n')
         self._pipe.stdin.close()
         if self._pipe.wait() != 0:  # pragma: no cover
             raise GitError('failed to process commit')
