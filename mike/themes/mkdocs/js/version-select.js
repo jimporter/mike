@@ -61,11 +61,13 @@ window.addEventListener("DOMContentLoaded", function() {
     container.id = "version-selector";
     container.appendChild(select);
 
-    var title = document.querySelector("div.navbar-header");
-    var height = window.getComputedStyle(title).getPropertyValue("height");
-    container.style.height = height;
+    var title = document.querySelector(".navbar-brand");
+    if (title.parentNode.classList.contains("navbar-header")) {
+      var height = window.getComputedStyle(title).getPropertyValue("height");
+      container.style.height = height;
+    }
 
-    title.appendChild(container);
+    title.parentNode.insertBefore(container, title.nextSibling);
   };
   xhr.send();
 });
