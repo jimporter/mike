@@ -112,6 +112,7 @@ setup(
         'mike.themes': [
             'mkdocs = mike.themes.mkdocs',
             'readthedocs = mike.themes.readthedocs',
+            'material = mike.themes.material',
             'amelia = mike.themes.mkdocs',
             'cerulean = mike.themes.mkdocs',
             'cosmo = mike.themes.mkdocs',

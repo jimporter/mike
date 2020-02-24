@@ -5,6 +5,8 @@
 - Drop support for Python 2
 - Update version selector extras for the `mkdocs` theme to work with both MkDocs
   1.0 and 1.1
+- Add support for the [`material`](https://github.com/squidfunk/mkdocs-material)
+  theme
 
 ---
 
