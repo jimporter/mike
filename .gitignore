@@ -1,6 +1,7 @@
 *.pyc
 /.coverage
 /.coverage.*
+/.eggs/
 /mike.egg-info/
 /build/
 /dist/
