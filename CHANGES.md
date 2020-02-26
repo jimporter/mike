@@ -1,6 +1,6 @@
 # Changes
 
-## v0.5.0 (in progress)
+## v0.5.0 (2020-02-26)
 
 - Drop support for Python 2
 - Update version selector extras for the `mkdocs` theme to work with both MkDocs
