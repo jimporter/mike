@@ -13,13 +13,13 @@
 
 ---
 
-## v0.4.2 (2018-12-15)
+## v0.4.2 (2019-12-15)
 
 - Fix using `mike` from subdirectories in some more cases
 
 ---
 
-## v0.4.1 (2018-12-14)
+## v0.4.1 (2019-12-14)
 
 - Fix using `mike` commands from non-root directories of your project
 
