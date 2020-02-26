@@ -5,8 +5,11 @@
 - Drop support for Python 2
 - Update version selector extras for the `mkdocs` theme to work with both MkDocs
   1.0 and 1.1
-- Add support for the [`material`](https://github.com/squidfunk/mkdocs-material)
-  theme
+- Add support for the [`material`][material] theme
+- Add support for [`mkdocs-bootswatch-classic`][bootswatch-classic] themes
+
+[material]: https://github.com/squidfunk/mkdocs-material
+[bootswatch-classic]: https://github.com/mkdocs/mkdocs-bootswatch-classic
 
 ---
 
