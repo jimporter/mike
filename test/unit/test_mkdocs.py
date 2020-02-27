@@ -17,11 +17,12 @@ class TestMkDocs(unittest.TestCase):
         self.stage = stage_dir('build')
         copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
 
-        # XXX: It'd be nice if we could change directory here to ensure this
-        # works, but mkdocs hasn't released a final version with the
-        # paths-are-relative-to-config behavior yet...
-        mkdocs.build(config_file=os.path.join(self.stage, 'mkdocs.yml'),
-                     verbose=False)
+        # Change to a different directory to make sure that everything works,
+        # including paths being relative to mkdocs.yml (which MkDocs itself is
+        # responsible for).
+        with pushd(this_dir):
+            mkdocs.build(config_file=os.path.join(self.stage, 'mkdocs.yml'),
+                         verbose=False)
 
         self.assertTrue(os.path.exists('site/index.html'))
 
