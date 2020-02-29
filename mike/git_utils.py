@@ -25,22 +25,21 @@ from enum import Enum
 BranchStatus = Enum('BranchState', ['even', 'ahead', 'behind', 'diverged'])
 
 
-class GitError(OSError):
-    pass
+class GitError(Exception):
+    def __init__(self, message, stderr=None):
+        if stderr:
+            message += ': "{}"'.format(stderr.strip())
+        super().__init__(message)
 
 
 class GitBranchDiverged(GitError):
     def __init__(self, branch1, branch2):
-        GitError.__init__(self, '{} has diverged from {}'.format(
-            branch1, branch2
-        ))
+        super().__init__('{} has diverged from {}'.format(branch1, branch2))
 
 
 class GitRevUnrelated(GitError):
     def __init__(self, branch1, branch2):
-        GitError.__init__(self, '{} is unrelated to {}'.format(
-            branch1, branch2
-        ))
+        super().__init__('{} is unrelated to {}'.format(branch1, branch2))
 
 
 def git_path(path):
@@ -66,7 +65,7 @@ def get_config(key):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('error getting config: {}'.format(stderr))
+        raise GitError('error getting config {!r}'.format(key), stderr)
     return stdout.strip()
 
 
@@ -75,7 +74,7 @@ def get_latest_commit(rev, short=False):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('error getting latest commit: {}'.format(stderr))
+        raise GitError('error getting latest commit', stderr)
     return stdout.strip()
 
 
@@ -97,7 +96,7 @@ def get_merge_base(rev1, rev2):
         return stdout.strip()
     elif result == 1:
         raise GitRevUnrelated(rev1, rev2)
-    raise GitError('error getting merge-base: {}'.format(stderr))
+    raise GitError('error getting merge-base', stderr)
 
 
 def compare_branches(branch1, branch2):
@@ -116,7 +115,7 @@ def update_ref(branch, new_ref):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stderr = p.communicate()[1]
     if p.wait() != 0:
-        raise GitError('error updating ref: {}'.format(stderr))
+        raise GitError('error updating ref for {}'.format(branch), stderr)
 
 
 def try_rebase_branch(remote, branch, force=False):
@@ -234,7 +233,8 @@ def push_branch(remote, branch, force=False):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('failed to push branch: {}'.format(stderr))
+        raise GitError('failed to push branch {} to {}'.format(branch, remote),
+                       stderr)
 
 
 def file_mode(branch, filename):
@@ -247,7 +247,7 @@ def file_mode(branch, filename):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('unable to read file: {}'.format(stderr))
+        raise GitError('unable to read file {!r}'.format(filename), stderr)
     if not stdout:
         raise GitError('file not found')
 
@@ -262,29 +262,29 @@ def read_file(branch, filename, universal_newlines=False):
                  universal_newlines=universal_newlines)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
-        raise GitError('unable to read file: {}'.format(stderr))
+        raise GitError('unable to read file {!r}'.format(filename),
+                       str(stderr))
     return stdout
 
 
 def walk_files(branch, path=''):
     cmd = ['git', 'ls-tree', '--full-tree', '-r', '--',
            '{branch}:{path}'.format(branch=branch, path=path)]
-    with open(os.devnull, 'wb') as devnull:
-        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=devnull,
-                     universal_newlines=True)
+    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.DEVNULL,
+                 universal_newlines=True)
 
-        for line in p.stdout:
-            strmode, _, _, filename = re.split(r'\s', line.rstrip(), 3)
-            mode = int(strmode, 8)
-            filepath = os.path.join(path, os.path.normpath(filename))
-            yield FileInfo(filepath, read_file(branch, filepath), mode)
+    for line in p.stdout:
+        strmode, _, _, filename = re.split(r'\s', line.rstrip(), 3)
+        mode = int(strmode, 8)
+        filepath = os.path.join(path, os.path.normpath(filename))
+        yield FileInfo(filepath, read_file(branch, filepath), mode)
 
-        p.stdout.close()
-        if p.wait() != 0:
-            # It'd be nice if we could read from stderr, but it's somewhat
-            # complex to do that while avoiding deadlocks. (select(2) does this
-            # on POSIX systems, but that doesn't work on Windows.)
-            raise GitError('unable to read files')
+    p.stdout.close()
+    if p.wait() != 0:
+        # It'd be nice if we could read from stderr, but it's somewhat
+        # complex to do that while avoiding deadlocks. (select(2) does this
+        # on POSIX systems, but that doesn't work on Windows.)
+        raise GitError('unable to read files')
 
 
 def walk_real_files(srcdir):
