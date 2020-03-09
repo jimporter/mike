@@ -1,8 +1,7 @@
 # mike
 
 [![PyPi version][pypi-image]][pypi-link]
-[![Travis build status][travis-image]][travis-link]
-[![Appveyor build status][appveyor-image]][appveyor-link]
+[![Build status][ci-image]][ci-link]
 [![Coverage status][codecov-image]][codecov-link]
 
 **mike** is a Python utility to easily deploy multiple versions of your
@@ -194,10 +193,8 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 
 [pypi-image]: https://img.shields.io/pypi/v/mike.svg
 [pypi-link]: https://pypi.python.org/pypi/mike
-[travis-image]: https://travis-ci.org/jimporter/mike.svg?branch=master
-[travis-link]: https://travis-ci.org/jimporter/mike
-[appveyor-image]: https://ci.appveyor.com/api/projects/status/rj8e3xa1r7nh22u2/branch/master?svg=true
-[appveyor-link]: https://ci.appveyor.com/project/jimporter/mike/branch/master
+[ci-image]: https://github.com/jimporter/mike/workflows/build/badge.svg
+[ci-link]: https://github.com/jimporter/mike/actions?query=branch%3Amaster+workflow%3Abuild
 [codecov-image]: https://codecov.io/gh/jimporter/mike/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/mike
 [setuptools]: https://pythonhosted.org/setuptools/
