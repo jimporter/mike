@@ -22,7 +22,7 @@ window.addEventListener("DOMContentLoaded", function() {
   }
 
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", REL_BASE_URL + "/../versions.json");
+  xhr.open("GET", ABS_BASE_URL + "/../versions.json");
   xhr.onload = function() {
     var versions = JSON.parse(this.responseText);
 
@@ -35,7 +35,7 @@ window.addEventListener("DOMContentLoaded", function() {
       return {text: i.title, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
-      window.location.href = REL_BASE_URL + "/../" + this.value;
+      window.location.href = ABS_BASE_URL + "/../" + this.value;
     });
 
     var container = document.createElement("div");
