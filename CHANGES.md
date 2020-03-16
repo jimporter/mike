@@ -1,5 +1,9 @@
 # Changes
 
+## v0.5.1 (2020-03-16)
+
+- Fix version selector with `material` theme when on homepage
+
 ## v0.5.0 (2020-02-26)
 
 - Drop support for Python 2
