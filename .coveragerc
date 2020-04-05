@@ -1,5 +1,5 @@
 [run]
-source = mike
+include = ${TOP}/mike/*
 parallel = True
 branch = True
 
