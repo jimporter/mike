@@ -27,7 +27,6 @@ class Coverage(Command):
         if env.get('PYTHONPATH'):
             pythonpath += os.pathsep + env['PYTHONPATH']
         env.update({
-            'TOP': root_dir,
             'PYTHONPATH': pythonpath,
             'COVERAGE_FILE': os.path.join(root_dir, '.coverage'),
             'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
