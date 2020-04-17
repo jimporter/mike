@@ -30,8 +30,10 @@ def stage_dir(name):
 def pushd(dirname):
     old = os.getcwd()
     os.chdir(dirname)
-    yield
-    os.chdir(old)
+    try:
+        yield
+    finally:
+        os.chdir(old)
 
 
 def copytree(src, dst):
