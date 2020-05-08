@@ -169,7 +169,7 @@ def _makedirs(path):
 
 def install_extras(mkdocs_yml, theme=None):
     with open(mkdocs_yml) as f:
-        config, indent, bsi = load_yaml_guess_indent(f)
+        config, indent, bsi = load_yaml_guess_indent(f, preserve_quotes=True)
         if theme is None:
             if 'theme' not in config:
                 raise ValueError('no theme specified in mkdocs.yml; pass ' +

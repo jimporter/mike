@@ -1,5 +1,9 @@
 # Changes
 
+## v0.6.0 (in progress)
+
+- Preserve quotes in mkdocs.yml when running `install-extras`
+
 ## v0.5.1 (2020-03-16)
 
 - Fix version selector with `material` theme when on homepage
