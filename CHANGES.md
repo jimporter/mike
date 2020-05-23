@@ -2,7 +2,8 @@
 
 ## v0.6.0 (in progress)
 
-- Preserve quotes in mkdocs.yml when running `install-extras`
+- Preserve quotes in `mkdocs.yml` when running `install-extras`
+- Add support for custom `site_dir` in `mkdocs.yml`
 
 ## v0.5.1 (2020-03-16)
 

@@ -167,8 +167,8 @@ def _makedirs(path):
             raise
 
 
-def install_extras(mkdocs_yml, theme=None):
-    with open(mkdocs_yml) as f:
+def install_extras(config_file, theme=None):
+    with open(config_file) as f:
         config, indent, bsi = load_yaml_guess_indent(f, preserve_quotes=True)
         if theme is None:
             if 'theme' not in config:
@@ -197,7 +197,7 @@ def install_extras(mkdocs_yml, theme=None):
                 if relpath not in extras:
                     extras.append(relpath)
 
-    with open(mkdocs_yml, 'w') as f:
+    with open(config_file, 'w') as f:
         yaml.round_trip_dump(config, f, indent=indent, block_seq_indent=bsi)
 
 

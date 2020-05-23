@@ -8,14 +8,7 @@ from .. import *
 from mike import git_utils, versions
 
 
-class TestDeploy(unittest.TestCase):
-    def setUp(self):
-        self.stage = stage_dir('deploy')
-        git_init()
-        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
-        check_call_silent(['git', 'commit', '-m', 'initial commit'])
-
+class DeployTestCase(unittest.TestCase):
     def _test_deploy(self, expected_message=None,
                      expected_versions=[versions.VersionInfo('1.0')]):
         rev = git_utils.get_latest_commit('master', short=True)
@@ -41,6 +34,15 @@ class TestDeploy(unittest.TestCase):
         with open('versions.json') as f:
             self.assertEqual(list(versions.Versions.loads(f.read())),
                              expected_versions)
+
+
+class TestDeploy(DeployTestCase):
+    def setUp(self):
+        self.stage = stage_dir('deploy')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
 
     def test_default(self):
         assertPopen(['mike', 'deploy', '1.0'])
@@ -218,3 +220,17 @@ class TestDeploy(unittest.TestCase):
 
         assertPopen(['mike', 'deploy', '--rebase', '1.0'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
+
+
+class TestDeployCustomSiteDir(DeployTestCase):
+    def setUp(self):
+        self.stage = stage_dir('deploy-sitedir')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'site_dir'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
+    def test_default(self):
+        assertPopen(['mike', 'deploy', '1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy()

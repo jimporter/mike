@@ -1,15 +1,17 @@
 import os
 import re
 import subprocess
+from ruamel import yaml
 
 
-def site_dir(config_file=None):
-    if not config_file:
-        return 'site'
-    return os.path.join(os.path.dirname(config_file), 'site')
+def site_dir(config_file):
+    with open(config_file) as f:
+        config = yaml.safe_load(f)
+        site = config.get('site_dir', 'site')
+    return os.path.join(os.path.dirname(config_file), site)
 
 
-def build(config_file=None, verbose=True):
+def build(config_file, verbose=True):
     command = (
         ['mkdocs', 'build', '--clean'] +
         (['--config-file', config_file] if config_file else [])

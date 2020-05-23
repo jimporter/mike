@@ -1,0 +1,6 @@
+site_name: test
+theme: mkdocs
+site_dir: built_docs
+
+pages:
+  - Home: index.md

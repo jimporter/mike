@@ -117,7 +117,7 @@ def set_default(args):
 
 
 def install_extras(args):
-    commands.install_extras('mkdocs.yml', args.theme)
+    commands.install_extras(args.config_file, args.theme)
 
 
 def serve(args):
@@ -141,7 +141,7 @@ def main():
                           help='short descriptive title for this version')
     deploy_p.add_argument('-u', '--update-aliases', action='store_true',
                           help='allow aliases pointing to other versions')
-    deploy_p.add_argument('-F', '--config-file',
+    deploy_p.add_argument('-F', '--config-file', default='mkdocs.yml',
                           help='the MkDocs configuration file to use')
     deploy_p.add_argument('version', metavar='VERSION',
                           help='version (directory) to deploy this build to')
@@ -200,6 +200,8 @@ def main():
         'install-extras', help='install extra files to your docs'
     )
     install_extras_p.set_defaults(func=install_extras)
+    install_extras_p.add_argument('-F', '--config-file', default='mkdocs.yml',
+                                  help='the MkDocs configuration file to use')
     install_extras_p.add_argument('-t', '--theme',
                                   help='the theme to use for your docs')
 
