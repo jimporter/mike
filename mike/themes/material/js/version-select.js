@@ -4,7 +4,8 @@ window.addEventListener("DOMContentLoaded", function() {
   var ex = new RegExp("/?assets/fonts/material-icons.css$");
   var sheet = document.querySelector('link[href$="material-icons.css"]');
 
-  var REL_BASE_URL = sheet.getAttribute("href").replace(ex, "");
+  var RAW_REL_BASE_URL = sheet.getAttribute("href").replace(ex, "");
+  var REL_BASE_URL = RAW_REL_BASE_URL == "" ? ".": RAW_REL_BASE_URL;
   var ABS_BASE_URL = sheet.href.replace(ex, "");
   var CURRENT_VERSION = ABS_BASE_URL.split("/").pop();
 
