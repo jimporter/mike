@@ -4,8 +4,6 @@ window.addEventListener("DOMContentLoaded", function() {
   var ex = new RegExp("/?assets/fonts/material-icons.css$");
   var sheet = document.querySelector('link[href$="material-icons.css"]');
 
-  var RAW_REL_BASE_URL = sheet.getAttribute("href").replace(ex, "");
-  var REL_BASE_URL = RAW_REL_BASE_URL == "" ? ".": RAW_REL_BASE_URL;
   var ABS_BASE_URL = sheet.href.replace(ex, "");
   var CURRENT_VERSION = ABS_BASE_URL.split("/").pop();
 
@@ -23,7 +21,7 @@ window.addEventListener("DOMContentLoaded", function() {
   }
 
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", REL_BASE_URL + "/../versions.json");
+  xhr.open("GET", ABS_BASE_URL + "/../versions.json");
   xhr.onload = function() {
     var versions = JSON.parse(this.responseText);
 
@@ -36,7 +34,7 @@ window.addEventListener("DOMContentLoaded", function() {
       return {text: i.title, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
-      window.location.href = REL_BASE_URL + "/../" + this.value;
+      window.location.href = ABS_BASE_URL + "/../" + this.value;
     });
 
     var container = document.createElement("div");
