@@ -1,5 +1,10 @@
 # Changes
 
+## v0.5.3 (in progress)
+
+- Fix some cases of `material` theme's version selector failing to load
+- Add support for `material` v5.0+
+
 ## v0.5.2 (2020-05-23)
 
 - Preserve quotes in `mkdocs.yml` when running `install-extras`
