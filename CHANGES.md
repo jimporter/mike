@@ -1,6 +1,6 @@
 # Changes
 
-## v0.5.3 (in progress)
+## v0.5.3 (2020-06-23)
 
 - Fix some cases of `material` theme's version selector failing to load
 - Add support for `material` v5.0+
