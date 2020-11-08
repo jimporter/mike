@@ -1,5 +1,9 @@
 # Changes
 
+## v0.5.4 (2020-11-08)
+
+- Add support for `mkdocs.yml` files using `!!python` tags
+
 ## v0.5.3 (2020-06-23)
 
 - Fix some cases of `material` theme's version selector failing to load
