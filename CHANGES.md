@@ -1,6 +1,6 @@
 # Changes
 
-## v0.5.4 (2020-11-08)
+## v0.5.5 (2020-11-08)
 
 - Add support for `mkdocs.yml` files using `!!python` tags
 
