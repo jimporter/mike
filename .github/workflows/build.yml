@@ -30,9 +30,9 @@ jobs:
       - name: Run tests
         run: |
           python setup.py coverage -q
-          coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        run: |
+          codecov
   lint:
     runs-on: ubuntu-latest
 
