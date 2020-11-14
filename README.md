@@ -6,7 +6,8 @@
 
 **mike** is a Python utility to easily deploy multiple versions of your
 [MkDocs](http://www.mkdocs.org)-powered docs to a Git branch, suitable for
-deploying to Github via `gh-pages`.
+deploying to Github via `gh-pages`. To see an example of this in action, take a
+look at the documentation for [bfg9000][bfg9000].
 
 ## Why Use mike?
 
@@ -197,4 +198,6 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [ci-link]: https://github.com/jimporter/mike/actions?query=branch%3Amaster+workflow%3Abuild
 [codecov-image]: https://codecov.io/gh/jimporter/mike/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/mike
+
+[bfg9000]: https://jimporter.github.io/bfg9000
 [setuptools]: https://pythonhosted.org/setuptools/
