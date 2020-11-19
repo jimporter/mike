@@ -53,7 +53,14 @@ class GitBranchHTTPHandler(BaseHTTPRequestHandler):
 
             return path
         except git_utils.GitError:
-            self.send_error(404, 'File not found')
+            msg = 'File not found'
+            if self.path == '/':
+                msg = (
+                    '{}. Did you forget to run `mike set-default`? ' +
+                    'Alternately, you can navigate to {}:{}/[some-version] ' +
+                    'to see your docs'
+                ).format(msg, self.server.server_name, self.server.server_port)
+            self.send_error(404, msg, self.path)
         except Exception:  # pragma: no cover
             self.send_error(500, 'Internal server error')
 
