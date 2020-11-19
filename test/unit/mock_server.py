@@ -24,8 +24,8 @@ class MockRequest:
 
 class MockServer:
     def __init__(self, addr, handler):
-        self.addr = addr
+        self.server_name, self.server_port = addr
         self.handler = handler
 
     def handle_request(self, request):
-        self.handler(request, self.addr, self)
+        self.handler(request, (self.server_name, self.server_port), self)

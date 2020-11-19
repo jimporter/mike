@@ -95,3 +95,16 @@ class TestGitBranchHTTPHandler(unittest.TestCase):
             b'Server: MikeHTTP.*\r\n' +
             b'Date: .*\r\n'
         )
+
+    def test_404_root(self):
+        with git_utils.Commit('branch', 'remove file') as commit:
+            commit.delete_files(['index.html'])
+
+        req = MockRequest(path=b'/')
+        self.server.handle_request(req)
+        self.assertRegex(
+            req.response,
+            b'HTTP/1.0 404 File not found. Did you.*\r\n' +
+            b'Server: MikeHTTP.*\r\n' +
+            b'Date: .*\r\n'
+        )
