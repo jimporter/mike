@@ -82,7 +82,8 @@ mike serve
 ```
 
 By default, this serves the docs on `http://localhost:8000`, but you can
-change this with `-a`/`--dev-addr`.
+change this with `-a`/`--dev-addr`. Remember though, *this is for testing only*.
+To host your docs for real, you should use a real web server.
 
 ### Deleting Docs
 
