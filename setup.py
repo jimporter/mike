@@ -113,7 +113,6 @@ setup(
         'mike.themes': [
             'mkdocs = mike.themes.mkdocs',
             'readthedocs = mike.themes.readthedocs',
-            'material = mike.themes.material',
 
             # Bootswatch themes
             'bootstrap = mike.themes.mkdocs',

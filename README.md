@@ -186,7 +186,22 @@ this:
 ]
 ```
 
-To see an example of how to work with this, check the
+If distributing your theme as a Python package, you should also add a
+[setuptools][setuptools] entry point for `mike.themes` pointing to a Python file
+in the package that raises an exception with an error message for mike to report
+to the user if they attempt to run `mike install-extras`. For example:
+
+```python
+raise ValueError('install-extras not required to use mike with cooldocs '
+                 'theme; for more information, see https://...')
+```
+
+If you're creating a third-party extension to an existing theme, you add a
+setuptools entry point for `mike.themes` pointing to a Python submodule that
+contains `css/` and `js/` subdirectories containing the extra code to be
+installed into the user's documentation.
+
+To see some examples of how to work with this, check the
 [`mike/themes/mkdocs`](mike/themes/mkdocs) directory.
 
 ## License
