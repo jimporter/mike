@@ -7,23 +7,33 @@
 
 [material-mike]: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#versioning
 
+---
+
 ## v0.5.5 (2020-11-08)
 
 - Add support for `mkdocs.yml` files using `!!python` tags
+
+---
 
 ## v0.5.3 (2020-06-23)
 
 - Fix some cases of `material` theme's version selector failing to load
 - Add support for `material` v5.0+
 
+---
+
 ## v0.5.2 (2020-05-23)
 
 - Preserve quotes in `mkdocs.yml` when running `install-extras`
 - Add support for custom `site_dir` in `mkdocs.yml`
 
+---
+
 ## v0.5.1 (2020-03-16)
 
 - Fix version selector with `material` theme when on homepage
+
+---
 
 ## v0.5.0 (2020-02-26)
 
