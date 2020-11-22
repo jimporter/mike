@@ -3,7 +3,7 @@
 ## v0.6 (in progress)
 
 - Remove support for installing extras for `material` theme since `material`
-  now has [built-in support][material-mike] for mike.
+  now has [built-in support][material-mike] for mike
 
 [material-mike]: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#versioning
 
