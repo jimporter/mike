@@ -1,6 +1,6 @@
 # Changes
 
-## v0.6.0 (2020-11-22)
+## v0.6.1 (in progress)
 
 - Remove support for installing extras for `material` theme since `material`
   now has [built-in support][material-mike] for mike
