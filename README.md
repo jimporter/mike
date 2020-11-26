@@ -43,6 +43,9 @@ your MkDocs config. Simply run the following command in the directory with your
 mike install-extras
 ```
 
+(If you have existing documentation on your `gh-pages` branch, you may want to
+delete the old documentation first via [`mike delete --all`](#deleting-docs).)
+
 mike is designed to produce one version of your docs at a time. That way, you
 can easily deploy a new version without touching any older versions of your
 docs; this can be especially important if your old docs are no longer buildable
