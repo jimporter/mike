@@ -173,6 +173,15 @@ diverged from your remote, mike will leave it as-is and ask you what to do. To
 ignore the remote's state, just pass `--ignore`; to update to the remote's
 state, pass `--rebase`.
 
+## `CNAME` (and Other Special Files)
+
+Some special files that you'd like to deploy along with your documentation (such
+as `CNAME`) aren't related to a particular version of the docs, and instead need
+to go in the root directory of your site. There's no special handling for this
+in mike, but since your built docs live on a git branch, it's still easy to
+manage: simply check out your `gh-pages` branch (or wherever your built docs
+live), and commit the necessary files to the root directory.
+
 ## For Theme Authors
 
 If you'd like to provide support for mike in your theme, you just need to
