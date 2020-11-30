@@ -1,5 +1,5 @@
 import json
-from packaging.version import LegacyVersion as Version
+from verspec.loose import LooseVersion as Version
 
 
 def _ensure_version(version):

@@ -2,8 +2,10 @@
 
 ## v0.6.1 (in progress)
 
+- Require Python 3.6+
 - Remove support for installing extras for `material` theme since `material`
   now has [built-in support][material-mike] for mike
+- Replace `packaging` dependency with `verspec` for future stability
 
 [material-mike]: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#versioning
 

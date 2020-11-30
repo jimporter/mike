@@ -1,6 +1,6 @@
 import json
 import unittest
-from packaging.version import LegacyVersion as Version
+from verspec.loose import LooseVersion as Version
 
 from mike.versions import VersionInfo, Versions
 
