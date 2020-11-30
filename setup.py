@@ -61,12 +61,6 @@ with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
     long_desc = re.sub(r'(^# mike)\n\n(.+\n)*', r'\1', f.read())
 
-try:
-    import pypandoc
-    long_desc = pypandoc.convert_text(long_desc, 'rst', format='md')
-except ImportError:
-    pass
-
 setup(
     name='mike',
     version=version,
@@ -74,6 +68,7 @@ setup(
     description=('Manage multiple versions of your MkDocs-powered ' +
                  'documentation'),
     long_description=long_desc,
+    long_description_content_type='text/markdown',
     keywords='mkdocs multiple versions',
     url='https://github.com/jimporter/mike',
 
@@ -101,7 +96,7 @@ setup(
 
     install_requires=(['mkdocs >= 1.0', 'jinja2', 'ruamel.yaml', 'verspec']),
     extras_require={
-        'dev': ['coverage', 'flake8 >= 3.0', 'pypandoc >= 1.4'],
+        'dev': ['coverage', 'flake8 >= 3.0'],
         'test': ['coverage', 'flake8 >= 3.0'],
     },
 
