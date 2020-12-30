@@ -39,7 +39,7 @@ Before using mike for the first time, you'll probably want to add the "extras"
 to your documentation sources that will display a version selector in your
 generated docs. (Note: if your documentation theme has built-in support for
 mike, such as the [Insiders' edition][material-insiders] of Material for
-MkDocs), this step is unnecessary.)
+MkDocs, this step is unnecessary.)
 
 To do this, run the following command in the directory with your `mkdocs.yml`
 file, and it will add the extra CSS and JS files to your docs directory and
