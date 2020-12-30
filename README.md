@@ -35,9 +35,13 @@ pip install mike
 
 ### Building Your Docs
 
-Before your first build, you'll probably want to add the version selector to
-your MkDocs config. Simply run the following command in the directory with your
-`mkdocs.yml` file to install the extra CSS and JS files to your docs:
+Before your first build, you'll probably want to add the "extras" to your
+documentation sources that will display a version selector in your generated
+docs. To do this, run the following command in the directory with your
+`mkdocs.yml` file, and it will add the extra CSS and JS files to your docs
+directory and update your `mkdocs.yml` configuration as needed. Once you're
+happy with the changes, you can commit them so that subsequent builders (e.g.
+your CI system) don't need to worry about this step:
 
 ```sh
 mike install-extras
@@ -122,7 +126,7 @@ mike list [version-or-alias]
 ```
 
 Sometimes, you need this information to be consumed by another tool. In that
-case, simply pass `-j`/`--json` to return the list of doc versions as JSON.
+case, pass `-j`/`--json` to return the list of doc versions as JSON.
 
 ### Setting the Default Version
 
@@ -182,7 +186,7 @@ Some special files that you'd like to deploy along with your documentation (such
 as `CNAME`) aren't related to a particular version of the docs, and instead need
 to go in the root directory of your site. There's no special handling for this
 in mike, but since your built docs live on a git branch, it's still easy to
-manage: simply check out your `gh-pages` branch (or wherever your built docs
+manage: check out your `gh-pages` branch (or wherever your built docs
 live), and commit the necessary files to the root directory.
 
 ## For Theme Authors
