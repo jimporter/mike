@@ -33,15 +33,19 @@ pip install mike
 
 ## Usage
 
-### Building Your Docs
+### Initialization
 
-Before your first build, you'll probably want to add the "extras" to your
-documentation sources that will display a version selector in your generated
-docs. To do this, run the following command in the directory with your
-`mkdocs.yml` file, and it will add the extra CSS and JS files to your docs
-directory and update your `mkdocs.yml` configuration as needed. Once you're
-happy with the changes, you can commit them so that subsequent builders (e.g.
-your CI system) don't need to worry about this step:
+Before using mike for the first time, you'll probably want to add the "extras"
+to your documentation sources that will display a version selector in your
+generated docs. (Note: if your documentation theme has built-in support for
+mike, such as the [Insiders' edition][material-insiders] of Material for
+MkDocs), this step is unnecessary.)
+
+To do this, run the following command in the directory with your `mkdocs.yml`
+file, and it will add the extra CSS and JS files to your docs directory and
+update your `mkdocs.yml` configuration as needed. Once you're happy with the
+changes, you can commit them so that subsequent builders (e.g. your CI system)
+don't need to worry about this step:
 
 ```sh
 mike install-extras
@@ -49,6 +53,8 @@ mike install-extras
 
 (If you have existing documentation on your `gh-pages` branch, you may want to
 delete the old documentation first via [`mike delete --all`](#deleting-docs).)
+
+### Building Your Docs
 
 mike is designed to produce one version of your docs at a time. That way, you
 can easily deploy a new version without touching any older versions of your
@@ -232,4 +238,5 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [codecov-link]: https://codecov.io/gh/jimporter/mike
 
 [bfg9000]: https://jimporter.github.io/bfg9000
+[material-insiders]: https://squidfunk.github.io/mkdocs-material/insiders/
 [setuptools]: https://pythonhosted.org/setuptools/
