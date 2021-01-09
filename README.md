@@ -35,10 +35,12 @@ pip install mike
 
 ### Initialization
 
-Before using mike for the first time, you probably want to add the mike plugin
-to your `mkdocs.yml` file. This adds a version selector to supported themes as
-well as updating the `site_url` (if you set it) to point to the version of the
-docs that are being built:
+Before using mike for the first time, you may want to add the mike plugin
+to your `mkdocs.yml` file. This plugin is added by default when building your
+documentation with mike, but by adding it explicitly, you can configure how it
+works. The plugin adds a version selector to supported themes as well as
+updating the `site_url` (if you set it) to point to the version of the docs that
+are being built:
 
 ```yaml
 plugins:
@@ -49,8 +51,8 @@ plugins:
       javascript_dir: js      # the directory to put the version selector's JS
 ```
 
-Note: If you have existing documentation on your `gh-pages` branch, you may want
-to delete the old documentation before building your new versioned docs via
+Note: If you have existing documentation on your `gh-pages` branch, you may also
+want to delete the old documentation before building your new versioned docs via
 [`mike delete --all`](#deleting-docs).)
 
 ### Building Your Docs

@@ -46,7 +46,8 @@ def check_remote_status(args, strict=False):
 
 def deploy(args):
     check_remote_status(args, strict=True)
-    mkdocs_utils.build(args.config_file, args.version)
+    with mkdocs_utils.inject_plugin(args.config_file) as config_file:
+        mkdocs_utils.build(config_file, args.version)
     commands.deploy(mkdocs_utils.site_dir(args.config_file), args.version,
                     args.title, args.alias, args.update_aliases, args.branch,
                     args.message)
