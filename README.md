@@ -43,6 +43,7 @@ docs that are being built:
 ```yaml
 plugins:
   - mike:
+      # these fields are all optional; the defaults are as below...
       version_selector: true  # turn this off to leave out the version selector
       css_dir: css            # the directory to put the version selector's CSS
       javascript_dir: js      # the directory to put the version selector's JS
