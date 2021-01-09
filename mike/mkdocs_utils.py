@@ -3,6 +3,8 @@ import re
 import subprocess
 from ruamel import yaml
 
+docs_version_var = 'MIKE_DOCS_VERSION'
+
 
 def site_dir(config_file):
     with open(config_file) as f:
@@ -11,13 +13,17 @@ def site_dir(config_file):
     return os.path.join(os.path.dirname(config_file), site)
 
 
-def build(config_file, verbose=True):
+def build(config_file, version, verbose=True):
     command = (
         ['mkdocs', 'build', '--clean'] +
         (['--config-file', config_file] if config_file else [])
     )
+
+    env = os.environ.copy()
+    env[docs_version_var] = version
+
     output = None if verbose else subprocess.DEVNULL
-    subprocess.run(command, check=True, stdout=output, stderr=output)
+    subprocess.run(command, check=True, env=env, stdout=output, stderr=output)
 
 
 def version():

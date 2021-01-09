@@ -220,9 +220,23 @@ class TestDeploy(DeployTestCase):
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
+class TestDeployPlugin(DeployTestCase):
+    def setUp(self):
+        self.stage = stage_dir('deploy_plugin')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'theme_object'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
+    def test_default(self):
+        assertPopen(['mike', 'deploy', '1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy()
+
+
 class TestDeployCustomSiteDir(DeployTestCase):
     def setUp(self):
-        self.stage = stage_dir('deploy-sitedir')
+        self.stage = stage_dir('deploy_sitedir')
         git_init()
         copytree(os.path.join(test_data_dir, 'site_dir'), self.stage)
         check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])

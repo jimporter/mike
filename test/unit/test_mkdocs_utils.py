@@ -2,36 +2,36 @@ import os
 import unittest
 
 from .. import *
-from mike import mkdocs
+from mike import mkdocs_utils
 
 
-class TestMkDocs(unittest.TestCase):
+class TestMkDocsUtils(unittest.TestCase):
     def test_site_dir(self):
         self.stage = stage_dir('build')
         copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        self.assertEqual(mkdocs.site_dir('mkdocs.yml'), 'site')
+        self.assertEqual(mkdocs_utils.site_dir('mkdocs.yml'), 'site')
         self.assertEqual(
-            mkdocs.site_dir(os.path.join(self.stage, 'mkdocs.yml')),
+            mkdocs_utils.site_dir(os.path.join(self.stage, 'mkdocs.yml')),
             os.path.join(self.stage, 'site')
         )
 
     def test_custom_site_dir(self):
         self.stage = stage_dir('build')
         copytree(os.path.join(test_data_dir, 'site_dir'), self.stage)
-        self.assertEqual(mkdocs.site_dir('mkdocs.yml'), 'built_docs')
+        self.assertEqual(mkdocs_utils.site_dir('mkdocs.yml'), 'built_docs')
         self.assertEqual(
-            mkdocs.site_dir(os.path.join(self.stage, 'mkdocs.yml')),
+            mkdocs_utils.site_dir(os.path.join(self.stage, 'mkdocs.yml')),
             os.path.join(self.stage, 'built_docs')
         )
 
     def test_build(self):
         self.stage = stage_dir('build')
         copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        mkdocs.build('mkdocs.yml', verbose=False)
+        mkdocs_utils.build('mkdocs.yml', '1.0', verbose=False)
 
         self.assertTrue(os.path.exists('site/index.html'))
 
-    def test_build_explicit_cfg(self):
+    def test_build_directory(self):
         self.stage = stage_dir('build')
         copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
 
@@ -39,10 +39,10 @@ class TestMkDocs(unittest.TestCase):
         # including paths being relative to mkdocs.yml (which MkDocs itself is
         # responsible for).
         with pushd(this_dir):
-            mkdocs.build(config_file=os.path.join(self.stage, 'mkdocs.yml'),
-                         verbose=False)
+            mkdocs_utils.build(os.path.join(self.stage, 'mkdocs.yml'),
+                               '1.0', verbose=False)
 
         self.assertTrue(os.path.exists('site/index.html'))
 
     def test_version(self):
-        self.assertRegex(mkdocs.version(), r'\S+')
+        self.assertRegex(mkdocs_utils.version(), r'\S+')

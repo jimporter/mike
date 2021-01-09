@@ -104,6 +104,9 @@ setup(
         'console_scripts': [
             'mike = mike.driver:main',
         ],
+        'mkdocs.plugins': [
+            'mike = mike.mkdocs_plugin:MikePlugin',
+        ],
         'mike.themes': [
             'mkdocs = mike.themes.mkdocs',
             'readthedocs = mike.themes.readthedocs',

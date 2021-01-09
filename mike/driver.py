@@ -3,7 +3,7 @@ import sys
 
 from . import commands
 from . import git_utils
-from . import mkdocs
+from . import mkdocs_utils
 from .app_version import version as app_version
 
 
@@ -46,8 +46,8 @@ def check_remote_status(args, strict=False):
 
 def deploy(args):
     check_remote_status(args, strict=True)
-    mkdocs.build(args.config_file)
-    commands.deploy(mkdocs.site_dir(args.config_file), args.version,
+    mkdocs_utils.build(args.config_file, args.version)
+    commands.deploy(mkdocs_utils.site_dir(args.config_file), args.version,
                     args.title, args.alias, args.update_aliases, args.branch,
                     args.message)
     if args.push:

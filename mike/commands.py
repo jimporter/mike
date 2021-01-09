@@ -9,7 +9,7 @@ from pkg_resources import iter_entry_points, resource_stream
 from ruamel.yaml.util import load_yaml_guess_indent
 
 from . import git_utils
-from . import mkdocs
+from . import mkdocs_utils
 from . import server
 from .app_version import version as app_version
 from .versions import Versions
@@ -43,7 +43,7 @@ def deploy(site_dir, version, title=None, aliases=[], update_aliases=False,
         ).format(
             rev=git_utils.get_latest_commit('HEAD', short=True),
             doc_version=version,
-            mkdocs_version=mkdocs.version(),
+            mkdocs_version=mkdocs_utils.version(),
             mike_version=app_version
         )
 
