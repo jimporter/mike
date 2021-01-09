@@ -224,7 +224,7 @@ class TestDeployPlugin(DeployTestCase):
     def setUp(self):
         self.stage = stage_dir('deploy_plugin')
         git_init()
-        copytree(os.path.join(test_data_dir, 'theme_object'), self.stage)
+        copytree(os.path.join(test_data_dir, 'mkdocs_plugin'), self.stage)
         check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
         check_call_silent(['git', 'commit', '-m', 'initial commit'])
 

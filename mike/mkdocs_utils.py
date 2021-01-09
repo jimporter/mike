@@ -1,7 +1,7 @@
 import os
 import re
 import subprocess
-from ruamel import yaml
+import yaml
 
 docs_version_var = 'MIKE_DOCS_VERSION'
 

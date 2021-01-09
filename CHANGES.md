@@ -3,6 +3,7 @@
 ## v0.6.1 (in progress)
 
 - Require Python 3.6+
+- Remove `mike install-extras` and replace it with an MkDocs plugin
 - Remove support for installing extras for `material` theme since `material`
   now has [built-in support][material-mike] for mike
 - Replace `packaging` dependency with `verspec` for future stability

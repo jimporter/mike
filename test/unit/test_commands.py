@@ -1,6 +1,4 @@
-import os
 import re
-import ruamel.yaml as yaml
 import unittest
 from itertools import chain
 from unittest import mock
@@ -359,86 +357,6 @@ class TestSetDefault(unittest.TestCase):
         self.assertRaises(ValueError, commands.set_default, '2.0')
         self.assertRaises(ValueError, commands.set_default, '1.0',
                           branch='branch')
-
-
-class TestGetThemeDir(unittest.TestCase):
-    def test_mkdocs_theme(self):
-        theme_dir = commands.get_theme_dir('mkdocs')
-        self.assertEqual(os.path.basename(theme_dir), 'mkdocs')
-
-    def test_bootswatch_theme(self):
-        theme_dir = commands.get_theme_dir('yeti')
-        self.assertEqual(os.path.basename(theme_dir), 'mkdocs')
-
-    def test_unknown_theme(self):
-        self.assertRaises(ValueError, commands.get_theme_dir, 'nonexist')
-
-    def test_no_theme(self):
-        self.assertRaises(ValueError, commands.get_theme_dir, None)
-
-
-class TestMakeDirs(unittest.TestCase):
-    def setUp(self):
-        self.stage = stage_dir('makedirs')
-
-    def test_nonexistent(self):
-        commands._makedirs('dir')
-        assertDirectory('.', {'dir'})
-
-    def test_existing_dir(self):
-        os.mkdir('dir')
-        commands._makedirs('dir')
-        assertDirectory('.', {'dir'})
-
-    def test_existing_file(self):
-        open('dir', 'w').close()
-        self.assertRaises(OSError, commands._makedirs, 'dir')
-
-
-class TestInstallExtras(unittest.TestCase):
-    def setUp(self):
-        self.stage = stage_dir('install_extras')
-        self.mkdocs_yml = os.path.join(self.stage, 'mkdocs.yml')
-
-    def _test_extras(self):
-        assertDirectory('.', {
-            'mkdocs.yml',
-            'docs',
-            'docs/css',
-            'docs/css/version-select.css',
-            'docs/js',
-            'docs/js/version-select.js',
-            'docs/index.md',
-        })
-
-        with open(self.mkdocs_yml) as f:
-            config = yaml.safe_load(f)
-            self.assertTrue(os.path.join('css', 'version-select.css') in
-                            config['extra_css'])
-            self.assertTrue(os.path.join('js', 'version-select.js') in
-                            config['extra_javascript'])
-
-    def test_basic_theme(self):
-        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        commands.install_extras(self.mkdocs_yml)
-        self._test_extras()
-
-    def test_theme_object(self):
-        copytree(os.path.join(test_data_dir, 'theme_object'), self.stage)
-        commands.install_extras(self.mkdocs_yml)
-        self._test_extras()
-
-    def test_no_theme(self):
-        copytree(os.path.join(test_data_dir, 'no_theme'), self.stage)
-        self.assertRaises(ValueError, commands.install_extras, self.mkdocs_yml)
-        commands.install_extras(self.mkdocs_yml, theme='mkdocs')
-        self._test_extras()
-
-    def test_install_twice(self):
-        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        commands.install_extras(self.mkdocs_yml)
-        commands.install_extras(self.mkdocs_yml)
-        self._test_extras()
 
 
 class TestServe(unittest.TestCase):

@@ -35,24 +35,22 @@ pip install mike
 
 ### Initialization
 
-Before using mike for the first time, you'll probably want to add the "extras"
-to your documentation sources that will display a version selector in your
-generated docs. (Note: if your documentation theme has built-in support for
-mike, such as the [Insiders' edition][material-insiders] of Material for
-MkDocs, this step is unnecessary.)
+Before using mike for the first time, you probably want to add the mike plugin
+to your `mkdocs.yml` file. This adds a version selector to supported themes as
+well as updating the `site_url` (if you set it) to point to the version of the
+docs that are being built:
 
-To do this, run the following command in the directory with your `mkdocs.yml`
-file, and it will add the extra CSS and JS files to your docs directory and
-update your `mkdocs.yml` configuration as needed. Once you're happy with the
-changes, you can commit them so that subsequent builders (e.g. your CI system)
-don't need to worry about this step:
-
-```sh
-mike install-extras
+```yaml
+plugins:
+  - mike:
+      version_selector: true  # turn this off to leave out the version selector
+      css_dir: css            # the directory to put the version selector's CSS
+      javascript_dir: js      # the directory to put the version selector's JS
 ```
 
-(If you have existing documentation on your `gh-pages` branch, you may want to
-delete the old documentation first via [`mike delete --all`](#deleting-docs).)
+Note: If you have existing documentation on your `gh-pages` branch, you may want
+to delete the old documentation before building your new versioned docs via
+[`mike delete --all`](#deleting-docs).)
 
 ### Building Your Docs
 
@@ -208,20 +206,11 @@ this:
 ]
 ```
 
-If distributing your theme as a Python package, you should also add a
-[setuptools][setuptools] entry point for `mike.themes` pointing to a Python file
-in the package that raises an exception with an error message for mike to report
-to the user if they attempt to run `mike install-extras`. For example:
-
-```python
-raise ValueError('install-extras not required to use mike with cooldocs '
-                 'theme; for more information, see https://...')
-```
-
 If you're creating a third-party extension to an existing theme, you add a
 setuptools entry point for `mike.themes` pointing to a Python submodule that
 contains `css/` and `js/` subdirectories containing the extra code to be
-installed into the user's documentation.
+installed into the user's documentation. This will then automatically be
+included via the `mike` plugin in the user's `mkdocs.yml` file.
 
 To see some examples of how to work with this, check the
 [`mike/themes/mkdocs`](mike/themes/mkdocs) directory.

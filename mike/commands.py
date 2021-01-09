@@ -1,12 +1,6 @@
-import errno
 import http.server
-import os
-import ruamel.yaml as yaml
-import shutil
-from collections import abc
 from jinja2 import Template
-from pkg_resources import iter_entry_points, resource_stream
-from ruamel.yaml.util import load_yaml_guess_indent
+from pkg_resources import resource_stream
 
 from . import git_utils
 from . import mkdocs_utils
@@ -148,57 +142,6 @@ def set_default(version, branch='gh-pages', message=None):
         commit.add_file(git_utils.FileInfo(
             'index.html', t.render(version=version)
         ))
-
-
-def get_theme_dir(theme_name):
-    if theme_name is None:
-        raise ValueError('no theme specified')
-    themes = list(iter_entry_points('mike.themes', theme_name))
-    if len(themes) == 0:
-        raise ValueError("theme '{}' unsupported".format(theme_name))
-    return os.path.dirname(themes[0].load().__file__)
-
-
-def _makedirs(path):
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno != errno.EEXIST or not os.path.isdir(path):
-            raise
-
-
-def install_extras(config_file, theme=None):
-    with open(config_file) as f:
-        config, indent, bsi = load_yaml_guess_indent(f, preserve_quotes=True)
-        if theme is None:
-            if 'theme' not in config:
-                raise ValueError('no theme specified in mkdocs.yml; pass ' +
-                                 '--theme instead')
-            theme = config['theme']
-            if isinstance(theme, abc.Mapping):
-                theme = theme['name']
-
-        theme_dir = get_theme_dir(theme)
-        docs_dir = config.get('docs_dir', 'docs')
-
-        for path, prop in [('css', 'extra_css'), ('js', 'extra_javascript')]:
-            files = os.listdir(os.path.join(theme_dir, path))
-            if not files:  # pragma: no cover
-                continue
-
-            extras = config.setdefault(prop, [])
-            for f in files:
-                relpath = os.path.join(path, f)
-                src = os.path.join(theme_dir, relpath)
-                dst = os.path.join(docs_dir, relpath)
-
-                _makedirs(os.path.dirname(dst))
-                shutil.copyfile(src, dst)
-                if relpath not in extras:
-                    extras.append(relpath)
-
-    with open(config_file, 'w') as f:
-        yaml.round_trip_dump(config, f, indent=indent, block_seq_indent=bsi)
 
 
 def serve(address='localhost:8000', branch='gh-pages', verbose=True):

@@ -116,10 +116,6 @@ def set_default(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
-def install_extras(args):
-    commands.install_extras(args.config_file, args.theme)
-
-
 def serve(args):
     check_remote_status(args)
     commands.serve(args.dev_addr, args.branch)
@@ -195,15 +191,6 @@ def main():
     add_git_arguments(set_default_p)
     set_default_p.add_argument('version', metavar='VERSION',
                                help='version to set as default')
-
-    install_extras_p = subparsers.add_parser(
-        'install-extras', help='install extra files to your docs'
-    )
-    install_extras_p.set_defaults(func=install_extras)
-    install_extras_p.add_argument('-F', '--config-file', default='mkdocs.yml',
-                                  help='the MkDocs configuration file to use')
-    install_extras_p.add_argument('-t', '--theme',
-                                  help='the theme to use for your docs')
 
     serve_p = subparsers.add_parser(
         'serve', help='serve docs locally for testing'
