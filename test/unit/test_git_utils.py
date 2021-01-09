@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 import unittest
 
@@ -38,16 +37,12 @@ class TestGetLatestCommit(unittest.TestCase):
 
     def test_latest_commit(self):
         rev = git_utils.get_latest_commit('master')
-        expected_rev = (subprocess.check_output(
-            ['git', 'rev-parse', 'master'], universal_newlines=True
-        ).rstrip())
+        expected_rev = check_output(['git', 'rev-parse', 'master']).rstrip()
         self.assertEqual(rev, expected_rev)
 
     def test_short(self):
         rev = git_utils.get_latest_commit('master', short=True)
-        expected_rev = (subprocess.check_output(
-            ['git', 'rev-parse', 'master'], universal_newlines=True
-        ).rstrip())
+        expected_rev = check_output(['git', 'rev-parse', 'master']).rstrip()
         self.assertEqual(rev, expected_rev[0:len(rev)])
 
     def test_nonexistent_branch(self):

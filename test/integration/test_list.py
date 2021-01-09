@@ -28,21 +28,18 @@ class TestList(unittest.TestCase):
             ))
 
     def _get_list(self, options=[]):
-        proc = subprocess.Popen(
+        return subprocess.run(
             ['mike', 'list'] + options,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             universal_newlines=True
         )
 
-        stdout, stderr = proc.communicate()
-        return proc.returncode, stdout, stderr
-
     def _check_list(self, options=[], stdout=_default_output, stderr='',
                     returncode=0):
-        result = self._get_list(options)
-        self.assertEqual(result[0], returncode)
-        self.assertEqual(result[1], stdout)
-        self.assertEqual(result[2], stderr)
+        proc = self._get_list(options)
+        self.assertEqual(proc.returncode, returncode)
+        self.assertEqual(proc.stdout, stdout)
+        self.assertEqual(proc.stderr, stderr)
 
     def test_list(self):
         self._check_list()
@@ -55,11 +52,11 @@ class TestList(unittest.TestCase):
                          'mike: version nonexist does not exist\n', 1)
 
     def test_list_json(self):
-        returncode, stdout, stderr = self._get_list(['-j'])
-        self.assertEqual(returncode, 0)
-        self.assertEqual(stderr, '')
+        proc = self._get_list(['-j'])
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(proc.stderr, '')
 
-        data = json.loads(stdout)
+        data = json.loads(proc.stdout)
         data[0]['aliases'].sort()
         self.assertEqual(data, [
             {'version': '4.0', 'title': '4.0', 'aliases': ['dev', 'latest']},
@@ -69,10 +66,10 @@ class TestList(unittest.TestCase):
         ])
 
     def test_list_version_json(self):
-        returncode, stdout, stderr = self._get_list(['-j', 'stable'])
-        self.assertEqual(returncode, 0)
-        self.assertEqual(stderr, '')
-        self.assertEqual(json.loads(stdout), {
+        proc = self._get_list(['-j', 'stable'])
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(proc.stderr, '')
+        self.assertEqual(json.loads(proc.stdout), {
             'version': '3.0', 'title': '3.0.3', 'aliases': ['stable']
         })
 

@@ -1,5 +1,4 @@
 import os
-import subprocess
 import unittest
 
 from . import assertPopen, assertOutput
@@ -20,8 +19,7 @@ class TestDelete(unittest.TestCase):
             assertPopen(['mike', 'deploy', '-b', branch, i])
 
     def _test_delete(self, expected_message=None):
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
+        message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
@@ -44,8 +42,7 @@ class TestDelete(unittest.TestCase):
         assertPopen(['mike', 'delete', '--all'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
 
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
+        message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, r'^Removed everything with mike \S+$')
         self.assertFalse(os.path.exists('version.json'))
 

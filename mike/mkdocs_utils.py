@@ -16,16 +16,14 @@ def build(config_file, verbose=True):
         ['mkdocs', 'build', '--clean'] +
         (['--config-file', config_file] if config_file else [])
     )
-
-    if verbose:
-        subprocess.check_call(command)
-    else:
-        subprocess.check_output(command, stderr=subprocess.STDOUT)
+    output = None if verbose else subprocess.DEVNULL
+    subprocess.run(command, check=True, stdout=output, stderr=output)
 
 
 def version():
-    output = subprocess.check_output(
-        ['mkdocs', '--version'], universal_newlines=True
-    ).rstrip()
+    output = subprocess.run(
+        ['mkdocs', '--version'],
+        check=True, stdout=subprocess.PIPE, universal_newlines=True
+    ).stdout.rstrip()
     m = re.search('^mkdocs, version (\\S*)', output)
     return m.group(1)

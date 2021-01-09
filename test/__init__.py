@@ -7,8 +7,8 @@ from contextlib import contextmanager
 from itertools import chain
 
 __all__ = ['this_dir', 'test_data_dir', 'test_stage_dir', 'stage_dir', 'pushd',
-           'copytree', 'check_call_silent', 'git_config', 'git_init',
-           'commit_file', 'assertDirectory']
+           'copytree', 'check_call_silent', 'check_output', 'git_config',
+           'git_init', 'commit_file', 'assertDirectory']
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, 'data')
@@ -46,8 +46,14 @@ def copytree(src, dst):
             shutil.copy2(curr_src, curr_dst)
 
 
+def check_output(args):
+    return subprocess.run(args, check=True, stdout=subprocess.PIPE,
+                          universal_newlines=True).stdout
+
+
 def check_call_silent(args):
-    subprocess.check_output(args, stderr=subprocess.STDOUT)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL)
 
 
 def git_config():

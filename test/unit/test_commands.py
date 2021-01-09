@@ -1,7 +1,6 @@
 import os
 import re
 import ruamel.yaml as yaml
-import subprocess
 import unittest
 from itertools import chain
 from unittest import mock
@@ -33,8 +32,7 @@ class TestListVersions(unittest.TestCase):
 
 class TestBase(unittest.TestCase):
     def _test_state(self, expected_message, expected_versions):
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, expected_message)
 
         dirs = set()
@@ -181,8 +179,7 @@ class TestDelete(TestBase):
         commands.delete(all=True)
         check_call_silent(['git', 'checkout', 'gh-pages'])
 
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, r'^Removed everything with mike \S+$')
         assertDirectory('.', set())
 
@@ -244,8 +241,7 @@ class TestAlias(TestBase):
         commands.delete(all=True)
         check_call_silent(['git', 'checkout', 'gh-pages'])
 
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, r'^Removed everything with mike \S+$')
         assertDirectory('.', set())
 
@@ -278,8 +274,7 @@ class TestRetitle(unittest.TestCase):
         commands.deploy(self.stage, '1.0', branch=branch)
 
     def _test_retitle(self, expected_message=None):
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
@@ -331,8 +326,7 @@ class TestSetDefault(unittest.TestCase):
         commands.deploy(self.stage, '1.0', branch=branch)
 
     def _test_default(self, expected_message=None):
-        message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'],
-                                          universal_newlines=True).rstrip()
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:

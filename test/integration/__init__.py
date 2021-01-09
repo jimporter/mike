@@ -10,14 +10,13 @@ class SubprocessError(unittest.TestCase.failureException):
 
 
 def assertPopen(command, returncode=0):
-    proc = subprocess.Popen(
+    proc = subprocess.run(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         universal_newlines=True
     )
-    output = proc.communicate()[0]
     if proc.returncode != returncode:
-        raise SubprocessError(output)
-    return output
+        raise SubprocessError(proc.stdout)
+    return proc.stdout
 
 
 def assertOutput(test, command, output, *args, **kwargs):

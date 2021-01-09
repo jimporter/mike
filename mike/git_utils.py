@@ -62,20 +62,18 @@ def make_when(timestamp=None):
 
 def get_config(key):
     cmd = ['git', 'config', key]
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
-        raise GitError('error getting config {!r}'.format(key), stderr)
-    return stdout.strip()
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        raise GitError('error getting config {!r}'.format(key), p.stderr)
+    return p.stdout.strip()
 
 
 def get_latest_commit(rev, short=False):
     cmd = ['git', 'rev-parse'] + (['--short'] if short else []) + [rev]
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
-        raise GitError('error getting latest commit', stderr)
-    return stdout.strip()
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        raise GitError('error getting latest commit', p.stderr)
+    return p.stdout.strip()
 
 
 def has_branch(branch):
@@ -88,15 +86,13 @@ def has_branch(branch):
 
 def get_merge_base(rev1, rev2):
     cmd = ['git', 'merge-base', rev1, rev2]
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    stdout, stderr = p.communicate()
-    result = p.wait()
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
 
-    if result == 0:
-        return stdout.strip()
-    elif result == 1:
+    if p.returncode == 0:
+        return p.stdout.strip()
+    elif p.returncode == 1:
         raise GitRevUnrelated(rev1, rev2)
-    raise GitError('error getting merge-base', stderr)
+    raise GitError('error getting merge-base', p.stderr)
 
 
 def compare_branches(branch1, branch2):
@@ -112,10 +108,9 @@ def compare_branches(branch1, branch2):
 
 def update_ref(branch, new_ref):
     cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), new_ref]
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    stderr = p.communicate()[1]
-    if p.wait() != 0:
-        raise GitError('error updating ref for {}'.format(branch), stderr)
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        raise GitError('error updating ref for {}'.format(branch), p.stderr)
 
 
 def try_rebase_branch(remote, branch, force=False):
@@ -230,11 +225,10 @@ class Commit:
 def push_branch(remote, branch, force=False):
     cmd = (['git', 'push'] + (['--force'] if force else []) +
            ['--', remote, branch])
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
         raise GitError('failed to push branch {} to {}'.format(branch, remote),
-                       stderr)
+                       p.stderr)
 
 
 def file_mode(branch, filename):
@@ -244,27 +238,25 @@ def file_mode(branch, filename):
         return 0o040000
 
     cmd = ['git', 'ls-tree', '--full-tree', '--', branch, git_path(filename)]
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
-        raise GitError('unable to read file {!r}'.format(filename), stderr)
-    if not stdout:
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        raise GitError('unable to read file {!r}'.format(filename), p.stderr)
+    if not p.stdout:
         raise GitError('file not found')
 
-    return int(stdout.split(' ', 1)[0], 8)
+    return int(p.stdout.split(' ', 1)[0], 8)
 
 
 def read_file(branch, filename, universal_newlines=False):
     cmd = ['git', 'show', '{branch}:{filename}'.format(
         branch=branch, filename=git_path(filename)
     )]
-    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE,
-                 universal_newlines=universal_newlines)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE,
+               universal_newlines=universal_newlines)
+    if p.returncode != 0:
         raise GitError('unable to read file {!r}'.format(filename),
-                       str(stderr))
-    return stdout
+                       str(p.stderr))
+    return p.stdout
 
 
 def walk_files(branch, path=''):
