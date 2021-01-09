@@ -58,29 +58,35 @@ class TestMkdocsPluginOnConfig(unittest.TestCase):
 class TestMkdocsPluginOnFiles(unittest.TestCase):
     MockTheme = namedtuple('MockTheme', ['name'])
 
-    def make_config(self, theme):
+    def make_plugin(self, version_selector=True):
+        p = mkdocs_plugin.MikePlugin()
+        p.config = {'version_selector': version_selector, 'css_dir': 'css',
+                    'javascript_dir': 'js'}
+        return p
+
+    def make_config(self, theme, extra_css=[], extra_javascript=[]):
         return {'theme': self.MockTheme(theme),
                 'site_dir': os.path.abspath(test_data_dir),
-                'extra_css': [], 'extra_javascript': []}
+                'extra_css': list(extra_css),
+                'extra_javascript': list(extra_javascript)}
 
     def test_mkdocs_theme(self):
-        p = mkdocs_plugin.MikePlugin()
-        p.config = {'version_selector': True, 'css_dir': 'css',
-                    'javascript_dir': 'js'}
-        files = p.on_files([], self.make_config('mkdocs'))
+        cfg = self.make_config('mkdocs')
+        files = self.make_plugin().on_files([], cfg)
         self.assertEqual([i.src_path for i in files],
                          ['version-select.css', 'version-select.js'])
 
     def test_unrecognized_theme(self):
-        p = mkdocs_plugin.MikePlugin()
-        p.config = {'version_selector': True, 'css_dir': 'css',
-                    'javascript_dir': 'js'}
-        files = p.on_files([], self.make_config('unrecognized'))
+        cfg = self.make_config('unrecognized')
+        files = self.make_plugin().on_files([], cfg)
         self.assertEqual(files, [])
 
+    def test_duplicate_files(self):
+        cfg = self.make_config('mkdocs', ['css/version-select.css'])
+        with self.assertRaises(mkdocs_plugin.PluginError):
+            self.make_plugin().on_files([], cfg)
+
     def test_no_version_select(self):
-        p = mkdocs_plugin.MikePlugin()
-        p.config = {'version_selector': False, 'css_dir': 'css',
-                    'javascript_dir': 'js'}
-        files = p.on_files([], self.make_config('mkdocs'))
+        cfg = self.make_config('mkdocs')
+        files = self.make_plugin(False).on_files([], cfg)
         self.assertEqual(files, [])

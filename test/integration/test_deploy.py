@@ -25,7 +25,8 @@ class DeployTestCase(unittest.TestCase):
         for i in expected_versions:
             dirs |= {str(i.version)} | i.aliases
         contents = {'versions.json'} | set(chain.from_iterable(
-            (d, d + '/index.html') for d in dirs
+            (d, d + '/index.html', d + '/css/version-select.css',
+             d + '/js/version-select.js') for d in dirs
         ))
         assertDirectory('.', contents, allow_extra=True)
 

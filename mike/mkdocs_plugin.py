@@ -7,6 +7,11 @@ from pkg_resources import iter_entry_points
 
 from .mkdocs_utils import docs_version_var
 
+try:
+    from mkdocs.exceptions import PluginError
+except ImportError:
+    PluginError = ValueError
+
 
 def get_theme_dir(theme_name):
     themes = list(iter_entry_points('mike.themes', theme_name))
@@ -41,8 +46,14 @@ class MikePlugin(BasePlugin):
             srcdir = os.path.join(theme_dir, path)
             destdir = os.path.join(config['site_dir'], cfg_value)
 
-            extra_files = os.listdir(srcdir)
-            for f in extra_files:
+            extra_kind = 'extra_' + prop
+            norm_extras = [os.path.normpath(i) for i in config[extra_kind]]
+            for f in os.listdir(srcdir):
+                relative_dest = os.path.join(cfg_value, f)
+                if relative_dest in norm_extras:
+                    raise PluginError('{!r} is already included in {!r}'
+                                      .format(relative_dest, extra_kind))
+
                 files.append(File(f, srcdir, destdir, False))
-                config['extra_' + prop].append(os.path.join(cfg_value, f))
+                config[extra_kind].append(relative_dest)
         return files
