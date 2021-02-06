@@ -145,6 +145,10 @@ version of the docs:
 mike set-default [version-or-alias]
 ```
 
+If you want to use a different template from the default, you can pass
+`-t`/`--template`; this takes a path to a [Jinja][jinja] template that accepts a
+`{{version}}` variable.
+
 Like `deploy` and `delete` above, you can specify `-p`/`--push` to push this
 commit as well.
 
@@ -232,3 +236,4 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [bfg9000]: https://jimporter.github.io/bfg9000
 [material-insiders]: https://squidfunk.github.io/mkdocs-material/insiders/
 [setuptools]: https://pythonhosted.org/setuptools/
+[jinja]: https://jinja.palletsprojects.com/

@@ -6,6 +6,7 @@
 - Remove `mike install-extras` and replace it with an MkDocs plugin; if you
   previously used `install-extras`, be sure to remove the added JS/CSS from your
   docs directory
+- Add support for custom templates with `mike set-default`
 - Canonical URLs in generated documentation now point to the correct location
 - Remove support for installing extras for `material` theme since `material`
   now has [built-in support][material-mike] for mike

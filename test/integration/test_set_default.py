@@ -18,7 +18,8 @@ class TestSetDefault(unittest.TestCase):
         for i in versions:
             assertPopen(['mike', 'deploy', '-b', branch, i])
 
-    def _test_default(self, expected_message=None):
+    def _test_default(self, expr=r'window\.location\.replace\("1\.0"\)',
+                      expected_message=None):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
@@ -27,13 +28,20 @@ class TestSetDefault(unittest.TestCase):
                              r'^Set default version to \S+ with mike \S+$')
 
         with open('index.html') as f:
-            self.assertRegex(f.read(), r'window\.location\.replace\("1\.0"\)')
+            self.assertRegex(f.read(), expr)
 
     def test_set_default(self):
         self._deploy()
         assertPopen(['mike', 'set-default', '1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default()
+
+    def test_custom_template(self):
+        self._deploy()
+        assertPopen(['mike', 'set-default', '-t',
+                     os.path.join(test_data_dir, 'template.html'), '1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default(r'^Redirecting to 1\.0$')
 
     def test_from_subdir(self):
         self._deploy()
@@ -53,7 +61,7 @@ class TestSetDefault(unittest.TestCase):
         self._deploy()
         assertPopen(['mike', 'set-default', '-m', 'commit message', '1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_default('commit message')
+        self._test_default(expected_message='commit message')
 
     def test_push(self):
         self._deploy()

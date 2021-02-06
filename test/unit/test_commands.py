@@ -323,7 +323,8 @@ class TestSetDefault(unittest.TestCase):
     def _deploy(self, branch='gh-pages'):
         commands.deploy(self.stage, '1.0', branch=branch)
 
-    def _test_default(self, expected_message=None):
+    def _test_default(self, expr=r'window\.location\.replace\("1\.0"\)',
+                      expected_message=None):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
@@ -332,13 +333,21 @@ class TestSetDefault(unittest.TestCase):
                              r'^Set default version to \S+ with mike \S+$')
 
         with open('index.html') as f:
-            self.assertRegex(f.read(), r'window\.location\.replace\("1\.0"\)')
+            self.assertRegex(f.read(), expr)
 
     def test_set_default(self):
         self._deploy()
         commands.set_default('1.0')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default()
+
+    def test_custom_template(self):
+        self._deploy()
+        with mock.patch('builtins.open',
+                        mock.mock_open(read_data=b'{{version}}')):
+            commands.set_default('1.0', 'template.html')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default(r'^1\.0$')
 
     def test_branch(self):
         self._deploy('branch')
@@ -350,7 +359,7 @@ class TestSetDefault(unittest.TestCase):
         self._deploy()
         commands.set_default('1.0', message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_default('commit message')
+        self._test_default(expected_message='commit message')
 
     def test_set_invalid_default(self):
         self._deploy()

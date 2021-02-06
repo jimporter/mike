@@ -126,7 +126,7 @@ def retitle(version, title, branch='gh-pages', message=None):
         commit.add_file(versions_to_file_info(all_versions))
 
 
-def set_default(version, branch='gh-pages', message=None):
+def set_default(version, template=None, branch='gh-pages', message=None):
     if message is None:
         message = (
             'Set default version to {doc_version} with mike {mike_version}'
@@ -136,8 +136,9 @@ def set_default(version, branch='gh-pages', message=None):
     if not all_versions.find(version):
         raise ValueError('version {} does not exist'.format(version))
 
-    with git_utils.Commit(branch, message) as commit, \
-         resource_stream(__name__, 'templates/index.html') as f:  # noqa
+    f = (open(template, 'rb') if template else
+         resource_stream(__name__, 'templates/index.html'))
+    with git_utils.Commit(branch, message) as commit, f:
         t = Template(f.read().decode('utf-8'))
         commit.add_file(git_utils.FileInfo(
             'index.html', t.render(version=version)
