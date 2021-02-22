@@ -8,24 +8,48 @@ from .app_version import version as app_version
 
 
 def add_git_arguments(parser, commit=True):
-    parser.add_argument('-r', '--remote', default='origin',
-                        help='origin to push to (default: %(default)s)')
-    parser.add_argument('-b', '--branch', default='gh-pages',
-                        help='branch to commit to (default: %(default)s)')
+    # Add this whenever we add git arguments since we pull the remote and
+    # branch from mkdocs.yml.
+    parser.add_argument('-F', '--config-file', metavar='FILE',
+                        default='mkdocs.yml',
+                        help='the MkDocs configuration file to use')
 
-    group = parser.add_mutually_exclusive_group()
+    git = parser.add_argument_group('git arguments')
+    git.add_argument('-r', '--remote',
+                     help='origin to push to (default: origin)')
+    git.add_argument('-b', '--branch',
+                     help='branch to commit to (default: gh-pages)')
+
+    group = git.add_mutually_exclusive_group()
     group.add_argument('--rebase', action='store_true',
                        help='rebase with remote')
     group.add_argument('--ignore', action='store_true',
                        help='ignore remote status')
 
     if commit:
-        parser.add_argument('-m', '--message',
-                            help='commit message')
-        parser.add_argument('-p', '--push', action='store_true',
-                            help='push to {remote}/{branch} after commit')
-        parser.add_argument('-f', '--force', action='store_true',
-                            help='force push when pushing')
+        git.add_argument('-m', '--message', help='commit message')
+        git.add_argument('-p', '--push', action='store_true',
+                         help='push to {remote}/{branch} after commit')
+        git.add_argument('-f', '--force', action='store_true',
+                         help='force push when pushing')
+
+
+def load_mkdocs_config(args, strict=False):
+    try:
+        cfg = mkdocs_utils.ConfigData(args.config_file)
+        if args.branch is None:
+            args.branch = cfg.remote_branch
+        if args.remote is None:
+            args.remote = cfg.remote_name
+        return cfg
+    except OSError:
+        if strict:
+            raise RuntimeError('{!r} not found'.format(args.config_file))
+        if args.branch is None or args.remote is None:
+            raise RuntimeError((
+                '{!r} not found; pass --config-file or set ' +
+                '--remote/--branch explicitly'
+            ).format(args.config_file))
 
 
 def check_remote_status(args, strict=False):
@@ -45,17 +69,18 @@ def check_remote_status(args, strict=False):
 
 
 def deploy(args):
+    cfg = load_mkdocs_config(args, strict=True)
     check_remote_status(args, strict=True)
     with mkdocs_utils.inject_plugin(args.config_file) as config_file:
         mkdocs_utils.build(config_file, args.version)
-    commands.deploy(mkdocs_utils.site_dir(args.config_file), args.version,
-                    args.title, args.alias, args.update_aliases, args.branch,
-                    args.message)
+    commands.deploy(cfg.site_dir, args.version, args.title, args.alias,
+                    args.update_aliases, args.branch, args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
 def delete(args):
+    load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.delete(args.version, args.all, args.branch, args.message)
     if args.push:
@@ -63,6 +88,7 @@ def delete(args):
 
 
 def alias(args):
+    load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.alias(args.version, args.alias, args.branch, args.message)
     if args.push:
@@ -70,6 +96,7 @@ def alias(args):
 
 
 def retitle(args):
+    load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.retitle(args.version, args.title, args.branch, args.message)
     if args.push:
@@ -90,6 +117,7 @@ def list_versions(args):
                 version=version, aliases=aliases
             ))
 
+    load_mkdocs_config(args)
     check_remote_status(args)
     all_versions = commands.list_versions(args.branch)
 
@@ -111,6 +139,7 @@ def list_versions(args):
 
 
 def set_default(args):
+    load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.set_default(args.version, args.template, args.branch,
                          args.message)
@@ -119,6 +148,7 @@ def set_default(args):
 
 
 def serve(args):
+    load_mkdocs_config(args)
     check_remote_status(args)
     commands.serve(args.dev_addr, args.branch)
 
@@ -134,13 +164,11 @@ def main():
         'deploy', help='build docs and deploy them to a branch'
     )
     deploy_p.set_defaults(func=deploy)
-    add_git_arguments(deploy_p)
     deploy_p.add_argument('-t', '--title',
                           help='short descriptive title for this version')
     deploy_p.add_argument('-u', '--update-aliases', action='store_true',
                           help='allow aliases pointing to other versions')
-    deploy_p.add_argument('-F', '--config-file', default='mkdocs.yml',
-                          help='the MkDocs configuration file to use')
+    add_git_arguments(deploy_p)
     deploy_p.add_argument('version', metavar='VERSION',
                           help='version (directory) to deploy this build to')
     deploy_p.add_argument('alias', nargs='*', metavar='ALIAS',
@@ -150,9 +178,9 @@ def main():
         'delete', help='delete docs from a branch'
     )
     delete_p.set_defaults(func=delete)
-    add_git_arguments(delete_p)
     delete_p.add_argument('--all', action='store_true',
                           help='delete everything')
+    add_git_arguments(delete_p)
     delete_p.add_argument('version', nargs='*', metavar='VERSION',
                           help='version (directory) to delete')
 
@@ -180,9 +208,9 @@ def main():
         'list', help='list deployed docs on a branch'
     )
     list_p.set_defaults(func=list_versions)
-    add_git_arguments(list_p, commit=False)
     list_p.add_argument('-j', '--json', action='store_true',
                         help='display the result as JSON')
+    add_git_arguments(list_p, commit=False)
     list_p.add_argument('version', metavar='VERSION', nargs='?',
                         help='version (directory) to deploy this build to')
 
@@ -190,9 +218,9 @@ def main():
         'set-default', help='set the default version for your docs'
     )
     set_default_p.set_defaults(func=set_default)
-    add_git_arguments(set_default_p)
     set_default_p.add_argument('-t', '--template',
                                help='the template file to use')
+    add_git_arguments(set_default_p)
     set_default_p.add_argument('version', metavar='VERSION',
                                help='version to set as default')
 

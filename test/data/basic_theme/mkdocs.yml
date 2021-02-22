@@ -1,5 +1,5 @@
 site_name: test
 theme: mkdocs
 
-pages:
+nav:
   - Home: index.md

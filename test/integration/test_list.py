@@ -3,6 +3,7 @@ import os
 import subprocess
 import unittest
 
+from . import assertPopen
 from .. import *
 from mike import git_utils, versions
 
@@ -16,6 +17,10 @@ class TestList(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('list')
         git_init()
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
         all_versions = versions.Versions()
         all_versions.add('1.0')
         all_versions.add('2.0', '2.0.2')
@@ -76,11 +81,17 @@ class TestList(unittest.TestCase):
     def test_from_subdir(self):
         os.mkdir('sub')
         with pushd('sub'):
-            self._check_list(['1.0'], '1.0\n')
-            self._check_list(['4.0'], '4.0 [dev, latest]\n')
-            self._check_list(['stable'], '"3.0.3" (3.0) [stable]\n')
-            self._check_list(['nonexist'], '',
+            assertPopen(['mike', 'list', '1.0'], returncode=1)
+
+            opts = ['-F', '../mkdocs.yml']
+            self._check_list(['1.0'] + opts, '1.0\n')
+            self._check_list(['4.0'] + opts, '4.0 [dev, latest]\n')
+            self._check_list(['stable'] + opts, '"3.0.3" (3.0) [stable]\n')
+            self._check_list(['nonexist'] + opts, '',
                              'mike: version nonexist does not exist\n', 1)
+
+            self._check_list(['1.0', '-b', 'gh-pages', '-r', 'origin'],
+                             '1.0\n')
 
     def test_local_empty(self):
         origin_rev = git_utils.get_latest_commit('gh-pages')

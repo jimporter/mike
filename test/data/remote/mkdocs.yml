@@ -1,6 +1,7 @@
 site_name: test
 theme: mkdocs
-site_dir: built_docs
+remote_name: myremote
+remote_branch: mybranch
 
 nav:
   - Home: index.md

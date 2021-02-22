@@ -15,6 +15,10 @@ class TestList(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('serve')
         git_init()
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
         with git_utils.Commit('gh-pages', 'add file') as commit:
             commit.add_file(git_utils.FileInfo('index.html', 'main page'))
             commit.add_file(git_utils.FileInfo('dir/index.html', 'sub page'))
@@ -46,7 +50,8 @@ class TestList(unittest.TestCase):
     def test_from_subdir(self):
         os.mkdir('sub')
         with pushd('sub'):
-            self._check_serve()
+            self._check_serve(['-F', '../mkdocs.yml'])
+            self._check_serve(['-b', 'gh-pages', '-r', 'origin'])
 
     def test_local_empty(self):
         origin_rev = git_utils.get_latest_commit('gh-pages')

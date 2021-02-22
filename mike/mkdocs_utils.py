@@ -8,11 +8,14 @@ from tempfile import NamedTemporaryFile
 docs_version_var = 'MIKE_DOCS_VERSION'
 
 
-def site_dir(config_file):
-    with open(config_file) as f:
-        config = yaml.load(f, Loader=yaml.Loader)
-        site = config.get('site_dir', 'site')
-    return os.path.join(os.path.dirname(config_file), site)
+class ConfigData:
+    def __init__(self, config_file):
+        with open(config_file) as f:
+            config = yaml.load(f, Loader=yaml.Loader)
+        self.site_dir = os.path.join(os.path.dirname(config_file),
+                                     config.get('site_dir', 'site'))
+        self.remote_name = config.get('remote_name', 'origin')
+        self.remote_branch = config.get('remote_branch', 'gh-pages')
 
 
 @contextmanager

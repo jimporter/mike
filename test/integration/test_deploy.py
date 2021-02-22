@@ -49,7 +49,7 @@ class TestDeploy(DeployTestCase):
         self._test_deploy()
 
     def test_title(self):
-        assertPopen(['mike', 'deploy', '-t', '1.0.0', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', '-t', '1.0.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', '1.0.0')
@@ -64,7 +64,7 @@ class TestDeploy(DeployTestCase):
 
     def test_update(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])
-        assertPopen(['mike', 'deploy', '-t', '1.0.1', '1.0', 'greatest'])
+        assertPopen(['mike', 'deploy', '1.0', 'greatest', '-t', '1.0.1'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', '1.0.1', ['latest', 'greatest'])
@@ -72,7 +72,7 @@ class TestDeploy(DeployTestCase):
 
     def test_update_aliases(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])
-        assertPopen(['mike', 'deploy', '-u', '2.0', 'latest'])
+        assertPopen(['mike', 'deploy', '2.0', 'latest', '-u'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('2.0', aliases=['latest']),
@@ -82,17 +82,18 @@ class TestDeploy(DeployTestCase):
     def test_from_subdir(self):
         os.mkdir('sub')
         with pushd('sub'):
+            assertPopen(['mike', 'deploy', '1.0'], returncode=1)
             assertPopen(['mike', 'deploy', '1.0', '-F', '../mkdocs.yml'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy()
 
     def test_branch(self):
-        assertPopen(['mike', 'deploy', '-b', 'branch', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', '-b', 'branch'])
         check_call_silent(['git', 'checkout', 'branch'])
         self._test_deploy()
 
     def test_commit_message(self):
-        assertPopen(['mike', 'deploy', '-m', 'commit message', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', '-m', 'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('commit message')
 
@@ -103,7 +104,7 @@ class TestDeploy(DeployTestCase):
         check_call_silent(['git', 'clone', self.stage, '.'])
         git_config()
 
-        assertPopen(['mike', 'deploy', '-p', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', '-p'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
 
         with pushd(self.stage):
@@ -214,10 +215,10 @@ class TestDeploy(DeployTestCase):
         ), returncode=1)
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        assertPopen(['mike', 'deploy', '--ignore', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', '--ignore'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
 
-        assertPopen(['mike', 'deploy', '--rebase', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', '--rebase'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
@@ -247,3 +248,47 @@ class TestDeployCustomSiteDir(DeployTestCase):
         assertPopen(['mike', 'deploy', '1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy()
+
+
+class TestDeployOtherRemote(DeployTestCase):
+    def setUp(self):
+        self.stage_origin = stage_dir('deploy_remote')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'remote'), self.stage_origin)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+        check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
+                           'ignore'])
+
+        self.stage = stage_dir('deploy_remote_clone')
+        check_call_silent(['git', 'clone', self.stage_origin, '.'])
+        git_config()
+
+    def _test_rev(self, branch):
+        clone_rev = git_utils.get_latest_commit(branch)
+        with pushd(self.stage_origin):
+            self.assertEqual(git_utils.get_latest_commit(branch), clone_rev)
+
+    def test_default(self):
+        check_call_silent(['git', 'remote', 'rename', 'origin', 'myremote'])
+
+        assertPopen(['mike', 'deploy', '1.0', '-p'])
+        check_call_silent(['git', 'checkout', 'mybranch'])
+        self._test_deploy()
+        self._test_rev('mybranch')
+
+    def test_explicit_branch(self):
+        check_call_silent(['git', 'remote', 'rename', 'origin', 'myremote'])
+
+        assertPopen(['mike', 'deploy', '1.0', '-b', 'pages', '-p'])
+        check_call_silent(['git', 'checkout', 'pages'])
+        self._test_deploy()
+        self._test_rev('pages')
+
+    def test_explicit_remote(self):
+        check_call_silent(['git', 'remote', 'rename', 'origin', 'remote'])
+
+        assertPopen(['mike', 'deploy', '1.0', '-r', 'remote', '-p'])
+        check_call_silent(['git', 'checkout', 'mybranch'])
+        self._test_deploy()
+        self._test_rev('mybranch')

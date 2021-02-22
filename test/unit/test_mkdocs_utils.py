@@ -8,24 +8,36 @@ from .. import *
 from mike import mkdocs_utils
 
 
-class TestSiteDir(unittest.TestCase):
-    def test_site_dir(self):
-        self.stage = stage_dir('build')
-        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        self.assertEqual(mkdocs_utils.site_dir('mkdocs.yml'), 'site')
-        self.assertEqual(
-            mkdocs_utils.site_dir(os.path.join(self.stage, 'mkdocs.yml')),
-            os.path.join(self.stage, 'site')
+class TestConfigData(unittest.TestCase):
+    def test_default(self):
+        os.chdir(os.path.join(test_data_dir, 'basic_theme'))
+        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
+        self.assertEqual(cfg.site_dir, 'site')
+        self.assertEqual(cfg.remote_name, 'origin')
+        self.assertEqual(cfg.remote_branch, 'gh-pages')
+
+    def test_abs_path(self):
+        cfg = mkdocs_utils.ConfigData(
+            os.path.join(test_data_dir, 'basic_theme', 'mkdocs.yml')
         )
+        self.assertEqual(cfg.site_dir,
+                         os.path.join(test_data_dir, 'basic_theme', 'site'))
+        self.assertEqual(cfg.remote_name, 'origin')
+        self.assertEqual(cfg.remote_branch, 'gh-pages')
 
     def test_custom_site_dir(self):
-        self.stage = stage_dir('build')
-        copytree(os.path.join(test_data_dir, 'site_dir'), self.stage)
-        self.assertEqual(mkdocs_utils.site_dir('mkdocs.yml'), 'built_docs')
-        self.assertEqual(
-            mkdocs_utils.site_dir(os.path.join(self.stage, 'mkdocs.yml')),
-            os.path.join(self.stage, 'built_docs')
-        )
+        os.chdir(os.path.join(test_data_dir, 'site_dir'))
+        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
+        self.assertEqual(cfg.site_dir, 'built_docs')
+        self.assertEqual(cfg.remote_name, 'origin')
+        self.assertEqual(cfg.remote_branch, 'gh-pages')
+
+    def test_remote(self):
+        os.chdir(os.path.join(test_data_dir, 'remote'))
+        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
+        self.assertEqual(cfg.site_dir, 'site')
+        self.assertEqual(cfg.remote_name, 'myremote')
+        self.assertEqual(cfg.remote_branch, 'mybranch')
 
 
 class TestInjectPlugin(unittest.TestCase):

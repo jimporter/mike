@@ -6,17 +6,11 @@ from .. import *
 from mike import git_utils, versions
 
 
-class TestRetitle(unittest.TestCase):
-    def setUp(self):
-        self.stage = stage_dir('retitle')
-        git_init()
-        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
-        check_call_silent(['git', 'commit', '-m', 'initial commit'])
-
-    def _deploy(self, branch='gh-pages', versions=['1.0']):
+class RetitleTestCase(unittest.TestCase):
+    def _deploy(self, branch=None, versions=['1.0']):
+        branch_args = ['-b', branch] if branch else []
         for i in versions:
-            assertPopen(['mike', 'deploy', '-b', branch, i])
+            assertPopen(['mike', 'deploy', i] + branch_args)
 
     def _test_retitle(self, expected_message=None):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
@@ -36,6 +30,15 @@ class TestRetitle(unittest.TestCase):
                 versions.VersionInfo('1.0', '1.0.1'),
             ])
 
+
+class TestRetitle(RetitleTestCase):
+    def setUp(self):
+        self.stage = stage_dir('retitle')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
     def test_retitle(self):
         self._deploy()
         assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
@@ -52,7 +55,18 @@ class TestRetitle(unittest.TestCase):
         self._deploy()
         os.mkdir('sub')
         with pushd('sub'):
-            assertPopen(['mike', 'retitle', '1.0', '1.0.1'])
+            assertPopen(['mike', 'retitle', '1.0', '1.0.1'], returncode=1)
+            assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-F',
+                         '../mkdocs.yml'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_retitle()
+
+    def test_from_subdir_explicit_branch(self):
+        self._deploy()
+        os.mkdir('sub')
+        with pushd('sub'):
+            assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-b', 'gh-pages',
+                         '-r', 'origin'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_retitle()
 
@@ -160,3 +174,54 @@ class TestRetitle(unittest.TestCase):
 
         assertPopen(['mike', 'retitle', '--rebase', '1.0', '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
+
+
+class TestRetitleOtherRemote(RetitleTestCase):
+    def setUp(self):
+        self.stage_origin = stage_dir('retitle_remote')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'remote'), self.stage_origin)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+        check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
+                           'ignore'])
+
+    def _clone(self):
+        self.stage = stage_dir('retitle_remote_clone')
+        check_call_silent(['git', 'clone', self.stage_origin, '.'])
+        git_config()
+
+    def _test_rev(self, branch):
+        clone_rev = git_utils.get_latest_commit(branch)
+        with pushd(self.stage_origin):
+            self.assertEqual(git_utils.get_latest_commit(branch), clone_rev)
+
+    def test_default(self):
+        self._deploy()
+        self._clone()
+        check_call_silent(['git', 'remote', 'rename', 'origin', 'myremote'])
+
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-p'])
+        check_call_silent(['git', 'checkout', 'mybranch'])
+        self._test_retitle()
+        self._test_rev('mybranch')
+
+    def test_explicit_branch(self):
+        self._deploy(branch='pages')
+        self._clone()
+        check_call_silent(['git', 'remote', 'rename', 'origin', 'myremote'])
+
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-p', '-b', 'pages'])
+        check_call_silent(['git', 'checkout', 'pages'])
+        self._test_retitle()
+        self._test_rev('pages')
+
+    def test_explicit_remote(self):
+        self._deploy()
+        self._clone()
+        check_call_silent(['git', 'remote', 'rename', 'origin', 'remote'])
+
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '-p', '-r', 'remote'])
+        check_call_silent(['git', 'checkout', 'mybranch'])
+        self._test_retitle()
+        self._test_rev('mybranch')

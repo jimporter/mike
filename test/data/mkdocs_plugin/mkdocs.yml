@@ -5,5 +5,5 @@ theme:
 plugins:
   - mike
 
-pages:
+nav:
   - Home: index.md
