@@ -1,6 +1,6 @@
 import re
 import unittest
-from itertools import chain
+from collections.abc import Collection
 from unittest import mock
 
 from .. import *
@@ -29,17 +29,27 @@ class TestListVersions(unittest.TestCase):
 
 
 class TestBase(unittest.TestCase):
-    def _test_state(self, expected_message, expected_versions):
+    def setUp(self):
+        self.stage = stage_dir(self.stage_dir)
+        git_init()
+        commit_files(['page.html', 'file.txt'])
+
+    def _test_state(self, expected_message, expected_versions, redirect=True):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, expected_message)
 
-        dirs = set()
-        for i in expected_versions:
-            dirs |= {str(i.version)} | i.aliases
-        contents = {'versions.json'} | set(chain.from_iterable(
-            (d, d + '/file.txt') for d in dirs
-        ))
-        assertDirectory('.', contents)
+        files = {'versions.json'}
+        for v in expected_versions:
+            version_str = str(v.version)
+            files |= {version_str, version_str + '/page.html',
+                      version_str + '/file.txt'}
+            for a in v.aliases:
+                files |= {a, a + '/page.html'}
+                if ( redirect is False or
+                     (isinstance(redirect, Collection) and
+                      a not in redirect) ):
+                    files.add(a + '/file.txt')
+        assertDirectory('.', files)
 
         with open('versions.json') as f:
             self.assertEqual(list(versions.Versions.loads(f.read())),
@@ -47,13 +57,11 @@ class TestBase(unittest.TestCase):
 
 
 class TestDeploy(TestBase):
-    def setUp(self):
-        self.stage = stage_dir('deploy')
-        git_init()
-        commit_file('file.txt')
+    stage_dir = 'deploy'
 
     def _test_deploy(self, expected_message=None,
-                     expected_versions=[versions.VersionInfo('1.0')]):
+                     expected_versions=[versions.VersionInfo('1.0')],
+                     **kwargs):
         if not expected_message:
             rev = git_utils.get_latest_commit('master', short=True)
             expected_message = (
@@ -61,7 +69,7 @@ class TestDeploy(TestBase):
                 .format(rev, expected_versions[0].version)
             )
 
-        self._test_state(expected_message, expected_versions)
+        self._test_state(expected_message, expected_versions, **kwargs)
 
     def test_default(self):
         commands.deploy(self.stage, '1.0')
@@ -82,6 +90,25 @@ class TestDeploy(TestBase):
             versions.VersionInfo('1.0', aliases=['latest'])
         ])
 
+    def test_aliases_copy(self):
+        commands.deploy(self.stage, '1.0', aliases=['latest'], redirect=False)
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ], redirect=False)
+
+    def test_aliases_custom_redirect(self):
+        with mock.patch('builtins.open',
+                        mock.mock_open(read_data=b'{{href}}')):
+            commands.deploy(self.stage, '1.0', aliases=['latest'],
+                            template='template.html')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ])
+        with open('latest/page.html') as f:
+            self.assertEqual(f.read(), '../1.0/page.html')
+
     def test_branch(self):
         commands.deploy(self.stage, '1.0', branch='branch')
         check_call_silent(['git', 'checkout', 'branch'])
@@ -98,8 +125,8 @@ class TestDeploy(TestBase):
                 'versions.json',
                 '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
             ))
-            commit.add_file(git_utils.FileInfo('1.0/old-file.txt', ''))
-            commit.add_file(git_utils.FileInfo('latest/old-file.txt', ''))
+            commit.add_file(git_utils.FileInfo('1.0/old-page.html', ''))
+            commit.add_file(git_utils.FileInfo('latest/old-page.html', ''))
 
         commands.deploy(self.stage, '1.0', '1.0.1', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
@@ -113,8 +140,9 @@ class TestDeploy(TestBase):
                 'versions.json',
                 '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
             ))
+            commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
             commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
-            commit.add_file(git_utils.FileInfo('latest/file.txt', ''))
+            commit.add_file(git_utils.FileInfo('latest/page.html', ''))
 
         with self.assertRaises(ValueError):
             commands.deploy(self.stage, '2.0', '2.0.0', ['latest'])
@@ -129,8 +157,9 @@ class TestDeploy(TestBase):
                 'versions.json',
                 '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
             ))
+            commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
             commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
-            commit.add_file(git_utils.FileInfo('latest/file.txt', ''))
+            commit.add_file(git_utils.FileInfo('latest/page.html', ''))
 
         commands.deploy(self.stage, '2.0', '2.0.0', ['latest'], True)
         check_call_silent(['git', 'checkout', 'gh-pages'])
@@ -141,10 +170,7 @@ class TestDeploy(TestBase):
 
 
 class TestDelete(TestBase):
-    def setUp(self):
-        self.stage = stage_dir('delete')
-        git_init()
-        commit_file('file.txt')
+    stage_dir = 'delete'
 
     def _deploy(self, branch='gh-pages'):
         commands.deploy(self.stage, '1.0', aliases=['stable'], branch=branch)
@@ -202,16 +228,13 @@ class TestDelete(TestBase):
 
 
 class TestAlias(TestBase):
-    def setUp(self):
-        self.stage = stage_dir('alias')
-        git_init()
-        commit_file('file.txt')
+    stage_dir = 'alias'
 
     def _deploy(self, branch='gh-pages'):
         commands.deploy(self.stage, '1.0', aliases=['latest'], branch=branch)
 
     def _test_alias(self, expected_message=None, expected_src='1.0',
-                    expected_aliases=['greatest']):
+                    expected_aliases=['greatest'], **kwargs):
         if not expected_message:
             expected_message = r'^Copied {} to {} with mike \S+$'.format(
                 re.escape(expected_src),
@@ -220,7 +243,7 @@ class TestAlias(TestBase):
 
         self._test_state(expected_message, [
             versions.VersionInfo('1.0', aliases=expected_aliases + ['latest'])
-        ])
+        ], **kwargs)
 
     def test_alias_from_version(self):
         self._deploy()
@@ -232,16 +255,23 @@ class TestAlias(TestBase):
         self._deploy()
         commands.alias('latest', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias(expected_src='latest')
+        self._test_alias(expected_src='1.0')
 
-    def xtest_delete_all(self):
+    def test_alias_copy(self):
         self._deploy()
-        commands.delete(all=True)
+        commands.alias('1.0', ['greatest'], redirect=False)
         check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(redirect=['latest'])
 
-        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
-        self.assertRegex(message, r'^Removed everything with mike \S+$')
-        assertDirectory('.', set())
+    def test_alias_custom_template(self):
+        self._deploy()
+        with mock.patch('builtins.open',
+                        mock.mock_open(read_data=b'{{href}}')):
+            commands.alias('1.0', ['greatest'], template='template.html')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias()
+        with open('greatest/page.html') as f:
+            self.assertEqual(f.read(), '../1.0/page.html')
 
     def test_branch(self):
         self._deploy('branch')
@@ -266,7 +296,7 @@ class TestRetitle(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('retitle')
         git_init()
-        commit_file('file.txt')
+        commit_files(['file.txt'])
 
     def _deploy(self, branch='gh-pages'):
         commands.deploy(self.stage, '1.0', branch=branch)
@@ -318,7 +348,7 @@ class TestSetDefault(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('set_default')
         git_init()
-        commit_file('file.txt')
+        commit_files(['file.txt'])
 
     def _deploy(self, branch='gh-pages'):
         commands.deploy(self.stage, '1.0', branch=branch)
@@ -344,7 +374,7 @@ class TestSetDefault(unittest.TestCase):
     def test_custom_template(self):
         self._deploy()
         with mock.patch('builtins.open',
-                        mock.mock_open(read_data=b'{{version}}')):
+                        mock.mock_open(read_data=b'{{href}}')):
             commands.set_default('1.0', 'template.html')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default(r'^1\.0$')

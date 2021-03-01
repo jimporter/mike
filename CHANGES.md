@@ -6,6 +6,8 @@
 - Remove `mike install-extras` and replace it with an MkDocs plugin; if you
   previously used `install-extras`, be sure to remove the added JS/CSS from your
   docs directory
+- When deploying aliases, deploy redirect pages to the real version by default;
+  pass `--no-redirect` to deploy copies
 - Add support for custom templates with `mike set-default`
 - Read from `remote_branch` and `remote_name` if set in `mkdocs.yml`
 

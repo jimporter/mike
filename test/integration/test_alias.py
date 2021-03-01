@@ -12,18 +12,27 @@ class AliasTestCase(unittest.TestCase):
         for i in versions:
             assertPopen(['mike', 'deploy', i] + branch_args)
 
-    def _test_alias(self, expected_message=None):
+    def _test_alias(self, expected_message=None,
+                    expected_versions=[versions.VersionInfo('1.0')],
+                    redirect=True):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
             self.assertRegex(message, r'^Copied \S+ to latest with mike \S+$')
 
-        assertDirectory('.', {
-            'versions.json',
-            '1.0/index.html',
-            'latest/index.html',
-        }, allow_extra=True)
+        files = {'versions.json'}
+        for v in expected_versions:
+            v_str = str(v.version)
+            files |= {v_str, v_str + '/index.html',
+                      v_str + '/css/version-select.css',
+                      v_str + '/js/version-select.js'}
+            for a in v.aliases:
+                files |= {a, a + '/index.html'}
+                if not redirect:
+                    files |= {a + '/css/version-select.css',
+                              a + '/js/version-select.js'}
+        assertDirectory('.', files, allow_extra=True)
 
         with open('versions.json') as f:
             self.assertEqual(list(versions.Versions.loads(f.read())), [
@@ -44,6 +53,22 @@ class TestAlias(AliasTestCase):
         assertPopen(['mike', 'alias', '1.0', 'latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
+
+    def test_alias_copy(self):
+        self._deploy()
+        assertPopen(['mike', 'alias', '1.0', 'latest', '--no-redirect'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(redirect=False)
+
+    def test_aliases_custom_template(self):
+        self._deploy()
+        assertPopen(['mike', 'alias', '1.0', 'latest', '-T',
+                     os.path.join(test_data_dir, 'template.html')])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias()
+        with open('latest/index.html') as f:
+            self.assertRegex(f.read(),
+                             r'^Redirecting to \.\./1\.0/index.html$')
 
     def test_from_subdir(self):
         self._deploy()

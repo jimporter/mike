@@ -76,6 +76,12 @@ particularly-relevant version of your docs somewhere special (e.g. `latest`):
 mike deploy [version] [alias]...
 ```
 
+By default, aliases create a simple HTML redirect to the real version of the
+docs; to create a copy of the docs for each alias, you can pass `--no-redirect`.
+If you're using redirects, you can customize the redirect template with
+`-T`/`--template`; this takes a path to a [Jinja][jinja] template that accepts
+an `{{href}}` variable.
+
 If you'd like to specify a title for this version that doesn't match the version
 string, you can pass `-t TITLE`/`--title=TITLE` as well. If `version` already
 exists, this command will *also* update all of the pre-existing aliases for it.
@@ -146,8 +152,8 @@ mike set-default [version-or-alias]
 ```
 
 If you want to use a different template from the default, you can pass
-`-t`/`--template`; this takes a path to a [Jinja][jinja] template that accepts a
-`{{version}}` variable.
+`-T`/`--template`; this takes a path to a [Jinja][jinja] template that accepts
+an `{{href}}` variable.
 
 Like `deploy` and `delete` above, you can specify `-p`/`--push` to push this
 commit as well.

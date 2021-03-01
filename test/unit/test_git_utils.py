@@ -33,7 +33,7 @@ class TestGetLatestCommit(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('get_latest_commit')
         git_init()
-        commit_file('file.txt', 'initial commit')
+        commit_files(['file.txt'], 'initial commit')
 
     def test_latest_commit(self):
         rev = git_utils.get_latest_commit('master')
@@ -54,7 +54,7 @@ class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
     def setUp(self):
         self.origin = stage_dir('get_merge_base')
         git_init()
-        commit_file('file.txt', 'initial commit')
+        commit_files(['file.txt'], 'initial commit')
         check_call_silent(['git', 'checkout', '-b', 'branch'])
 
     def test_even(self):
@@ -65,7 +65,7 @@ class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
 
     def test_ahead(self):
         rev = git_utils.get_latest_commit('master')
-        commit_file('file2.txt', 'second commit')
+        commit_files(['file2.txt'], 'second commit')
 
         self.assertEqual(git_utils.get_merge_base('branch', 'master'), rev)
         self.assertEqual(git_utils.compare_branches('branch', 'master'),
@@ -74,7 +74,7 @@ class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
     def test_behind(self):
         rev = git_utils.get_latest_commit('master')
         check_call_silent(['git', 'checkout', 'master'])
-        commit_file('file2.txt', 'second commit')
+        commit_files(['file2.txt'], 'second commit')
 
         self.assertEqual(git_utils.get_merge_base('branch', 'master'), rev)
         self.assertEqual(git_utils.compare_branches('branch', 'master'),
@@ -82,9 +82,9 @@ class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
 
     def test_diverged(self):
         rev = git_utils.get_latest_commit('master')
-        commit_file('file2.txt', 'second commit')
+        commit_files(['file2.txt'], 'second commit')
         check_call_silent(['git', 'checkout', 'master'])
-        commit_file('file2-master.txt', 'second commit')
+        commit_files(['file2-master.txt'], 'second commit')
 
         self.assertEqual(git_utils.get_merge_base('master', 'branch'), rev)
         self.assertEqual(git_utils.compare_branches('master', 'branch'),
@@ -92,7 +92,7 @@ class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
 
     def test_unrelated(self):
         check_call_silent(['git', 'checkout', '--orphan', 'orphan'])
-        commit_file('file-unrelated.txt', 'new commit')
+        commit_files(['file-unrelated.txt'], 'new commit')
 
         self.assertRaises(git_utils.GitRevUnrelated, git_utils.get_merge_base,
                           'master', 'orphan')
@@ -108,11 +108,11 @@ class TestUpdateRef(unittest.TestCase):
     def setUp(self):
         self.origin = stage_dir('update_ref')
         git_init()
-        commit_file('file.txt', 'initial commit')
+        commit_files(['file.txt'], 'initial commit')
         check_call_silent(['git', 'checkout', '-b', 'branch'])
 
     def test_ahead(self):
-        commit_file('file2.txt', 'second commit')
+        commit_files(['file2.txt'], 'second commit')
 
         rev = git_utils.get_latest_commit('master')
         git_utils.update_ref('branch', rev)
@@ -120,16 +120,16 @@ class TestUpdateRef(unittest.TestCase):
 
     def test_behind(self):
         check_call_silent(['git', 'checkout', 'master'])
-        commit_file('file2.txt', 'second commit')
+        commit_files(['file2.txt'], 'second commit')
 
         rev = git_utils.get_latest_commit('master')
         git_utils.update_ref('branch', rev)
         self.assertEqual(git_utils.get_latest_commit('branch'), rev)
 
     def test_diverged(self):
-        commit_file('file2.txt', 'second commit')
+        commit_files(['file2.txt'], 'second commit')
         check_call_silent(['git', 'checkout', 'master'])
-        commit_file('file2-master.txt', 'second commit')
+        commit_files(['file2-master.txt'], 'second commit')
 
         rev = git_utils.get_latest_commit('master')
         git_utils.update_ref('branch', rev)
@@ -146,7 +146,7 @@ class TestTryRebaseBranch(unittest.TestCase):
     def setUp(self):
         self.origin = stage_dir('try_rebase_branch_origin')
         git_init()
-        commit_file('file.txt', 'initial commit')
+        commit_files(['file.txt'], 'initial commit')
 
         self.stage = stage_dir('try_rebase_branch')
         check_call_silent(['git', 'clone', self.origin, '.'])
@@ -160,7 +160,7 @@ class TestTryRebaseBranch(unittest.TestCase):
         self.assertEqual(old_rev, new_rev)
 
     def test_ahead(self):
-        commit_file('file2.txt', 'add file2')
+        commit_files(['file2.txt'], 'add file2')
         old_rev = git_utils.get_latest_commit('master')
 
         git_utils.try_rebase_branch('origin', 'master')
@@ -170,7 +170,7 @@ class TestTryRebaseBranch(unittest.TestCase):
     def test_behind(self):
         old_rev = git_utils.get_latest_commit('master')
         with pushd(self.origin):
-            commit_file('file2.txt', 'add file2')
+            commit_files(['file2.txt'], 'add file2')
             origin_rev = git_utils.get_latest_commit('master')
         check_call_silent(['git', 'fetch', 'origin'])
 
@@ -180,10 +180,10 @@ class TestTryRebaseBranch(unittest.TestCase):
         self.assertEqual(new_rev, origin_rev)
 
     def test_diverged(self):
-        commit_file('file2.txt', 'add file2')
+        commit_files(['file2.txt'], 'add file2')
         old_rev = git_utils.get_latest_commit('master')
         with pushd(self.origin):
-            commit_file('file2-origin.txt', 'add file2')
+            commit_files(['file2-origin.txt'], 'add file2')
         check_call_silent(['git', 'fetch', 'origin'])
 
         self.assertRaises(git_utils.GitBranchDiverged,
@@ -192,10 +192,10 @@ class TestTryRebaseBranch(unittest.TestCase):
         self.assertEqual(old_rev, new_rev)
 
     def test_diverged_force(self):
-        commit_file('file2.txt', 'add file2')
+        commit_files(['file2.txt'], 'add file2')
         old_rev = git_utils.get_latest_commit('master')
         with pushd(self.origin):
-            commit_file('file2-origin.txt', 'add file2')
+            commit_files(['file2-origin.txt'], 'add file2')
             origin_rev = git_utils.get_latest_commit('master')
         check_call_silent(['git', 'fetch', 'origin'])
 
@@ -331,14 +331,14 @@ class TestPushBranch(unittest.TestCase):
         git_init()
         check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
                            'ignore'])
-        commit_file('file.txt', 'initial commit')
+        commit_files(['file.txt'], 'initial commit')
 
         self.stage = stage_dir('update_branch')
         check_call_silent(['git', 'clone', self.origin, '.'])
         git_config()
 
     def test_push(self):
-        commit_file('file2.txt', 'add file2')
+        commit_files(['file2.txt'], 'add file2')
         clone_rev = git_utils.get_latest_commit('master')
         git_utils.push_branch('origin', 'master')
 
@@ -348,17 +348,17 @@ class TestPushBranch(unittest.TestCase):
 
     def test_push_fails(self):
         with pushd(self.origin):
-            commit_file('file2.txt', 'add file2')
+            commit_files(['file2.txt'], 'add file2')
 
-        commit_file('file2.txt', 'add file2 from clone')
+        commit_files(['file2.txt'], 'add file2 from clone')
         self.assertRaises(git_utils.GitError, git_utils.push_branch, 'origin',
                           'master')
 
     def test_force_push(self):
         with pushd(self.origin):
-            commit_file('file2.txt', 'add file2')
+            commit_files(['file2.txt'], 'add file2')
 
-        commit_file('file2.txt', 'add file2 from clone')
+        commit_files(['file2.txt'], 'add file2 from clone')
         clone_rev = git_utils.get_latest_commit('master')
         git_utils.push_branch('origin', 'master', force=True)
 
@@ -430,7 +430,7 @@ class TestWalkFiles(unittest.TestCase):
         self.stage = stage_dir('walk_files')
         os.chdir(self.stage)
         git_init()
-        commit_file('file.txt', 'initial commit')
+        commit_files(['file.txt'], 'initial commit')
 
         with git_utils.Commit('branch', 'add file') as commit:
             commit.add_file(git_utils.FileInfo('file.txt', b'text'))

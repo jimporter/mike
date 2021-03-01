@@ -1,6 +1,5 @@
 import os
 import unittest
-from itertools import chain
 
 from . import assertPopen, assertOutput
 from .. import *
@@ -9,7 +8,8 @@ from mike import git_utils, versions
 
 class DeployTestCase(unittest.TestCase):
     def _test_deploy(self, expected_message=None,
-                     expected_versions=[versions.VersionInfo('1.0')]):
+                     expected_versions=[versions.VersionInfo('1.0')],
+                     redirect=True):
         rev = git_utils.get_latest_commit('master', short=True)
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
@@ -21,14 +21,18 @@ class DeployTestCase(unittest.TestCase):
                 .format(rev, expected_versions[0].version)
             )
 
-        dirs = set()
-        for i in expected_versions:
-            dirs |= {str(i.version)} | i.aliases
-        contents = {'versions.json'} | set(chain.from_iterable(
-            (d, d + '/index.html', d + '/css/version-select.css',
-             d + '/js/version-select.js') for d in dirs
-        ))
-        assertDirectory('.', contents, allow_extra=True)
+        files = {'versions.json'}
+        for v in expected_versions:
+            v_str = str(v.version)
+            files |= {v_str, v_str + '/index.html',
+                      v_str + '/css/version-select.css',
+                      v_str + '/js/version-select.js'}
+            for a in v.aliases:
+                files |= {a, a + '/index.html'}
+                if not redirect:
+                    files |= {a + '/css/version-select.css',
+                              a + '/js/version-select.js'}
+        assertDirectory('.', files, allow_extra=True)
 
         with open('versions.json') as f:
             self.assertEqual(list(versions.Versions.loads(f.read())),
@@ -61,6 +65,25 @@ class TestDeploy(DeployTestCase):
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
         ])
+
+    def test_aliases_copy(self):
+        assertPopen(['mike', 'deploy', '1.0', 'latest', '--no-redirect'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ], redirect=False)
+
+    def test_aliases_custom_template(self):
+        assertPopen(['mike', 'deploy', '1.0', 'latest', '-T',
+                     os.path.join(test_data_dir, 'template.html')])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        with open('latest/index.html') as f:
+            self.assertRegex(f.read(),
+                             r'^Redirecting to \.\./1\.0/index.html$')
 
     def test_update(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])

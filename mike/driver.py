@@ -74,7 +74,8 @@ def deploy(args):
     with mkdocs_utils.inject_plugin(args.config_file) as config_file:
         mkdocs_utils.build(config_file, args.version)
     commands.deploy(cfg.site_dir, args.version, args.title, args.alias,
-                    args.update_aliases, args.branch, args.message)
+                    args.update_aliases, args.redirect, args.template,
+                    branch=args.branch, message=args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -82,7 +83,8 @@ def deploy(args):
 def delete(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.delete(args.version, args.all, args.branch, args.message)
+    commands.delete(args.version, args.all, branch=args.branch,
+                    message=args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -90,7 +92,8 @@ def delete(args):
 def alias(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.alias(args.version, args.alias, args.branch, args.message)
+    commands.alias(args.version, args.alias, args.redirect, args.template,
+                   branch=args.branch, message=args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -98,7 +101,8 @@ def alias(args):
 def retitle(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.retitle(args.version, args.title, args.branch, args.message)
+    commands.retitle(args.version, args.title, branch=args.branch,
+                     message=args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -141,8 +145,8 @@ def list_versions(args):
 def set_default(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.set_default(args.version, args.template, args.branch,
-                         args.message)
+    commands.set_default(args.version, args.template, branch=args.branch,
+                         message=args.message)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -150,7 +154,7 @@ def set_default(args):
 def serve(args):
     load_mkdocs_config(args)
     check_remote_status(args)
-    commands.serve(args.dev_addr, args.branch)
+    commands.serve(args.dev_addr, branch=args.branch)
 
 
 def main():
@@ -168,6 +172,11 @@ def main():
                           help='short descriptive title for this version')
     deploy_p.add_argument('-u', '--update-aliases', action='store_true',
                           help='allow aliases pointing to other versions')
+    deploy_p.add_argument('--no-redirect', dest='redirect', default=True,
+                          action='store_false',
+                          help='make copies of docs for each alias')
+    deploy_p.add_argument('-T', '--template',
+                          help='the template file to use for redirects')
     add_git_arguments(deploy_p)
     deploy_p.add_argument('version', metavar='VERSION',
                           help='version (directory) to deploy this build to')
@@ -188,6 +197,11 @@ def main():
         'alias', help='alias docs from a branch'
     )
     alias_p.set_defaults(func=alias)
+    alias_p.add_argument('--no-redirect', dest='redirect', default=True,
+                         action='store_false',
+                         help='make copies of docs for each alias')
+    alias_p.add_argument('-T', '--template',
+                         help='the template file to use for redirects')
     add_git_arguments(alias_p)
     alias_p.add_argument('version', metavar='VERSION',
                          help='version (directory) to alias')
@@ -218,7 +232,7 @@ def main():
         'set-default', help='set the default version for your docs'
     )
     set_default_p.set_defaults(func=set_default)
-    set_default_p.add_argument('-t', '--template',
+    set_default_p.add_argument('-T', '--template',
                                help='the template file to use')
     add_git_arguments(set_default_p)
     set_default_p.add_argument('version', metavar='VERSION',

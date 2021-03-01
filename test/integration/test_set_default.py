@@ -41,7 +41,7 @@ class TestSetDefault(SetDefaultTestCase):
 
     def test_custom_template(self):
         self._deploy()
-        assertPopen(['mike', 'set-default', '1.0', '-t',
+        assertPopen(['mike', 'set-default', '1.0', '-T',
                      os.path.join(test_data_dir, 'template.html')])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default(r'^Redirecting to 1\.0$')

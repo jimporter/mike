@@ -8,7 +8,7 @@ from itertools import chain
 
 __all__ = ['this_dir', 'test_data_dir', 'test_stage_dir', 'stage_dir', 'pushd',
            'copytree', 'check_call_silent', 'check_output', 'git_config',
-           'git_init', 'commit_file', 'assertDirectory']
+           'git_init', 'commit_files', 'assertDirectory']
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, 'data')
@@ -66,9 +66,10 @@ def git_init():
     git_config()
 
 
-def commit_file(filename, message='add file'):
-    open(filename, 'w').close()
-    check_call_silent(['git', 'add', filename])
+def commit_files(filenames, message='add file'):
+    for f in filenames:
+        open(f, 'w').close()
+        check_call_silent(['git', 'add', f])
     check_call_silent(['git', 'commit', '-m', message])
 
 
