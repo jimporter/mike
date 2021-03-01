@@ -8,6 +8,8 @@
   docs directory
 - When deploying aliases, deploy redirect pages to the real version by default;
   pass `--no-redirect` to deploy copies
+- Improve the default redirect template to support redirection when the user has
+  disabled JavaScript
 - Add support for custom templates with `mike set-default`
 - Read from `remote_branch` and `remote_name` if set in `mkdocs.yml`
 
