@@ -47,10 +47,10 @@ plugins:
   - mike:
       # these fields are all optional; the defaults are as below...
       version_selector: true   # set to false to leave out the version selector
-      canonical_version: null  # the version for <link rel="canonical">; `null`
-                               # uses the version specified via `mike deploy`
       css_dir: css             # the directory to put the version selector's CSS
       javascript_dir: js       # the directory to put the version selector's JS
+      canonical_version: null  # the version for <link rel="canonical">; `null`
+                               # uses the version specified via `mike deploy`
 ```
 
 Note: If you have existing documentation on your `gh-pages` branch, you may also
