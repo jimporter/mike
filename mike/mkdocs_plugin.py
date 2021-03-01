@@ -23,6 +23,8 @@ def get_theme_dir(theme_name):
 class MikePlugin(BasePlugin):
     config_scheme = (
         ('version_selector', config_options.Type(bool, default=True)),
+        ('canonical_version',
+         config_options.Type((str, type(None)), default=None)),
         ('css_dir', config_options.Type(str, default='css')),
         ('javascript_dir', config_options.Type(str, default='js')),
     )
@@ -30,6 +32,8 @@ class MikePlugin(BasePlugin):
     def on_config(self, config):
         version = os.environ.get(docs_version_var)
         if version and config.get('site_url'):
+            if self.config['canonical_version'] is not None:
+                version = self.config['canonical_version']
             config['site_url'] = urljoin(config['site_url'], version)
 
     def on_files(self, files, config):

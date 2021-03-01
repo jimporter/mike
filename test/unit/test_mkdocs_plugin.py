@@ -36,6 +36,7 @@ class TestMkdocsPluginOnConfig(unittest.TestCase):
     def test_site_url(self):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
             p = mkdocs_plugin.MikePlugin()
+            p.config = {'canonical_version': None}
             config = {'site_url': 'https://example.com/'}
             p.on_config(config)
             self.assertEqual(config['site_url'], 'https://example.com/1.0')
@@ -43,13 +44,30 @@ class TestMkdocsPluginOnConfig(unittest.TestCase):
     def test_no_site_url(self):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
             p = mkdocs_plugin.MikePlugin()
+            p.config = {'canonical_version': None}
             config = {'site_url': ''}
             p.on_config(config)
             self.assertEqual(config['site_url'], '')
 
+    def test_explicit_canonical(self):
+        with mock.patch('os.environ', {docs_version_var: '1.0'}):
+            p = mkdocs_plugin.MikePlugin()
+            p.config = {'canonical_version': 'latest'}
+            config = {'site_url': 'https://example.com/'}
+            p.on_config(config)
+            self.assertEqual(config['site_url'], 'https://example.com/latest')
+
+        with mock.patch('os.environ', {docs_version_var: '1.0'}):
+            p = mkdocs_plugin.MikePlugin()
+            p.config = {'canonical_version': ''}
+            config = {'site_url': 'https://example.com/'}
+            p.on_config(config)
+            self.assertEqual(config['site_url'], 'https://example.com/')
+
     def test_no_version(self):
         with mock.patch('os.environ', {}):
             p = mkdocs_plugin.MikePlugin()
+            p.config = {'canonical_version': None}
             config = {'site_url': 'https://example.com/'}
             p.on_config(config)
             self.assertEqual(config['site_url'], 'https://example.com/')

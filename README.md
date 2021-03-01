@@ -46,9 +46,11 @@ are being built:
 plugins:
   - mike:
       # these fields are all optional; the defaults are as below...
-      version_selector: true  # turn this off to leave out the version selector
-      css_dir: css            # the directory to put the version selector's CSS
-      javascript_dir: js      # the directory to put the version selector's JS
+      version_selector: true   # set to false to leave out the version selector
+      canonical_version: null  # the version for <link rel="canonical">; `null`
+                               # uses the version specified via `mike deploy`
+      css_dir: css             # the directory to put the version selector's CSS
+      javascript_dir: js       # the directory to put the version selector's JS
 ```
 
 Note: If you have existing documentation on your `gh-pages` branch, you may also
