@@ -153,8 +153,12 @@ class Commit:
         cmd = ['git', 'fast-import', '--date-format=raw', '--quiet', '--done']
         self._pipe = sp.Popen(cmd, stdin=sp.PIPE, stderr=sp.DEVNULL,
                               universal_newlines=False)
-        self._start_commit(branch, message)
         self._finished = False
+        try:
+            self._start_commit(branch, message)
+        except Exception:
+            self.abort()
+            raise
 
     def __enter__(self):
         return self
@@ -173,10 +177,18 @@ class Commit:
 
     def _start_commit(self, branch, message):
         name = get_config('user.name')
+        if re.search(r'[<>\n]', name):
+            raise GitError('invalid user.name: {!r}'.format(name))
+
         email = get_config('user.email')
+        if not email:
+            raise GitError('user.email is not set')
+        if re.search(r'[<>\n]', email):
+            raise GitError('invalid user.email: {!r}'.format(email))
+
         self._write('commit refs/heads/{}\n'.format(branch))
-        self._write('committer {name} <{email}> {time}\n'.format(
-            name=name, email=email, time=make_when()
+        self._write('committer {name}<{email}> {time}\n'.format(
+            name=name + ' ' if name else '', email=email, time=make_when()
         ))
         self._write('data {length}\n{message}\n'.format(
             length=len(message), message=message
@@ -217,7 +229,10 @@ class Commit:
             raise GitError('commit already finalized')
         self._finished = True
 
-        self._pipe.stdin.close()
+        try:
+            self._pipe.stdin.close()
+        except BrokenPipeError:  # pragma: no cover
+            pass
         self._pipe.terminate()
         self._pipe.wait()
 

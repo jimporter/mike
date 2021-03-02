@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from unittest import mock
 
 from .. import *
 from mike import git_utils
@@ -339,6 +340,23 @@ class TestCommit(unittest.TestCase):
 
         check_call_silent(['git', 'checkout', 'master'])
         assertDirectory('.', {'file.txt'})
+
+    def test_invalid_username(self):
+        check_call_silent(['git', 'config', 'user.name', '<>'])
+        with self.assertRaises(git_utils.GitError):
+            with git_utils.Commit('master', 'add file'):
+                pass
+
+    def test_invalid_email(self):
+        check_call_silent(['git', 'config', 'user.email', '<>'])
+        with self.assertRaises(git_utils.GitError):
+            with git_utils.Commit('master', 'add file'):
+                pass
+
+        with mock.patch('mike.git_utils.get_config', return_value=''), \
+             self.assertRaises(git_utils.GitError):
+            with git_utils.Commit('master', 'add file'):
+                pass
 
 
 class TestPushBranch(unittest.TestCase):
