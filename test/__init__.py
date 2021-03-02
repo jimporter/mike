@@ -93,7 +93,7 @@ def relpaths(paths, base):
 
 def assertDirectory(path, contents, include_hidden=False, allow_extra=False):
     path = os.path.normpath(path)
-    actual = set(os.path.normpath(os.path.join(path, base, f))
+    actual = set(os.path.normpath(os.path.join(base, f))
                  for base, dirs, files in walk(path, include_hidden)
                  for f in chain(files, dirs))
     expected = set(os.path.normpath(os.path.join(path, i)) for i in contents)

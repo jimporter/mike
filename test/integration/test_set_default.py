@@ -7,21 +7,25 @@ from mike import git_utils
 
 
 class SetDefaultTestCase(unittest.TestCase):
-    def _deploy(self, branch=None, versions=['1.0']):
-        branch_args = ['-b', branch] if branch else []
+    def _deploy(self, branch=None, versions=['1.0'], prefix=''):
+        extra_args = ['-b', branch] if branch else []
+        if prefix:
+            extra_args.extend(['--prefix', prefix])
         for i in versions:
-            assertPopen(['mike', 'deploy', i] + branch_args)
+            assertPopen(['mike', 'deploy', i] + extra_args)
 
     def _test_default(self, expr=r'window\.location\.replace\("1\.0"\)',
-                      expected_message=None):
+                      expected_message=None, directory='.'):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            self.assertRegex(message,
-                             r'^Set default version to \S+ with mike \S+$')
+            self.assertRegex(
+                message,
+                r'^Set default version to \S+( in .*)? with mike \S+$'
+            )
 
-        with open('index.html') as f:
+        with open(os.path.join(directory, 'index.html')) as f:
             self.assertRegex(f.read(), expr)
 
 
@@ -75,6 +79,12 @@ class TestSetDefault(SetDefaultTestCase):
         assertPopen(['mike', 'set-default', '1.0', '-m', 'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default(expected_message='commit message')
+
+    def test_prefix(self):
+        self._deploy(prefix='prefix')
+        assertPopen(['mike', 'set-default', '1.0', '--prefix', 'prefix'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default(directory='prefix')
 
     def test_push(self):
         self._deploy()

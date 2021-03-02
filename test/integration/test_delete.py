@@ -7,19 +7,21 @@ from mike import git_utils
 
 
 class DeleteTestCase(unittest.TestCase):
-    def _deploy(self, branch=None, versions=['1.0', '2.0']):
-        branch_args = ['-b', branch] if branch else []
+    def _deploy(self, branch=None, versions=['1.0', '2.0'], prefix=''):
+        extra_args = ['-b', branch] if branch else []
+        if prefix:
+            extra_args.extend(['--prefix', prefix])
         for i in versions:
-            assertPopen(['mike', 'deploy', i] + branch_args)
+            assertPopen(['mike', 'deploy', i] + extra_args)
 
-    def _test_delete(self, expected_message=None):
+    def _test_delete(self, expected_message=None, directory='.'):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            self.assertRegex(message, r'^Removed \S+ with mike \S+$')
+            self.assertRegex(message, r'^Removed \S+( in .*)? with mike \S+$')
 
-        assertDirectory('.', {
+        assertDirectory(directory, {
             'versions.json',
             '2.0',
             '2.0/index.html'
@@ -78,6 +80,12 @@ class TestDelete(DeleteTestCase):
         assertPopen(['mike', 'delete', '1.0', '-m', 'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete('commit message')
+
+    def test_prefix(self):
+        self._deploy(prefix='prefix')
+        assertPopen(['mike', 'delete', '1.0', '--prefix', 'prefix'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_delete(directory='prefix')
 
     def test_push(self):
         self._deploy()

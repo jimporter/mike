@@ -91,8 +91,10 @@ If you want to move an alias from a previous version to this version (e.g. when
 releasing a new version and updating a `latest` alias), you can pass
 `-u`/`--update-aliases` to allow this.
 
-Finally, to push your docs to a remote branch, simply add `-p`/`--push` to your
-command.
+In addition, you can specify where to deploy your docs via `-b`/`--branch`,
+`-r`/`--remote`, and `--prefix`, specifying the branch, remote, and directory
+prefix within the branch, respectively. Finally, to push your docs to a remote
+branch, simply add `-p`/`--push` to your command.
 
 ### Viewing Your Docs
 
@@ -121,8 +123,8 @@ If `version-or-alias` is a version, this will delete the version and all its
 aliases from the branch; if it's an alias, it will only delete that alias.
 
 If you'd like to *completely* wipe the contents of your docs branch, just run
-`mike delete --all`. Like `deploy` above, you can specify `-p`/`--push` to
-push this commit as well.
+`mike delete --all`. Like `deploy` above, you can specify `--branch`, `--push`,
+etc to control how the commit is handled.
 
 ### Listing Docs
 
@@ -157,8 +159,8 @@ If you want to use a different template from the default, you can pass
 `-T`/`--template`; this takes a path to a [Jinja][jinja] template that accepts
 an `{{href}}` variable.
 
-Like `deploy` and `delete` above, you can specify `-p`/`--push` to push this
-commit as well.
+Like `deploy` and `delete` above, you can specify `--branch`, `--push`,
+etc to control how the commit is handled.
 
 ### Changing a Version's Title
 
@@ -171,8 +173,8 @@ with the `retitle` command:
 mike retitle [version-or-alias] [title]
 ```
 
-As with other commands that change your docs, you can specify `-p`/`--push` to
-push this commit.
+As with other commands that change your docs, you can specify `--branch`,
+`--push`, etc to control how the commit is handled.
 
 ### Adding a New Version Alias
 
@@ -183,12 +185,13 @@ your documentation. You can use the `alias` command for this:
 mike alias [version-or-alias] [alias]...
 ```
 
-Once again, you can specify `-p`/`--push` to push this commit.
+Once again, you can specify `--branch`, `--push`, etc to control how the commit
+is handled.
 
 ### More Details
 
-For more details on the available options (e.g. specifying which branch to push
-to), consult the `--help` command for mike.
+For more details on the available options, consult the `--help` command for
+mike.
 
 ## Staying in Sync
 

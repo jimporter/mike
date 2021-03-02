@@ -192,7 +192,7 @@ class Commit:
             self._write('deleteall\n')
         else:
             for f in files:
-                self._write('D {}\n'.format(f))
+                self._write('D {}\n'.format(git_path(f)))
 
     def add_file(self, file_info):
         self._write('M {mode:06o} inline {path}\n'.format(
@@ -260,8 +260,9 @@ def read_file(branch, filename, universal_newlines=False):
 
 
 def walk_files(branch, path=''):
+    gpath = git_path(path) if path else ''
     cmd = ['git', 'ls-tree', '--full-tree', '-r', '--',
-           '{branch}:{path}'.format(branch=branch, path=path)]
+           '{branch}:{path}'.format(branch=branch, path=gpath)]
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.DEVNULL,
                  universal_newlines=True)
 
@@ -276,7 +277,8 @@ def walk_files(branch, path=''):
         # It'd be nice if we could read from stderr, but it's somewhat
         # complex to do that while avoiding deadlocks. (select(2) does this
         # on POSIX systems, but that doesn't work on Windows.)
-        raise GitError('unable to read files')
+        raise GitError("unable to read files in '{branch}:{path}'"
+                       .format(branch=branch, path=gpath))
 
 
 def walk_real_files(srcdir):

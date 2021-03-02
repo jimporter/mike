@@ -10,6 +10,7 @@
   pass `--no-redirect` to deploy copies
 - Improve the default redirect template to support redirection when the user has
   disabled JavaScript
+- Allow deploying docs to a subdirectory within the target branch via `--prefix`
 - Add support for custom templates with `mike set-default`
 - Read from `remote_branch` and `remote_name` if set in `mkdocs.yml`
 

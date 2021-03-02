@@ -9,7 +9,7 @@ from mike import git_utils, versions
 class DeployTestCase(unittest.TestCase):
     def _test_deploy(self, expected_message=None,
                      expected_versions=[versions.VersionInfo('1.0')],
-                     redirect=True):
+                     redirect=True, directory='.'):
         rev = git_utils.get_latest_commit('master', short=True)
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
@@ -17,7 +17,7 @@ class DeployTestCase(unittest.TestCase):
         else:
             self.assertRegex(
                 message,
-                r'^Deployed {} to {} with MkDocs \S+ and mike \S+$'
+                r'^Deployed {} to {}( in .*)? with MkDocs \S+ and mike \S+$'
                 .format(rev, expected_versions[0].version)
             )
 
@@ -32,9 +32,9 @@ class DeployTestCase(unittest.TestCase):
                 if not redirect:
                     files |= {a + '/css/version-select.css',
                               a + '/js/version-select.js'}
-        assertDirectory('.', files, allow_extra=True)
+        assertDirectory(directory, files, allow_extra=True)
 
-        with open('versions.json') as f:
+        with open(os.path.join(directory, 'versions.json')) as f:
             self.assertEqual(list(versions.Versions.loads(f.read())),
                              expected_versions)
 
@@ -119,6 +119,11 @@ class TestDeploy(DeployTestCase):
         assertPopen(['mike', 'deploy', '1.0', '-m', 'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('commit message')
+
+    def test_prefix(self):
+        assertPopen(['mike', 'deploy', '1.0', '--prefix', 'prefix'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(directory='prefix')
 
     def test_push(self):
         check_call_silent(['git', 'config', 'receive.denyCurrentBranch',

@@ -253,6 +253,13 @@ class TestCommit(unittest.TestCase):
         with open('file.txt') as f:
             self.assertEqual(f.read(), 'this is some text')
 
+    def test_add_file_to_dir(self):
+        self._add_file(os.path.join('dir', 'file.txt'))
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'dir', 'dir/file.txt'})
+        with open(os.path.join('dir', 'file.txt')) as f:
+            self.assertEqual(f.read(), 'this is some text')
+
     def test_add_file_to_branch(self):
         self._add_file('file.txt', 'branch')
         check_call_silent(['git', 'checkout', 'branch'])
@@ -268,6 +275,15 @@ class TestCommit(unittest.TestCase):
 
         check_call_silent(['git', 'checkout', 'master'])
         assertDirectory('.', {'file2.txt'})
+
+    def test_delete_files_from_dir(self):
+        self._add_file(os.path.join('dir', 'file.txt'))
+        self._add_file(os.path.join('dir', 'file2.txt'))
+        with git_utils.Commit('master', 'delete file') as commit:
+            commit.delete_files([os.path.join('dir', 'file.txt')])
+
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'dir', 'dir/file2.txt'})
 
     def test_delete_all_files(self):
         self._add_file('file.txt')
@@ -457,13 +473,22 @@ class TestWalkFiles(unittest.TestCase):
             git_utils.FileInfo('file.txt', b'text'),
         ])
 
-    def test_subdir(self):
+    def test_dir(self):
         files = sorted(git_utils.walk_files('branch', 'dir'),
                        key=lambda x: x.path)
         self.assertEqual(files, [
             git_utils.FileInfo(os.path.join('dir', 'file 2.txt'),
                                b'more text'),
             git_utils.FileInfo(os.path.join('dir', 'file.txt'), b'more text'),
+            git_utils.FileInfo(os.path.join('dir', 'subdir', 'file 3.txt'),
+                               b'even more text'),
+        ])
+
+    def test_subdir(self):
+        files = sorted(git_utils.walk_files(
+            'branch', os.path.join('dir', 'subdir')
+        ), key=lambda x: x.path)
+        self.assertEqual(files, [
             git_utils.FileInfo(os.path.join('dir', 'subdir', 'file 3.txt'),
                                b'even more text'),
         ])

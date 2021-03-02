@@ -7,19 +7,22 @@ from mike import git_utils, versions
 
 
 class AliasTestCase(unittest.TestCase):
-    def _deploy(self, branch=None, versions=['1.0']):
-        branch_args = ['-b', branch] if branch else []
+    def _deploy(self, branch=None, versions=['1.0'], prefix=''):
+        extra_args = ['-b', branch] if branch else []
+        if prefix:
+            extra_args.extend(['--prefix', prefix])
         for i in versions:
-            assertPopen(['mike', 'deploy', i] + branch_args)
+            assertPopen(['mike', 'deploy', i] + extra_args)
 
     def _test_alias(self, expected_message=None,
                     expected_versions=[versions.VersionInfo('1.0')],
-                    redirect=True):
+                    redirect=True, directory='.'):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            self.assertRegex(message, r'^Copied \S+ to latest with mike \S+$')
+            self.assertRegex(message,
+                             r'^Copied \S+ to latest( in .*)? with mike \S+$')
 
         files = {'versions.json'}
         for v in expected_versions:
@@ -32,9 +35,9 @@ class AliasTestCase(unittest.TestCase):
                 if not redirect:
                     files |= {a + '/css/version-select.css',
                               a + '/js/version-select.js'}
-        assertDirectory('.', files, allow_extra=True)
+        assertDirectory(directory, files, allow_extra=True)
 
-        with open('versions.json') as f:
+        with open(os.path.join(directory, 'versions.json')) as f:
             self.assertEqual(list(versions.Versions.loads(f.read())), [
                 versions.VersionInfo('1.0', aliases=['latest']),
             ])
@@ -101,6 +104,12 @@ class TestAlias(AliasTestCase):
                      'commit message'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias('commit message')
+
+    def test_prefix(self):
+        self._deploy(prefix='prefix')
+        assertPopen(['mike', 'alias', '1.0', 'latest', '--prefix', 'prefix'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(directory='prefix')
 
     def test_push(self):
         self._deploy()

@@ -13,7 +13,7 @@ _default_output = ('4.0 [dev, latest]\n' +
                    '1.0\n')
 
 
-class TestList(unittest.TestCase):
+class ListTestCase(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('list')
         git_init()
@@ -29,12 +29,14 @@ class TestList(unittest.TestCase):
 
         with git_utils.Commit('gh-pages', 'commit message') as commit:
             commit.add_file(git_utils.FileInfo(
-                'versions.json', all_versions.dumps()
+                os.path.join(self.prefix, 'versions.json'),
+                all_versions.dumps()
             ))
 
     def _get_list(self, options=[]):
+        extra_args = ['--prefix', self.prefix] if self.prefix else []
         return subprocess.run(
-            ['mike', 'list'] + options,
+            ['mike', 'list'] + options + extra_args,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             universal_newlines=True
         )
@@ -45,6 +47,10 @@ class TestList(unittest.TestCase):
         self.assertEqual(proc.returncode, returncode)
         self.assertEqual(proc.stdout, stdout)
         self.assertEqual(proc.stderr, stderr)
+
+
+class TestList(ListTestCase):
+    prefix = ''
 
     def test_list(self):
         self._check_list()
@@ -170,3 +176,17 @@ class TestList(unittest.TestCase):
 
         self._check_list(['--rebase'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), origin_rev)
+
+
+class TestListPrefix(ListTestCase):
+    prefix = 'prefix'
+
+    def test_list(self):
+        self._check_list()
+
+    def test_list_version(self):
+        self._check_list(['1.0'], '1.0\n')
+        self._check_list(['4.0'], '4.0 [dev, latest]\n')
+        self._check_list(['stable'], '"3.0.3" (3.0) [stable]\n')
+        self._check_list(['nonexist'], '',
+                         'mike: version nonexist does not exist\n', 1)

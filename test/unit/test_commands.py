@@ -1,3 +1,4 @@
+import os
 import re
 import unittest
 from collections.abc import Collection
@@ -34,7 +35,8 @@ class TestBase(unittest.TestCase):
         git_init()
         commit_files(['page.html', 'file.txt'])
 
-    def _test_state(self, expected_message, expected_versions, redirect=True):
+    def _test_state(self, expected_message, expected_versions, redirect=True,
+                    directory='.'):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, expected_message)
 
@@ -49,9 +51,9 @@ class TestBase(unittest.TestCase):
                      (isinstance(redirect, Collection) and
                       a not in redirect) ):
                     files.add(a + '/file.txt')
-        assertDirectory('.', files)
+        assertDirectory(directory, files)
 
-        with open('versions.json') as f:
+        with open(os.path.join(directory, 'versions.json')) as f:
             self.assertEqual(list(versions.Versions.loads(f.read())),
                              expected_versions)
 
@@ -65,7 +67,7 @@ class TestDeploy(TestBase):
         if not expected_message:
             rev = git_utils.get_latest_commit('master', short=True)
             expected_message = (
-                r'^Deployed {} to {} with MkDocs \S+ and mike \S+$'
+                r'^Deployed {} to {}( in .*)? with MkDocs \S+ and mike \S+$'
                 .format(rev, expected_versions[0].version)
             )
 
@@ -118,6 +120,13 @@ class TestDeploy(TestBase):
         commands.deploy(self.stage, '1.0', message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('^commit message$')
+
+    def test_prefix(self):
+        commands.deploy(self.stage, '1.0', aliases=['latest'], prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ], directory='prefix')
 
     def test_overwrite_version(self):
         with git_utils.Commit('gh-pages', 'add versions.json') as commit:
@@ -172,16 +181,18 @@ class TestDeploy(TestBase):
 class TestDelete(TestBase):
     stage_dir = 'delete'
 
-    def _deploy(self, branch='gh-pages'):
-        commands.deploy(self.stage, '1.0', aliases=['stable'], branch=branch)
-        commands.deploy(self.stage, '2.0', branch=branch)
+    def _deploy(self, branch='gh-pages', prefix=''):
+        commands.deploy(self.stage, '1.0', aliases=['stable'], branch=branch,
+                        prefix=prefix)
+        commands.deploy(self.stage, '2.0', branch=branch, prefix=prefix)
 
     def _test_delete(self, expected_message=None,
-                     expected_versions=[versions.VersionInfo('2.0')]):
+                     expected_versions=[versions.VersionInfo('2.0')],
+                     **kwargs):
         if not expected_message:
-            expected_message = r'^Removed \S+ with mike \S+$'
+            expected_message = r'^Removed \S+( in .*)? with mike \S+$'
 
-        self._test_state(expected_message, expected_versions)
+        self._test_state(expected_message, expected_versions, **kwargs)
 
     def test_delete_version(self):
         self._deploy()
@@ -219,6 +230,22 @@ class TestDelete(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete('^commit message$')
 
+    def test_prefix(self):
+        self._deploy(prefix='prefix')
+        commands.delete(['1.0'], prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_delete(directory='prefix')
+
+    def test_prefix_delete_all(self):
+        self._deploy(prefix='prefix')
+        commands.delete(all=True, prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
+        self.assertRegex(message,
+                         r'^Removed everything in prefix with mike \S+$')
+        assertDirectory('prefix', set())
+
     def test_delete_invalid(self):
         self._deploy()
         self.assertRaises(ValueError, commands.delete)
@@ -230,15 +257,17 @@ class TestDelete(TestBase):
 class TestAlias(TestBase):
     stage_dir = 'alias'
 
-    def _deploy(self, branch='gh-pages'):
-        commands.deploy(self.stage, '1.0', aliases=['latest'], branch=branch)
+    def _deploy(self, branch='gh-pages', prefix=''):
+        commands.deploy(self.stage, '1.0', aliases=['latest'], branch=branch,
+                        prefix=prefix)
 
     def _test_alias(self, expected_message=None, expected_src='1.0',
                     expected_aliases=['greatest'], **kwargs):
         if not expected_message:
-            expected_message = r'^Copied {} to {} with mike \S+$'.format(
-                re.escape(expected_src),
-                re.escape(', '.join(expected_aliases))
+            expected_message = (
+                r'^Copied {} to {}( in .*)? with mike \S+$'
+                .format(re.escape(expected_src),
+                        re.escape(', '.join(expected_aliases)))
             )
 
         self._test_state(expected_message, [
@@ -285,6 +314,12 @@ class TestAlias(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias('^commit message$')
 
+    def test_prefix(self):
+        self._deploy(prefix='prefix')
+        commands.alias('1.0', ['greatest'], prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(directory='prefix')
+
     def test_alias_invalid(self):
         self._deploy()
         self.assertRaises(ValueError, commands.alias, '2.0', ['alias'])
@@ -298,23 +333,25 @@ class TestRetitle(unittest.TestCase):
         git_init()
         commit_files(['file.txt'])
 
-    def _deploy(self, branch='gh-pages'):
-        commands.deploy(self.stage, '1.0', branch=branch)
+    def _deploy(self, branch='gh-pages', prefix=''):
+        commands.deploy(self.stage, '1.0', branch=branch, prefix=prefix)
 
-    def _test_retitle(self, expected_message=None):
+    def _test_retitle(self, expected_message=None, directory='.'):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            self.assertRegex(message,
-                             r'^Set title of \S+ to 1\.0\.1 with mike \S+$')
+            self.assertRegex(
+                message,
+                r'^Set title of \S+ to 1\.0\.1( in .*)? with mike \S+$'
+            )
 
-        assertDirectory('.', {
+        assertDirectory(directory, {
             'versions.json',
             '1.0',
             '1.0/file.txt'
         })
-        with open('versions.json') as f:
+        with open(os.path.join(directory, 'versions.json')) as f:
             self.assertEqual(list(versions.Versions.loads(f.read())), [
                 versions.VersionInfo('1.0', '1.0.1'),
             ])
@@ -337,6 +374,12 @@ class TestRetitle(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_retitle('commit message')
 
+    def test_prefix(self):
+        self._deploy(prefix='prefix')
+        commands.retitle('1.0', '1.0.1', prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_retitle(directory='prefix')
+
     def test_retitle_invalid(self):
         self._deploy()
         self.assertRaises(ValueError, commands.retitle, '2.0', '2.0.2')
@@ -350,19 +393,21 @@ class TestSetDefault(unittest.TestCase):
         git_init()
         commit_files(['file.txt'])
 
-    def _deploy(self, branch='gh-pages'):
-        commands.deploy(self.stage, '1.0', branch=branch)
+    def _deploy(self, branch='gh-pages', prefix=''):
+        commands.deploy(self.stage, '1.0', branch=branch, prefix=prefix)
 
     def _test_default(self, expr=r'window\.location\.replace\("1\.0"\)',
-                      expected_message=None):
+                      expected_message=None, directory='.'):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
         else:
-            self.assertRegex(message,
-                             r'^Set default version to \S+ with mike \S+$')
+            self.assertRegex(
+                message,
+                r'^Set default version to \S+( in .*)? with mike \S+$'
+            )
 
-        with open('index.html') as f:
+        with open(os.path.join(directory, 'index.html')) as f:
             self.assertRegex(f.read(), expr)
 
     def test_set_default(self):
@@ -390,6 +435,12 @@ class TestSetDefault(unittest.TestCase):
         commands.set_default('1.0', message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default(expected_message='commit message')
+
+    def test_prefix(self):
+        self._deploy(prefix='prefix')
+        commands.set_default('1.0', prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default(directory='prefix')
 
     def test_set_invalid_default(self):
         self._deploy()

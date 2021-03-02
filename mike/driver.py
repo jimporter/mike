@@ -7,7 +7,7 @@ from . import mkdocs_utils
 from .app_version import version as app_version
 
 
-def add_git_arguments(parser, commit=True):
+def add_git_arguments(parser, *, commit=True, prefix=True):
     # Add this whenever we add git arguments since we pull the remote and
     # branch from mkdocs.yml.
     parser.add_argument('-F', '--config-file', metavar='FILE',
@@ -20,18 +20,23 @@ def add_git_arguments(parser, commit=True):
     git.add_argument('-b', '--branch',
                      help='branch to commit to (default: gh-pages)')
 
-    group = git.add_mutually_exclusive_group()
-    group.add_argument('--rebase', action='store_true',
-                       help='rebase with remote')
-    group.add_argument('--ignore', action='store_true',
-                       help='ignore remote status')
-
     if commit:
         git.add_argument('-m', '--message', help='commit message')
         git.add_argument('-p', '--push', action='store_true',
                          help='push to {remote}/{branch} after commit')
         git.add_argument('-f', '--force', action='store_true',
                          help='force push when pushing')
+
+    if prefix:
+        git.add_argument('--prefix', metavar='PATH', default='',
+                         help=('subdirectory within {branch} where docs are ' +
+                               'located'))
+
+    group = git.add_mutually_exclusive_group()
+    group.add_argument('--rebase', action='store_true',
+                       help='rebase with remote')
+    group.add_argument('--ignore', action='store_true',
+                       help='ignore remote status')
 
 
 def load_mkdocs_config(args, strict=False):
@@ -75,7 +80,8 @@ def deploy(args):
         mkdocs_utils.build(config_file, args.version)
     commands.deploy(cfg.site_dir, args.version, args.title, args.alias,
                     args.update_aliases, args.redirect, args.template,
-                    branch=args.branch, message=args.message)
+                    branch=args.branch, message=args.message,
+                    prefix=args.prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -84,7 +90,7 @@ def delete(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.delete(args.version, args.all, branch=args.branch,
-                    message=args.message)
+                    message=args.message, prefix=args.prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -93,7 +99,8 @@ def alias(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.alias(args.version, args.alias, args.redirect, args.template,
-                   branch=args.branch, message=args.message)
+                   branch=args.branch, message=args.message,
+                   prefix=args.prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -102,7 +109,7 @@ def retitle(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.retitle(args.version, args.title, branch=args.branch,
-                     message=args.message)
+                     message=args.message, prefix=args.prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -123,7 +130,7 @@ def list_versions(args):
 
     load_mkdocs_config(args)
     check_remote_status(args)
-    all_versions = commands.list_versions(args.branch)
+    all_versions = commands.list_versions(args.branch, args.prefix)
 
     if args.version:
         try:
@@ -146,7 +153,7 @@ def set_default(args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.set_default(args.version, args.template, branch=args.branch,
-                         message=args.message)
+                         message=args.message, prefix=args.prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -242,7 +249,7 @@ def main():
         'serve', help='serve docs locally for testing'
     )
     serve_p.set_defaults(func=serve)
-    add_git_arguments(serve_p)
+    add_git_arguments(serve_p, commit=False, prefix=False)
     serve_p.add_argument('-a', '--dev-addr', default='localhost:8000',
                          metavar='IP:PORT',
                          help=('IP address and port to serve from ' +
