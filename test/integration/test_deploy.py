@@ -1,9 +1,14 @@
 import os
+import re
 import unittest
 
 from . import assertPopen, assertOutput
 from .. import *
 from mike import git_utils, versions
+
+
+def match_redir(url):
+    return r'window\.location\.replace\("{}"\)'.format(re.escape(url))
 
 
 class DeployTestCase(unittest.TestCase):
@@ -65,6 +70,8 @@ class TestDeploy(DeployTestCase):
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
         ])
+        with open('latest/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/'))
 
     def test_aliases_copy(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest', '--no-redirect'])
@@ -73,7 +80,7 @@ class TestDeploy(DeployTestCase):
             versions.VersionInfo('1.0', aliases=['latest'])
         ], redirect=False)
 
-    def test_aliases_custom_template(self):
+    def test_aliases_custom_redirect(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest', '-T',
                      os.path.join(test_data_dir, 'template.html')])
         check_call_silent(['git', 'checkout', 'gh-pages'])
@@ -81,9 +88,9 @@ class TestDeploy(DeployTestCase):
             versions.VersionInfo('1.0', aliases=['latest'])
         ])
         check_call_silent(['git', 'checkout', 'gh-pages'])
+
         with open('latest/index.html') as f:
-            self.assertRegex(f.read(),
-                             r'^Redirecting to \.\./1\.0/index.html$')
+            self.assertEqual(f.read(), 'Redirecting to ../1.0/')
 
     def test_update(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])
@@ -320,3 +327,22 @@ class TestDeployOtherRemote(DeployTestCase):
         check_call_silent(['git', 'checkout', 'mybranch'])
         self._test_deploy()
         self._test_rev('mybranch')
+
+
+class TestDeployNoDirectoryUrls(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('deploy_no_directory_urls')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'no_directory_urls'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
+    def test_default(self):
+        assertPopen(['mike', 'deploy', '1.0', 'latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        with open('latest/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/index.html'))
+        with open('latest/page.html') as f:
+            self.assertRegex(f.read(),
+                             match_redir('../1.0/page.html'))

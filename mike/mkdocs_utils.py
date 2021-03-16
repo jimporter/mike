@@ -16,6 +16,7 @@ class ConfigData:
                                      config.get('site_dir', 'site'))
         self.remote_name = config.get('remote_name', 'origin')
         self.remote_branch = config.get('remote_branch', 'gh-pages')
+        self.use_directory_urls = config.get('use_directory_urls', True)
 
 
 @contextmanager

@@ -9,6 +9,19 @@ from .mock_server import MockRequest, MockServer
 from mike import commands, git_utils, versions
 
 
+def match_redir(url):
+    return r'window\.location\.replace\("{}"\)'.format(re.escape(url))
+
+
+class MockConfig:
+    def __init__(self, site_dir, remote_name='origin',
+                 remote_branch='gh-pages', use_directory_urls=True):
+        self.site_dir = site_dir
+        self.remote_name = remote_name
+        self.remote_branch = remote_branch
+        self.use_directory_urls = use_directory_urls
+
+
 class TestListVersions(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('list_versions')
@@ -32,8 +45,9 @@ class TestListVersions(unittest.TestCase):
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir(self.stage_dir)
+        self.cfg = MockConfig(self.stage)
         git_init()
-        commit_files(['page.html', 'file.txt'])
+        commit_files(['page.html', 'file.txt', 'dir/index.html'])
 
     def _test_state(self, expected_message, expected_versions, redirect=True,
                     directory='.'):
@@ -42,11 +56,12 @@ class TestBase(unittest.TestCase):
 
         files = {'versions.json'}
         for v in expected_versions:
-            version_str = str(v.version)
-            files |= {version_str, version_str + '/page.html',
-                      version_str + '/file.txt'}
+            vstr = str(v.version)
+            files |= {vstr, vstr + '/page.html', vstr + '/file.txt',
+                      vstr + '/dir', vstr + '/dir/index.html'}
             for a in v.aliases:
-                files |= {a, a + '/page.html'}
+                files |= {a, a + '/page.html', a + '/dir',
+                          a + '/dir/index.html'}
                 if ( redirect is False or
                      (isinstance(redirect, Collection) and
                       a not in redirect) ):
@@ -74,26 +89,44 @@ class TestDeploy(TestBase):
         self._test_state(expected_message, expected_versions, **kwargs)
 
     def test_default(self):
-        commands.deploy(self.stage, '1.0')
+        commands.deploy(self.cfg, '1.0')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy()
 
     def test_title(self):
-        commands.deploy(self.stage, '1.0', '1.0.0')
+        commands.deploy(self.cfg, '1.0', '1.0.0')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', '1.0.0')
         ])
 
     def test_aliases(self):
-        commands.deploy(self.stage, '1.0', aliases=['latest'])
+        commands.deploy(self.cfg, '1.0', aliases=['latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
         ])
 
+        with open('latest/page.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
+        with open('latest/dir/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../../1.0/dir/'))
+
+    def test_aliases_no_directory_urls(self):
+        self.cfg.use_directory_urls = False
+        commands.deploy(self.cfg, '1.0', aliases=['latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ])
+
+        with open('latest/page.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
+        with open('latest/dir/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../../1.0/dir/index.html'))
+
     def test_aliases_copy(self):
-        commands.deploy(self.stage, '1.0', aliases=['latest'], redirect=False)
+        commands.deploy(self.cfg, '1.0', aliases=['latest'], redirect=False)
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
@@ -102,27 +135,30 @@ class TestDeploy(TestBase):
     def test_aliases_custom_redirect(self):
         with mock.patch('builtins.open',
                         mock.mock_open(read_data=b'{{href}}')):
-            commands.deploy(self.stage, '1.0', aliases=['latest'],
+            commands.deploy(self.cfg, '1.0', aliases=['latest'],
                             template='template.html')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
         ])
+
         with open('latest/page.html') as f:
             self.assertEqual(f.read(), '../1.0/page.html')
+        with open('latest/dir/index.html') as f:
+            self.assertEqual(f.read(), '../../1.0/dir/')
 
     def test_branch(self):
-        commands.deploy(self.stage, '1.0', branch='branch')
+        commands.deploy(self.cfg, '1.0', branch='branch')
         check_call_silent(['git', 'checkout', 'branch'])
         self._test_deploy()
 
     def test_commit_message(self):
-        commands.deploy(self.stage, '1.0', message='commit message')
+        commands.deploy(self.cfg, '1.0', message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('^commit message$')
 
     def test_prefix(self):
-        commands.deploy(self.stage, '1.0', aliases=['latest'], prefix='prefix')
+        commands.deploy(self.cfg, '1.0', aliases=['latest'], prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
@@ -137,7 +173,7 @@ class TestDeploy(TestBase):
             commit.add_file(git_utils.FileInfo('1.0/old-page.html', ''))
             commit.add_file(git_utils.FileInfo('latest/old-page.html', ''))
 
-        commands.deploy(self.stage, '1.0', '1.0.1', ['greatest'])
+        commands.deploy(self.cfg, '1.0', '1.0.1', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', '1.0.1', ['latest', 'greatest'])
@@ -151,10 +187,12 @@ class TestDeploy(TestBase):
             ))
             commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
             commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
+            commit.add_file(git_utils.FileInfo('1.0/dir/index.html', ''))
             commit.add_file(git_utils.FileInfo('latest/page.html', ''))
+            commit.add_file(git_utils.FileInfo('latest/dir/index.html', ''))
 
         with self.assertRaises(ValueError):
-            commands.deploy(self.stage, '2.0', '2.0.0', ['latest'])
+            commands.deploy(self.cfg, '2.0', '2.0.0', ['latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('add versions.json', [
             versions.VersionInfo('1.0', '1.0', ['latest'])
@@ -168,9 +206,11 @@ class TestDeploy(TestBase):
             ))
             commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
             commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
+            commit.add_file(git_utils.FileInfo('1.0/dir/index.html', ''))
             commit.add_file(git_utils.FileInfo('latest/page.html', ''))
+            commit.add_file(git_utils.FileInfo('latest/dir/index.html', ''))
 
-        commands.deploy(self.stage, '2.0', '2.0.0', ['latest'], True)
+        commands.deploy(self.cfg, '2.0', '2.0.0', ['latest'], True)
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('.*', [
             versions.VersionInfo('2.0', '2.0.0', ['latest']),
@@ -182,9 +222,9 @@ class TestDelete(TestBase):
     stage_dir = 'delete'
 
     def _deploy(self, branch='gh-pages', prefix=''):
-        commands.deploy(self.stage, '1.0', aliases=['stable'], branch=branch,
+        commands.deploy(self.cfg, '1.0', aliases=['stable'], branch=branch,
                         prefix=prefix)
-        commands.deploy(self.stage, '2.0', branch=branch, prefix=prefix)
+        commands.deploy(self.cfg, '2.0', branch=branch, prefix=prefix)
 
     def _test_delete(self, expected_message=None,
                      expected_versions=[versions.VersionInfo('2.0')],
@@ -258,7 +298,7 @@ class TestAlias(TestBase):
     stage_dir = 'alias'
 
     def _deploy(self, branch='gh-pages', prefix=''):
-        commands.deploy(self.stage, '1.0', aliases=['latest'], branch=branch,
+        commands.deploy(self.cfg, '1.0', aliases=['latest'], branch=branch,
                         prefix=prefix)
 
     def _test_alias(self, expected_message=None, expected_src='1.0',
@@ -276,65 +316,88 @@ class TestAlias(TestBase):
 
     def test_alias_from_version(self):
         self._deploy()
-        commands.alias('1.0', ['greatest'])
+        commands.alias(self.cfg, '1.0', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
 
+        with open('greatest/page.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
+        with open('greatest/dir/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../../1.0/dir/'))
+
+    def test_alias_no_directory_urls(self):
+        self._deploy()
+        self.cfg.use_directory_urls = False
+        commands.alias(self.cfg, '1.0', ['greatest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias()
+
+        with open('greatest/page.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
+        with open('greatest/dir/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../../1.0/dir/index.html'))
+
     def test_alias_from_alias(self):
         self._deploy()
-        commands.alias('latest', ['greatest'])
+        commands.alias(self.cfg, 'latest', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(expected_src='1.0')
 
     def test_alias_copy(self):
         self._deploy()
-        commands.alias('1.0', ['greatest'], redirect=False)
+        commands.alias(self.cfg, '1.0', ['greatest'], redirect=False)
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(redirect=['latest'])
 
-    def test_alias_custom_template(self):
+    def test_alias_custom_redirect(self):
         self._deploy()
         with mock.patch('builtins.open',
                         mock.mock_open(read_data=b'{{href}}')):
-            commands.alias('1.0', ['greatest'], template='template.html')
+            commands.alias(self.cfg, '1.0', ['greatest'],
+                           template='template.html')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
+
         with open('greatest/page.html') as f:
             self.assertEqual(f.read(), '../1.0/page.html')
+        with open('greatest/dir/index.html') as f:
+            self.assertEqual(f.read(), '../../1.0/dir/')
 
     def test_branch(self):
         self._deploy('branch')
-        commands.alias('1.0', ['greatest'], branch='branch')
+        commands.alias(self.cfg, '1.0', ['greatest'], branch='branch')
         check_call_silent(['git', 'checkout', 'branch'])
         self._test_alias()
 
     def test_commit_message(self):
         self._deploy()
-        commands.alias('1.0', ['greatest'], message='commit message')
+        commands.alias(self.cfg, '1.0', ['greatest'], message='commit message')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias('^commit message$')
 
     def test_prefix(self):
         self._deploy(prefix='prefix')
-        commands.alias('1.0', ['greatest'], prefix='prefix')
+        commands.alias(self.cfg, '1.0', ['greatest'], prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(directory='prefix')
 
     def test_alias_invalid(self):
         self._deploy()
-        self.assertRaises(ValueError, commands.alias, '2.0', ['alias'])
-        self.assertRaises(ValueError, commands.alias, '1.0', ['alias'],
-                          branch='branch')
+        self.assertRaises(ValueError, commands.alias, self.cfg, '2.0',
+                          ['alias'])
+        self.assertRaises(ValueError, commands.alias, self.cfg, '1.0',
+                          ['alias'], branch='branch')
 
 
 class TestRetitle(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('retitle')
+        self.cfg = MockConfig(self.stage)
         git_init()
         commit_files(['file.txt'])
 
     def _deploy(self, branch='gh-pages', prefix=''):
-        commands.deploy(self.stage, '1.0', branch=branch, prefix=prefix)
+        commands.deploy(self.cfg, '1.0', branch=branch, prefix=prefix)
 
     def _test_retitle(self, expected_message=None, directory='.'):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
@@ -390,11 +453,12 @@ class TestRetitle(unittest.TestCase):
 class TestSetDefault(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('set_default')
+        self.cfg = MockConfig(self.stage)
         git_init()
         commit_files(['file.txt'])
 
     def _deploy(self, branch='gh-pages', prefix=''):
-        commands.deploy(self.stage, '1.0', branch=branch, prefix=prefix)
+        commands.deploy(self.cfg, '1.0', branch=branch, prefix=prefix)
 
     def _test_default(self, expr=r'window\.location\.replace\("1\.0/"\)',
                       expected_message=None, directory='.'):

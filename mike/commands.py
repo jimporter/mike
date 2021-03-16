@@ -1,5 +1,6 @@
 import http.server
 import os
+import posixpath
 from jinja2 import Template
 from pkg_resources import resource_stream
 
@@ -19,10 +20,13 @@ def _redirect_template(user_template=None):
         return Template(f.read().decode('utf-8'), autoescape=True)
 
 
-def _add_redirect_to_commit(commit, template, src, dst):
+def _add_redirect_to_commit(commit, template, src, dst,
+                            use_directory_urls=True):
     if os.path.splitext(src)[1] == '.html':
         reldst = os.path.relpath(dst, os.path.dirname(src))
         href = '/'.join(reldst.split(os.path.sep))
+        if use_directory_urls and posixpath.basename(href) == 'index.html':
+            href = posixpath.dirname(href) + '/'
         commit.add_file(git_utils.FileInfo(src, template.render(href=href)))
 
 
@@ -45,7 +49,7 @@ def make_nojekyll():
     return git_utils.FileInfo('.nojekyll', '')
 
 
-def deploy(site_dir, version, title=None, aliases=[], update_aliases=False,
+def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
            redirect=True, template=None, *, branch='gh-pages', message=None,
            prefix=''):
     if message is None:
@@ -72,14 +76,16 @@ def deploy(site_dir, version, title=None, aliases=[], update_aliases=False,
     with git_utils.Commit(branch, message) as commit:
         commit.delete_files([version_str] + list(info.aliases))
 
-        for f in git_utils.walk_real_files(site_dir):
-            canonical_file = f.copy(destdir, site_dir)
+        for f in git_utils.walk_real_files(cfg.site_dir):
+            canonical_file = f.copy(destdir, cfg.site_dir)
             commit.add_file(canonical_file)
             for d in alias_destdirs:
-                alias_file = f.copy(d, site_dir)
+                alias_file = f.copy(d, cfg.site_dir)
                 if redirect:
-                    _add_redirect_to_commit(commit, t, alias_file.path,
-                                            canonical_file.path)
+                    _add_redirect_to_commit(
+                        commit, t, alias_file.path, canonical_file.path,
+                        cfg.use_directory_urls
+                    )
                 else:
                     commit.add_file(alias_file)
 
@@ -125,8 +131,8 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
             commit.add_file(versions_to_file_info(all_versions, prefix))
 
 
-def alias(version, aliases, redirect=True, template=None, *, branch='gh-pages',
-          message=None, prefix=''):
+def alias(cfg, version, aliases, redirect=True, template=None, *,
+          branch='gh-pages', message=None, prefix=''):
     all_versions = list_versions(branch, prefix)
     try:
         real_version = all_versions.find(version, strict=True)[0]
@@ -158,8 +164,10 @@ def alias(version, aliases, redirect=True, template=None, *, branch='gh-pages',
             for d in destdirs:
                 alias_file = canonical_file.copy(d, canonical_dir)
                 if redirect:
-                    _add_redirect_to_commit(commit, t, alias_file.path,
-                                            canonical_file.path)
+                    _add_redirect_to_commit(
+                        commit, t, alias_file.path, canonical_file.path,
+                        cfg.use_directory_urls
+                    )
                 else:
                     commit.add_file(alias_file)
         commit.add_file(versions_to_file_info(all_versions, prefix))

@@ -1,0 +1,7 @@
+site_name: test
+theme: mkdocs
+use_directory_urls: false
+
+nav:
+  - Home: index.md
+  - Page: page.md

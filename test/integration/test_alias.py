@@ -1,9 +1,14 @@
 import os
+import re
 import unittest
 
 from . import assertPopen, assertOutput
 from .. import *
 from mike import git_utils, versions
+
+
+def match_redir(url):
+    return r'window\.location\.replace\("{}"\)'.format(re.escape(url))
 
 
 class AliasTestCase(unittest.TestCase):
@@ -57,6 +62,9 @@ class TestAlias(AliasTestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
 
+        with open('latest/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/'))
+
     def test_alias_copy(self):
         self._deploy()
         assertPopen(['mike', 'alias', '1.0', 'latest', '--no-redirect'])
@@ -69,9 +77,9 @@ class TestAlias(AliasTestCase):
                      os.path.join(test_data_dir, 'template.html')])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
+
         with open('latest/index.html') as f:
-            self.assertRegex(f.read(),
-                             r'^Redirecting to \.\./1\.0/index.html$')
+            self.assertEqual(f.read(), 'Redirecting to ../1.0/')
 
     def test_from_subdir(self):
         self._deploy()
@@ -80,15 +88,6 @@ class TestAlias(AliasTestCase):
             assertPopen(['mike', 'alias', '1.0', 'latest'], returncode=1)
             assertPopen(['mike', 'alias', '1.0', 'latest', '-F',
                          '../mkdocs.yml'])
-        check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias()
-
-    def test_from_subdir_explicit_branch(self):
-        self._deploy()
-        os.mkdir('sub')
-        with pushd('sub'):
-            assertPopen(['mike', 'alias', '1.0', 'latest', '-b', 'gh-pages',
-                         '-r', 'origin'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
 
@@ -259,3 +258,22 @@ class TestAliasOtherRemote(AliasTestCase):
         check_call_silent(['git', 'checkout', 'mybranch'])
         self._test_alias()
         self._test_rev('mybranch')
+
+
+class TestAliasNoDirectoryUrls(AliasTestCase):
+    def setUp(self):
+        self.stage = stage_dir('alias_no_directory_urls')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'no_directory_urls'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
+    def test_default(self):
+        self._deploy()
+        assertPopen(['mike', 'alias', '1.0', 'latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        with open('latest/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/index.html'))
+        with open('latest/page.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/page.html'))

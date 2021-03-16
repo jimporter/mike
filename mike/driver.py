@@ -78,7 +78,7 @@ def deploy(args):
     check_remote_status(args, strict=True)
     with mkdocs_utils.inject_plugin(args.config_file) as config_file:
         mkdocs_utils.build(config_file, args.version)
-    commands.deploy(cfg.site_dir, args.version, args.title, args.alias,
+    commands.deploy(cfg, args.version, args.title, args.alias,
                     args.update_aliases, args.redirect, args.template,
                     branch=args.branch, message=args.message,
                     prefix=args.prefix)
@@ -96,9 +96,9 @@ def delete(args):
 
 
 def alias(args):
-    load_mkdocs_config(args)
+    cfg = load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.alias(args.version, args.alias, args.redirect, args.template,
+    commands.alias(cfg, args.version, args.alias, args.redirect, args.template,
                    branch=args.branch, message=args.message,
                    prefix=args.prefix)
     if args.push:

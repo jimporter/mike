@@ -68,6 +68,9 @@ def git_init():
 
 def commit_files(filenames, message='add file'):
     for f in filenames:
+        dirname = os.path.dirname(f)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         open(f, 'w').close()
         check_call_silent(['git', 'add', f])
     check_call_silent(['git', 'commit', '-m', message])
