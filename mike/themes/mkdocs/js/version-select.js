@@ -54,7 +54,7 @@ window.addEventListener("DOMContentLoaded", function() {
       return {text: i.title, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
-      window.location.href = REL_BASE_URL + "/../" + this.value;
+      window.location.href = REL_BASE_URL + "/../" + this.value + "/";
     });
 
     var container = document.createElement("div");

@@ -14,7 +14,7 @@ class SetDefaultTestCase(unittest.TestCase):
         for i in versions:
             assertPopen(['mike', 'deploy', i] + extra_args)
 
-    def _test_default(self, expr=r'window\.location\.replace\("1\.0"\)',
+    def _test_default(self, expr=r'window\.location\.replace\("1\.0/"\)',
                       expected_message=None, directory='.'):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
@@ -48,7 +48,7 @@ class TestSetDefault(SetDefaultTestCase):
         assertPopen(['mike', 'set-default', '1.0', '-T',
                      os.path.join(test_data_dir, 'template.html')])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_default(r'^Redirecting to 1\.0$')
+        self._test_default(r'^Redirecting to 1\.0/$')
 
     def test_from_subdir(self):
         self._deploy()

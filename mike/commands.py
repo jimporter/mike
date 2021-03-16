@@ -206,7 +206,7 @@ def set_default(version, template=None, *, branch='gh-pages', message=None,
     t = _redirect_template(template)
     with git_utils.Commit(branch, message) as commit:
         commit.add_file(git_utils.FileInfo(
-            os.path.join(prefix, 'index.html'), t.render(href=version)
+            os.path.join(prefix, 'index.html'), t.render(href=version + '/')
         ))
 
 

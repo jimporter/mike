@@ -396,7 +396,7 @@ class TestSetDefault(unittest.TestCase):
     def _deploy(self, branch='gh-pages', prefix=''):
         commands.deploy(self.stage, '1.0', branch=branch, prefix=prefix)
 
-    def _test_default(self, expr=r'window\.location\.replace\("1\.0"\)',
+    def _test_default(self, expr=r'window\.location\.replace\("1\.0/"\)',
                       expected_message=None, directory='.'):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
@@ -422,7 +422,7 @@ class TestSetDefault(unittest.TestCase):
                         mock.mock_open(read_data=b'{{href}}')):
             commands.set_default('1.0', 'template.html')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_default(r'^1\.0$')
+        self._test_default(r'^1\.0/$')
 
     def test_branch(self):
         self._deploy('branch')
