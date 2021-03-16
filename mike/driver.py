@@ -167,6 +167,7 @@ def serve(args):
 def main():
     parser = argparse.ArgumentParser(prog='mike')
     subparsers = parser.add_subparsers(metavar='COMMAND')
+    subparsers.required = True
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + app_version)
