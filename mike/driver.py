@@ -6,6 +6,49 @@ from . import git_utils
 from . import mkdocs_utils
 from .app_version import version as app_version
 
+description = """
+mike is a utility to make it easy to deploy multiple versions of your
+MkDocs-powered docs to a Git branch, suitable for deploying to Github via
+gh-pages. It's designed to produce one version of your docs at a time. That
+way, you can easily deploy a new version without touching any older versions of
+your docs.
+"""
+
+deploy_desc = """
+Build the current documentation and deploy it to the specified version (and
+aliases, if any) on the target branch.
+"""
+
+delete_desc = """
+Delete the documentation for the specified versions or aliases from the target
+branch. If deleting a version, that version and all its aliases will be
+removed; if deleting an alias, only that alias will be removed.
+"""
+
+alias_desc = """
+Add one or more new aliases to the specified version of the documentation on
+the target branch.
+"""
+
+retitle_desc = """
+Change the descriptive title of the specified version of the documentation on
+the target branch.
+"""
+
+list_desc = """
+Display a list of the currently-deployed documentation versions on the target
+branch.
+"""
+
+set_default_desc = """
+Set the default version of the documentation on the target branch, redirecting
+users from the root of the site to that version.
+"""
+
+serve_desc = """
+Start the development server, serving pages from the target branch.
+"""
+
 
 def add_git_arguments(parser, *, commit=True, prefix=True):
     # Add this whenever we add git arguments since we pull the remote and
@@ -165,7 +208,7 @@ def serve(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='mike')
+    parser = argparse.ArgumentParser(prog='mike', description=description)
     subparsers = parser.add_subparsers(metavar='COMMAND')
     subparsers.required = True
 
@@ -173,7 +216,8 @@ def main():
                         version='%(prog)s ' + app_version)
 
     deploy_p = subparsers.add_parser(
-        'deploy', help='build docs and deploy them to a branch'
+        'deploy', description=deploy_desc,
+        help='build docs and deploy them to a branch'
     )
     deploy_p.set_defaults(func=deploy)
     deploy_p.add_argument('-t', '--title',
@@ -192,7 +236,7 @@ def main():
                           help='alias for this build (e.g. "latest")')
 
     delete_p = subparsers.add_parser(
-        'delete', help='delete docs from a branch'
+        'delete', description=delete_desc, help='delete docs from a branch'
     )
     delete_p.set_defaults(func=delete)
     delete_p.add_argument('--all', action='store_true',
@@ -202,7 +246,7 @@ def main():
                           help='version (directory) to delete')
 
     alias_p = subparsers.add_parser(
-        'alias', help='alias docs from a branch'
+        'alias', description=alias_desc, help='alias docs from a branch'
     )
     alias_p.set_defaults(func=alias)
     alias_p.add_argument('--no-redirect', dest='redirect', default=True,
@@ -217,7 +261,8 @@ def main():
                          help='alias to add (e.g. "latest")')
 
     retitle_p = subparsers.add_parser(
-        'retitle', help='change the title of a version'
+        'retitle', description=retitle_desc,
+        help='change the title of a version'
     )
     retitle_p.set_defaults(func=retitle)
     add_git_arguments(retitle_p)
@@ -227,7 +272,7 @@ def main():
                            help='the new title to use')
 
     list_p = subparsers.add_parser(
-        'list', help='list deployed docs on a branch'
+        'list', description=list_desc, help='list deployed docs on a branch'
     )
     list_p.set_defaults(func=list_versions)
     list_p.add_argument('-j', '--json', action='store_true',
@@ -237,7 +282,8 @@ def main():
                         help='version (directory) to deploy this build to')
 
     set_default_p = subparsers.add_parser(
-        'set-default', help='set the default version for your docs'
+        'set-default', description=set_default_desc,
+        help='set the default version for your docs'
     )
     set_default_p.set_defaults(func=set_default)
     set_default_p.add_argument('-T', '--template',
@@ -247,7 +293,7 @@ def main():
                                help='version to set as default')
 
     serve_p = subparsers.add_parser(
-        'serve', help='serve docs locally for testing'
+        'serve', description=serve_desc, help='serve docs locally for testing'
     )
     serve_p.set_defaults(func=serve)
     add_git_arguments(serve_p, commit=False, prefix=False)
