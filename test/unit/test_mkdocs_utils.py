@@ -15,6 +15,7 @@ class TestConfigData(unittest.TestCase):
         self.assertEqual(cfg.site_dir, 'site')
         self.assertEqual(cfg.remote_name, 'origin')
         self.assertEqual(cfg.remote_branch, 'gh-pages')
+        self.assertEqual(cfg.use_directory_urls, True)
 
     def test_abs_path(self):
         cfg = mkdocs_utils.ConfigData(
@@ -24,6 +25,7 @@ class TestConfigData(unittest.TestCase):
                          os.path.join(test_data_dir, 'basic_theme', 'site'))
         self.assertEqual(cfg.remote_name, 'origin')
         self.assertEqual(cfg.remote_branch, 'gh-pages')
+        self.assertEqual(cfg.use_directory_urls, True)
 
     def test_custom_site_dir(self):
         os.chdir(os.path.join(test_data_dir, 'site_dir'))
@@ -31,6 +33,7 @@ class TestConfigData(unittest.TestCase):
         self.assertEqual(cfg.site_dir, 'built_docs')
         self.assertEqual(cfg.remote_name, 'origin')
         self.assertEqual(cfg.remote_branch, 'gh-pages')
+        self.assertEqual(cfg.use_directory_urls, True)
 
     def test_remote(self):
         os.chdir(os.path.join(test_data_dir, 'remote'))
@@ -38,6 +41,15 @@ class TestConfigData(unittest.TestCase):
         self.assertEqual(cfg.site_dir, 'site')
         self.assertEqual(cfg.remote_name, 'myremote')
         self.assertEqual(cfg.remote_branch, 'mybranch')
+        self.assertEqual(cfg.use_directory_urls, True)
+
+    def test_no_directory_urls(self):
+        os.chdir(os.path.join(test_data_dir, 'no_directory_urls'))
+        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
+        self.assertEqual(cfg.site_dir, 'site')
+        self.assertEqual(cfg.remote_name, 'origin')
+        self.assertEqual(cfg.remote_branch, 'gh-pages')
+        self.assertEqual(cfg.use_directory_urls, False)
 
 
 class TestInjectPlugin(unittest.TestCase):
