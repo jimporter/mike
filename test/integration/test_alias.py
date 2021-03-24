@@ -20,8 +20,9 @@ class AliasTestCase(unittest.TestCase):
             assertPopen(['mike', 'deploy', i] + extra_args)
 
     def _test_alias(self, expected_message=None,
-                    expected_versions=[versions.VersionInfo('1.0')],
-                    redirect=True, directory='.'):
+                    expected_versions=[
+                        versions.VersionInfo('1.0', aliases=['latest'])
+                    ], redirect=True, directory='.'):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
@@ -43,9 +44,8 @@ class AliasTestCase(unittest.TestCase):
         assertDirectory(directory, files, allow_extra=True)
 
         with open(os.path.join(directory, 'versions.json')) as f:
-            self.assertEqual(list(versions.Versions.loads(f.read())), [
-                versions.VersionInfo('1.0', aliases=['latest']),
-            ])
+            self.assertEqual(list(versions.Versions.loads(f.read())),
+                             expected_versions)
 
 
 class TestAlias(AliasTestCase):
@@ -64,6 +64,19 @@ class TestAlias(AliasTestCase):
 
         with open('latest/index.html') as f:
             self.assertRegex(f.read(), match_redir('../1.0/'))
+
+    def test_update_aliases(self):
+        assertPopen(['mike', 'deploy', '1.0', 'latest'])
+        assertPopen(['mike', 'deploy', '2.0'])
+        assertPopen(['mike', 'alias', '2.0', 'latest', '-u'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(expected_versions=[
+            versions.VersionInfo('2.0', aliases=['latest']),
+            versions.VersionInfo('1.0', ),
+        ])
+
+        with open('latest/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../2.0/'))
 
     def test_alias_copy(self):
         self._deploy()

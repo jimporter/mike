@@ -131,8 +131,8 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
             commit.add_file(versions_to_file_info(all_versions, prefix))
 
 
-def alias(cfg, version, aliases, redirect=True, template=None, *,
-          branch='gh-pages', message=None, prefix=''):
+def alias(cfg, version, aliases, update_aliases=False, redirect=True,
+          template=None, *, branch='gh-pages', message=None, prefix=''):
     all_versions = list_versions(branch, prefix)
     try:
         real_version = all_versions.find(version, strict=True)[0]
@@ -150,7 +150,8 @@ def alias(cfg, version, aliases, redirect=True, template=None, *,
             mike_version=app_version
         )
 
-    new_aliases = all_versions.update(real_version, aliases=aliases)
+    new_aliases = all_versions.update(real_version, aliases=aliases,
+                                      update_aliases=update_aliases)
     destdirs = [os.path.join(prefix, i) for i in new_aliases]
 
     if redirect and destdirs:

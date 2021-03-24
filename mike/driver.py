@@ -141,9 +141,9 @@ def delete(args):
 def alias(args):
     cfg = load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.alias(cfg, args.version, args.alias, args.redirect, args.template,
-                   branch=args.branch, message=args.message,
-                   prefix=args.prefix)
+    commands.alias(cfg, args.version, args.alias, args.update_aliases,
+                   args.redirect, args.template, branch=args.branch,
+                   message=args.message, prefix=args.prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -223,7 +223,7 @@ def main():
     deploy_p.add_argument('-t', '--title',
                           help='short descriptive title for this version')
     deploy_p.add_argument('-u', '--update-aliases', action='store_true',
-                          help='allow aliases pointing to other versions')
+                          help='update aliases pointing to other versions')
     deploy_p.add_argument('--no-redirect', dest='redirect', default=True,
                           action='store_false',
                           help='make copies of docs for each alias')
@@ -249,6 +249,8 @@ def main():
         'alias', description=alias_desc, help='alias docs from a branch'
     )
     alias_p.set_defaults(func=alias)
+    alias_p.add_argument('-u', '--update-aliases', action='store_true',
+                         help='update aliases pointing to other versions')
     alias_p.add_argument('--no-redirect', dest='redirect', default=True,
                          action='store_false',
                          help='make copies of docs for each alias')

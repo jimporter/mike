@@ -78,6 +78,13 @@ particularly-relevant version of your docs somewhere special (e.g. `latest`):
 mike deploy [version] [alias]...
 ```
 
+If `[version]` already exists, this command will *also* update all of the
+pre-existing aliases for it. Normally, if an alias specified on the command line
+is already associated with another version, this will return an error. If you
+*do* want to move an alias from another version to this version (e.g. when
+releasing a new version and updating the `latest` alias to point to this new
+version), you can pass `-u`/`--update-aliases` to allow this.
+
 By default, aliases create a simple HTML redirect to the real version of the
 docs; to create a copy of the docs for each alias, you can pass `--no-redirect`.
 If you're using redirects, you can customize the redirect template with
@@ -85,11 +92,7 @@ If you're using redirects, you can customize the redirect template with
 an `{{href}}` variable.
 
 If you'd like to specify a title for this version that doesn't match the version
-string, you can pass `-t TITLE`/`--title=TITLE` as well. If `version` already
-exists, this command will *also* update all of the pre-existing aliases for it.
-If you want to move an alias from a previous version to this version (e.g. when
-releasing a new version and updating a `latest` alias), you can pass
-`-u`/`--update-aliases` to allow this.
+string, you can pass `-t TITLE`/`--title=TITLE` as well.
 
 In addition, you can specify where to deploy your docs via `-b`/`--branch`,
 `-r`/`--remote`, and `--prefix`, specifying the branch, remote, and directory
@@ -184,6 +187,9 @@ your documentation. You can use the `alias` command for this:
 ```sh
 mike alias [version-or-alias] [alias]...
 ```
+
+As with `deploy`, you can pass `-u`/`--update-aliases` to change where an
+existing alias points to.
 
 Once again, you can specify `--branch`, `--push`, etc to control how the commit
 is handled.

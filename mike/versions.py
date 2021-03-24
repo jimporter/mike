@@ -82,30 +82,52 @@ class Versions:
             raise KeyError(version)
         return None
 
-    def add(self, version, title=None, aliases=[], update_aliases=False):
-        v = _ensure_version(version)
+    def _ensure_unique_aliases(self, version, aliases, update_aliases=False):
         removed_aliases = []
         for i in aliases:
             key = self.find(i)
-            if key and key[0] != v:
-                if not update_aliases or len(key) == 1:
-                    raise ValueError('{!r} already exists'.format(i))
+            if key and key[0] != version:
+                if len(key) == 1:
+                    raise ValueError(
+                        'alias {!r} already specified as a version'.format(i)
+                    )
+                if not update_aliases:
+                    raise ValueError(
+                        'alias {!r} already exists for version {}'
+                        .format(i, str(key[0]))
+                    )
                 removed_aliases.append(key)
+        return removed_aliases
+
+    def add(self, version, title=None, aliases=[], update_aliases=False):
+        v = _ensure_version(version)
+        removed_aliases = self._ensure_unique_aliases(
+            v, aliases, update_aliases
+        )
 
         if v in self._data:
             self._data[v].update(title, aliases)
         else:
             if self.find(version):
-                raise ValueError('{!r} already exists'.format(version))
+                raise ValueError('version {} already exists'.format(version))
             self._data[v] = VersionInfo(version, title, aliases)
 
+        # Remove aliases from old versions that we've moved to this version.
         for i in removed_aliases:
             self._data[i[0]].aliases.remove(i[1])
 
         return self._data[v]
 
-    def update(self, version, title=None, aliases=[]):
+    def update(self, version, title=None, aliases=[], update_aliases=False):
         key = self.find(version, strict=True)
+        removed_aliases = self._ensure_unique_aliases(
+            key[0], aliases, update_aliases
+        )
+
+        # Remove aliases from old versions that we've moved to this version.
+        for i in removed_aliases:
+            self._data[i[0]].aliases.remove(i[1])
+
         return self._data[key[0]].update(title, aliases)
 
     def _remove_by_key(self, key):

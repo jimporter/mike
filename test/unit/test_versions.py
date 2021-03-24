@@ -27,7 +27,8 @@ class TestVersionInfo(unittest.TestCase):
         self.assertEqual(v.title, '1.0')
         self.assertEqual(v.aliases, set())
 
-        self.assertRaises(ValueError, VersionInfo, '1.0', aliases=['1.0'])
+        with self.assertRaises(ValueError):
+            VersionInfo('1.0', aliases=['1.0'])
 
     def test_equality(self):
         v = VersionInfo('1.0')
@@ -134,23 +135,27 @@ class TestVersions(unittest.TestCase):
     def test_add_overwrite_alias(self):
         versions = Versions()
         versions.add('1.0', aliases=['latest'])
-        with self.assertRaises(ValueError):
+        msg = r"alias 'latest' already exists for version 1\.0"
+        with self.assertRaisesRegex(ValueError, msg):
             versions.add('2.0', aliases=['latest'])
 
     def test_add_overwrite_version_with_alias(self):
         versions = Versions()
         versions.add('1.0b1')
-        with self.assertRaises(ValueError):
+
+        msg = r"alias '1\.0b1' already specified as a version"
+        with self.assertRaisesRegex(ValueError, msg):
             versions.add('1.0', aliases=['1.0b1'])
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, msg):
             versions.add('1.0', aliases=['1.0b1'], update_aliases=True)
 
     def test_add_overwrite_alias_with_version(self):
         versions = Versions()
         versions.add('1.0b1', aliases=['1.0'])
-        with self.assertRaises(ValueError):
+        msg = r'version 1\.0 already exists'
+        with self.assertRaisesRegex(ValueError, msg):
             versions.add('1.0')
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, msg):
             versions.add('1.0', update_aliases=True)
 
     def test_add_invalid(self):
@@ -194,7 +199,36 @@ class TestVersions(unittest.TestCase):
             VersionInfo('1.0', '1.0.0', ['latest', 'greatest']),
         ])
 
-    def test_update_invalid(self):
+    def test_update_overwrite_same_alias(self):
+        versions = Versions()
+        versions.add('1.0', '1.0.0', ['latest'])
+        diff = versions.update('1.0', aliases=['latest'])
+        self.assertEqual(diff, set())
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0', '1.0.0', ['latest']),
+        ])
+
+    def test_update_overwrite_alias_error(self):
+        versions = Versions()
+        versions.add('1.0', '1.0.0', ['latest'])
+        versions.add('2.0', '2.0.0')
+
+        msg = r"alias 'latest' already exists for version 1\.0"
+        with self.assertRaisesRegex(ValueError, msg):
+            versions.update('2.0', aliases=['latest'])
+
+    def test_update_overwrite_alias_update(self):
+        versions = Versions()
+        versions.add('1.0', '1.0.0', ['latest'])
+        versions.add('2.0', '2.0.0')
+        diff = versions.update('2.0', aliases=['latest'], update_aliases=True)
+        self.assertEqual(diff, {'latest'})
+        self.assertEqual(list(versions), [
+            VersionInfo('2.0', '2.0.0', ['latest']),
+            VersionInfo('1.0', '1.0.0'),
+        ])
+
+    def test_update_invalid_version(self):
         versions = Versions()
         with self.assertRaises(KeyError):
             versions.update('1.0', '1.0.0')

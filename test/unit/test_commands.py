@@ -88,6 +88,18 @@ class TestDeploy(TestBase):
 
         self._test_state(expected_message, expected_versions, **kwargs)
 
+    def _mock_commit(self):
+        with git_utils.Commit('gh-pages', 'add versions.json') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'versions.json',
+                '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
+            ))
+            commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
+            commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
+            commit.add_file(git_utils.FileInfo('1.0/dir/index.html', ''))
+            commit.add_file(git_utils.FileInfo('latest/page.html', ''))
+            commit.add_file(git_utils.FileInfo('latest/dir/index.html', ''))
+
     def test_default(self):
         commands.deploy(self.cfg, '1.0')
         check_call_silent(['git', 'checkout', 'gh-pages'])
@@ -179,18 +191,24 @@ class TestDeploy(TestBase):
             versions.VersionInfo('1.0', '1.0.1', ['latest', 'greatest'])
         ])
 
-    def test_overwrite_alias(self):
-        with git_utils.Commit('gh-pages', 'add versions.json') as commit:
-            commit.add_file(git_utils.FileInfo(
-                'versions.json',
-                '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
-            ))
-            commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
-            commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
-            commit.add_file(git_utils.FileInfo('1.0/dir/index.html', ''))
-            commit.add_file(git_utils.FileInfo('latest/page.html', ''))
-            commit.add_file(git_utils.FileInfo('latest/dir/index.html', ''))
+    def test_overwrite_same_alias(self):
+        self._mock_commit()
+        commands.deploy(self.cfg, '1.0', '1.0.1', ['latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', '1.0.1', ['latest'])
+        ])
 
+    def test_overwrite_include_same_alias(self):
+        self._mock_commit()
+        commands.deploy(self.cfg, '1.0', '1.0.1', ['latest', 'greatest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', '1.0.1', ['latest', 'greatest'])
+        ])
+
+    def test_overwrite_alias_error(self):
+        self._mock_commit()
         with self.assertRaises(ValueError):
             commands.deploy(self.cfg, '2.0', '2.0.0', ['latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
@@ -199,17 +217,7 @@ class TestDeploy(TestBase):
         ])
 
     def test_update_aliases(self):
-        with git_utils.Commit('gh-pages', 'add versions.json') as commit:
-            commit.add_file(git_utils.FileInfo(
-                'versions.json',
-                '[{"version": "1.0", "title": "1.0", "aliases": ["latest"]}]',
-            ))
-            commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
-            commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
-            commit.add_file(git_utils.FileInfo('1.0/dir/index.html', ''))
-            commit.add_file(git_utils.FileInfo('latest/page.html', ''))
-            commit.add_file(git_utils.FileInfo('latest/dir/index.html', ''))
-
+        self._mock_commit()
         commands.deploy(self.cfg, '2.0', '2.0.0', ['latest'], True)
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('.*', [
@@ -341,7 +349,7 @@ class TestAlias(TestBase):
         self._deploy()
         commands.alias(self.cfg, 'latest', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias(expected_src='1.0')
+        self._test_alias()
 
     def test_alias_copy(self):
         self._deploy()
@@ -363,6 +371,32 @@ class TestAlias(TestBase):
         with open('greatest/dir/index.html') as f:
             self.assertEqual(f.read(), '../../1.0/dir/')
 
+    def test_alias_overwrite_same(self):
+        self._deploy()
+        commands.alias(self.cfg, '1.0', ['latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(expected_aliases=['latest'])
+
+    def test_alias_overwrite_include_same(self):
+        self._deploy()
+        commands.alias(self.cfg, '1.0', ['latest', 'greatest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(expected_aliases=['latest', 'greatest'])
+
+    def test_alias_overwrite_error(self):
+        self._deploy()
+        commands.deploy(self.cfg, '2.0')
+        with self.assertRaises(ValueError):
+            commands.alias(self.cfg, '2.0', ['latest'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_state(r'^Deployed \w+ to 2\.0', [
+            versions.VersionInfo('2.0', '2.0'),
+            versions.VersionInfo('1.0', '1.0', ['latest']),
+        ])
+
+    def test_alias_update(self):
+        pass
+
     def test_branch(self):
         self._deploy('branch')
         commands.alias(self.cfg, '1.0', ['greatest'], branch='branch')
@@ -381,7 +415,7 @@ class TestAlias(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(directory='prefix')
 
-    def test_alias_invalid(self):
+    def test_alias_invalid_version(self):
         self._deploy()
         self.assertRaises(ValueError, commands.alias, self.cfg, '2.0',
                           ['alias'])

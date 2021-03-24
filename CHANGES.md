@@ -13,6 +13,7 @@
 - Allow deploying docs to a subdirectory within the target branch via `--prefix`
 - Add support for custom templates with `mike set-default`
 - Read from `remote_branch` and `remote_name` if set in `mkdocs.yml`
+- Allow updating an existing alias with `mike alias -u`
 
 ### Breaking changes
 - Require Python 3.6+
@@ -21,6 +22,8 @@
 
 ### Bug fixes
 - Canonical URLs in generated documentation now point to the correct location
+- `mike alias` now checks for existing aliases to prevent erroneously setting an
+  alias for two different versions
 - Replace `packaging` dependency with `verspec` for future stability
 
 [material-mike]: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#versioning
