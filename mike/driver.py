@@ -119,12 +119,12 @@ def check_remote_status(args, strict=False):
 def deploy(args):
     cfg = load_mkdocs_config(args, strict=True)
     check_remote_status(args, strict=True)
-    with mkdocs_utils.inject_plugin(args.config_file) as config_file:
-        mkdocs_utils.build(config_file, args.version)
-    commands.deploy(cfg, args.version, args.title, args.alias,
-                    args.update_aliases, args.redirect, args.template,
-                    branch=args.branch, message=args.message,
-                    prefix=args.prefix)
+    with commands.deploy(cfg, args.version, args.title, args.alias,
+                         args.update_aliases, args.redirect, args.template,
+                         branch=args.branch, message=args.message,
+                         prefix=args.prefix):
+        with mkdocs_utils.inject_plugin(args.config_file) as config_file:
+            mkdocs_utils.build(config_file, args.version)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 

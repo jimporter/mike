@@ -1,6 +1,7 @@
 import http.server
 import os
 import posixpath
+from contextlib import contextmanager
 from jinja2 import Template
 from pkg_resources import resource_stream
 
@@ -49,6 +50,7 @@ def make_nojekyll():
     return git_utils.FileInfo('.nojekyll', '')
 
 
+@contextmanager
 def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
            redirect=True, template=None, *, branch='gh-pages', message=None,
            prefix=''):
@@ -69,6 +71,9 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
     version_str = str(info.version)
     destdir = os.path.join(prefix, version_str)
     alias_destdirs = [os.path.join(prefix, i) for i in info.aliases]
+
+    # Let the caller perform the build.
+    yield
 
     if redirect and info.aliases:
         t = _redirect_template(template)

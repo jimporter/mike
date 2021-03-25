@@ -36,12 +36,33 @@ def pushd(dirname):
         os.chdir(old)
 
 
-def copytree(src, dst):
-    for i in os.listdir(src):
-        curr_src = os.path.join(src, i)
-        curr_dst = os.path.join(dst, i)
-        if os.path.isdir(curr_src):
-            shutil.copytree(curr_src, curr_dst)
+def copytree(src, dst, ignore_hidden=True):
+    def accumulate(path):
+        for i in os.listdir(os.path.join(src, path)):
+            if ignore_hidden and i[0] == '.':
+                continue
+
+            curr_path = os.path.join(path, i)
+            if os.path.isdir(os.path.join(src, curr_path)):
+                yield (curr_path, True)
+                yield from accumulate(curr_path)
+            else:
+                yield (curr_path, False)
+
+    # Make a list of files to copy *before* starting to copy, so that we can
+    # put our copy inside the src directory.
+    to_copy = list(accumulate(''))
+    seen_dirs = set()
+
+    os.makedirs(dst, exist_ok=True)
+    for path, isdir in to_copy:
+        curr_src = os.path.join(src, path)
+        curr_dst = os.path.join(dst, path)
+
+        if isdir:
+            if path not in seen_dirs:
+                seen_dirs.add(path)
+                os.makedirs(curr_dst, exist_ok=True)
         else:
             shutil.copy2(curr_src, curr_dst)
 
