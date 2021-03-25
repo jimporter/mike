@@ -135,7 +135,7 @@ class TestVersions(unittest.TestCase):
     def test_add_overwrite_alias(self):
         versions = Versions()
         versions.add('1.0', aliases=['latest'])
-        msg = r"alias 'latest' already exists for version 1\.0"
+        msg = r"alias 'latest' already exists for version '1\.0'"
         with self.assertRaisesRegex(ValueError, msg):
             versions.add('2.0', aliases=['latest'])
 
@@ -152,7 +152,7 @@ class TestVersions(unittest.TestCase):
     def test_add_overwrite_alias_with_version(self):
         versions = Versions()
         versions.add('1.0b1', aliases=['1.0'])
-        msg = r'version 1\.0 already exists'
+        msg = r"version '1\.0' already exists"
         with self.assertRaisesRegex(ValueError, msg):
             versions.add('1.0')
         with self.assertRaisesRegex(ValueError, msg):
@@ -213,7 +213,7 @@ class TestVersions(unittest.TestCase):
         versions.add('1.0', '1.0.0', ['latest'])
         versions.add('2.0', '2.0.0')
 
-        msg = r"alias 'latest' already exists for version 1\.0"
+        msg = r"alias 'latest' already exists for version '1\.0'"
         with self.assertRaisesRegex(ValueError, msg):
             versions.update('2.0', aliases=['latest'])
 

@@ -209,7 +209,7 @@ class TestAlias(AliasTestCase):
         check_call_silent(['git', 'fetch', 'origin'])
 
         assertOutput(self, ['mike', 'alias', '1.0', 'latest'], output=(
-            'mike: gh-pages has diverged from origin/gh-pages\n' +
+            'error: gh-pages has diverged from origin/gh-pages\n' +
             '  Pass --ignore to ignore this or --rebase to rebase onto ' +
             'remote\n'
         ), returncode=1)

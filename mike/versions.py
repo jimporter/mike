@@ -93,7 +93,7 @@ class Versions:
                     )
                 if not update_aliases:
                     raise ValueError(
-                        'alias {!r} already exists for version {}'
+                        'alias {!r} already exists for version {!r}'
                         .format(i, str(key[0]))
                     )
                 removed_aliases.append(key)
@@ -109,7 +109,7 @@ class Versions:
             self._data[v].update(title, aliases)
         else:
             if self.find(version):
-                raise ValueError('version {} already exists'.format(version))
+                raise ValueError('version {!r} already exists'.format(version))
             self._data[v] = VersionInfo(version, title, aliases)
 
         # Remove aliases from old versions that we've moved to this version.

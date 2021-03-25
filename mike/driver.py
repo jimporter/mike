@@ -308,6 +308,4 @@ def main():
     try:
         return args.func(args)
     except Exception as e:
-        parser.exit(1, '{prog}: {error}\n'.format(
-            prog=parser.prog, error=str(e)
-        ))
+        parser.exit(1, 'error: {}\n'.format(str(e)))

@@ -118,7 +118,7 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
             try:
                 removed = all_versions.difference_update(versions)
             except KeyError as e:
-                raise ValueError('version {} does not exist'.format(e))
+                raise ValueError('version {!r} does not exist'.format(e))
 
             for i in removed:
                 if isinstance(i, str):
@@ -137,7 +137,7 @@ def alias(cfg, version, aliases, update_aliases=False, redirect=True,
     try:
         real_version = all_versions.find(version, strict=True)[0]
     except KeyError as e:
-        raise ValueError('version {} does not exist'.format(e))
+        raise ValueError('version {!r} does not exist'.format(e))
 
     if message is None:
         message = (
@@ -190,7 +190,7 @@ def retitle(version, title, *, branch='gh-pages', message=None, prefix=''):
     try:
         all_versions.update(version, title)
     except KeyError:
-        raise ValueError('version {} does not exist'.format(version))
+        raise ValueError('version {!r} does not exist'.format(version))
 
     with git_utils.Commit(branch, message) as commit:
         commit.add_file(versions_to_file_info(all_versions, prefix))
@@ -210,7 +210,7 @@ def set_default(version, template=None, *, branch='gh-pages', message=None,
 
     all_versions = list_versions(branch, prefix)
     if not all_versions.find(version):
-        raise ValueError('version {} does not exist'.format(version))
+        raise ValueError('version {!r} does not exist'.format(version))
 
     t = _redirect_template(template)
     with git_utils.Commit(branch, message) as commit:
