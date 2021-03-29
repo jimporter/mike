@@ -27,7 +27,27 @@ class TestVersionInfo(unittest.TestCase):
         self.assertEqual(v.title, '1.0')
         self.assertEqual(v.aliases, set())
 
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "^'' is not a valid version$"):
+            VersionInfo('')
+        with self.assertRaisesRegex(ValueError,
+                                    "^'..' is not a valid version$"):
+            VersionInfo('..')
+        with self.assertRaisesRegex(ValueError,
+                                    "^'foo/bar' is not a valid version$"):
+            VersionInfo('foo/bar')
+        with self.assertRaisesRegex(ValueError,
+                                    "^'foo/bar' is not a valid version$"):
+            VersionInfo(Version('foo/bar'))
+
+        with self.assertRaisesRegex(ValueError, "^'' is not a valid alias$"):
+            VersionInfo('1.0', aliases=['latest', ''])
+        with self.assertRaisesRegex(ValueError, "^'..' is not a valid alias$"):
+            VersionInfo('1.0', aliases=['..'])
+        with self.assertRaisesRegex(ValueError,
+                                    "^'foo/bar' is not a valid alias$"):
+            VersionInfo('1.0', aliases=['foo/bar'])
+        with self.assertRaisesRegex(ValueError,
+                                    "^duplicated version and alias$"):
             VersionInfo('1.0', aliases=['1.0'])
 
     def test_equality(self):
@@ -75,6 +95,14 @@ class TestVersionInfo(unittest.TestCase):
         self.assertEqual(v, VersionInfo(
             '1.0', '1.0.1', ['latest', 'greatest']
         ))
+
+        with self.assertRaisesRegex(ValueError, "^'' is not a valid alias$"):
+            v.update(aliases=[''])
+        with self.assertRaisesRegex(ValueError, "^'..' is not a valid alias$"):
+            v.update(aliases=['..'])
+        with self.assertRaisesRegex(ValueError,
+                                    "^'foo/bar' is not a valid alias$"):
+            v.update(aliases=['foo/bar'])
 
 
 class TestVersions(unittest.TestCase):

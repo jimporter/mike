@@ -1,4 +1,5 @@
 import json
+import re
 from verspec.loose import LooseVersion as Version
 
 
@@ -14,12 +15,22 @@ def _version_pair(version):
 
 class VersionInfo:
     def __init__(self, version, title=None, aliases=[]):
+        self._check_version(str(version), 'version')
+        for i in aliases:
+            self._check_version(i, 'alias')
+
         self.version, name = _version_pair(version)
         self.title = name if title is None else title
         self.aliases = set(aliases)
 
         if name in self.aliases:
             raise ValueError('duplicated version and alias')
+
+    @staticmethod
+    def _check_version(version, kind):
+        if ( not version or version in ['.', '..'] or
+             re.search(r'[\\/]', version) ):
+            raise ValueError('{!r} is not a valid {}'.format(version, kind))
 
     def __eq__(self, rhs):
         return (self.version == rhs.version and self.title == rhs.title and
@@ -39,6 +50,8 @@ class VersionInfo:
         return json.dumps(self.to_json())
 
     def update(self, title=None, aliases=[]):
+        for i in aliases:
+            self._check_version(i, 'alias')
         if title is not None:
             self.title = title
 

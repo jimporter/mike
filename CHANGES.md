@@ -25,6 +25,8 @@
 - `mike alias` now checks for existing aliases to prevent erroneously setting an
   alias for two different versions
 - Replace `packaging` dependency with `verspec` for future stability
+- Validate version and alias names to ensure they're non-empty and don't
+  contain a directory separator
 
 [material-mike]: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#versioning
 
