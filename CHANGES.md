@@ -1,6 +1,6 @@
 # Changes
 
-## v1.0.0 (in progress)
+## v1.0.0 (2021-04-10)
 
 ### New features
 - Remove `mike install-extras` and replace it with an MkDocs plugin; if you
