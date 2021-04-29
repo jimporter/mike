@@ -22,6 +22,14 @@ While mike is flexible, it's optimized around putting your docs in a
 particularly notable versions. This makes it easy to make permalinks to whatever
 version of the documentation you want to direct people to.
 
+## How it works
+
+mike works by creating a new Git commit on your `gh-pages` branch every time you
+deploy a new version of your docs using `mike deploy` (or other mike subcommands
+that change your `gh-pages` branch). When deploying a particular version,
+previously-deployed docs for that version are erased and overwritten, but docs
+for other versions remain untouched.
+
 ## Installation
 
 Like most Python projects, mike uses [setuptools][setuptools], so installation
