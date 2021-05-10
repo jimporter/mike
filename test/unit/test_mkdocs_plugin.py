@@ -13,9 +13,10 @@ class MockPlugins:
 
 # Mock importing `mkdocs.plugins`, since it can't be imported normally.
 real_import = __import__
-with mock.patch('builtins.__import__',
-                lambda name, *args: (MockPlugins if name == 'mkdocs.plugins'
-                                     else real_import(name, *args))):
+with mock.patch('builtins.__import__', lambda name, *args, **kwargs: (
+    MockPlugins if name == 'mkdocs.plugins' else
+    real_import(name, *args, **kwargs)
+)):
     from mike import mkdocs_plugin
 
 
