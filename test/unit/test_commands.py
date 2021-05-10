@@ -10,10 +10,6 @@ from .mock_server import MockRequest, MockServer
 from mike import commands, git_utils, versions
 
 
-def match_redir(url):
-    return r'window\.location\.replace\("{}"\)'.format(re.escape(url))
-
-
 class MockConfig:
     def __init__(self, site_dir, remote_name='origin',
                  remote_branch='gh-pages', use_directory_urls=True):
@@ -539,8 +535,8 @@ class TestSetDefault(unittest.TestCase):
         with commands.deploy(self.cfg, '1.0', branch=branch, prefix=prefix):
             pass
 
-    def _test_default(self, expr=r'window\.location\.replace\("1\.0/"\)',
-                      expected_message=None, directory='.'):
+    def _test_default(self, expr=match_redir('1.0/'), expected_message=None,
+                      directory='.'):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)

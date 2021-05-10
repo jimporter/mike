@@ -1,14 +1,9 @@
 import os
-import re
 import unittest
 
 from . import assertPopen, assertOutput
 from .. import *
 from mike import git_utils, versions
-
-
-def match_redir(url):
-    return r'window\.location\.replace\("{}"\)'.format(re.escape(url))
 
 
 class AliasTestCase(unittest.TestCase):

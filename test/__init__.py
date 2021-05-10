@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -8,7 +9,7 @@ from itertools import chain
 
 __all__ = ['this_dir', 'test_data_dir', 'test_stage_dir', 'stage_dir', 'pushd',
            'copytree', 'check_call_silent', 'check_output', 'git_config',
-           'git_init', 'commit_files', 'assertDirectory']
+           'git_init', 'commit_files', 'match_redir', 'assertDirectory']
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, 'data')
@@ -113,6 +114,10 @@ def walk(top, include_hidden):
 
 def relpaths(paths, base):
     return [os.path.relpath(i, base) for i in paths]
+
+
+def match_redir(url):
+    return r'window\.location\.replace\("{}"'.format(re.escape(url))
 
 
 def assertDirectory(path, contents, include_hidden=False, allow_extra=False):

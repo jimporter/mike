@@ -14,8 +14,8 @@ class SetDefaultTestCase(unittest.TestCase):
         for i in versions:
             assertPopen(['mike', 'deploy', i] + extra_args)
 
-    def _test_default(self, expr=r'window\.location\.replace\("1\.0/"\)',
-                      expected_message=None, directory='.'):
+    def _test_default(self, expr=match_redir('1.0/'), expected_message=None,
+                      directory='.'):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
