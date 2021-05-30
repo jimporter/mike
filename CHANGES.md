@@ -7,6 +7,8 @@
 - When redirecting to another page, include the `#hash`
 - Ensure the MkDocs `search` plugin is correctly enabled when building via mike
 
+---
+
 ## v1.0.0 (2021-04-10)
 
 ### New features
