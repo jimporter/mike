@@ -24,7 +24,7 @@ def inject_plugin(config_file):
     with open(config_file) as f:
         config = yaml.load(f, Loader=yaml.Loader)
 
-    plugins = config.setdefault('plugins', [])
+    plugins = config.setdefault('plugins', ['search'])
     for i in plugins:
         if ( (isinstance(i, str) and i == 'mike') or
              (isinstance(i, dict) and 'mike' in i) ):

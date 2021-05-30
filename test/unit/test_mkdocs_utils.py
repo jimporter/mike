@@ -71,7 +71,7 @@ class TestInjectPlugin(unittest.TestCase):
                 newcfg = yaml.load(out.getvalue(), Loader=yaml.Loader)
             mremove.assert_called_once()
 
-        self.assertEqual(newcfg, {'plugins': ['mike']})
+        self.assertEqual(newcfg, {'plugins': ['mike', 'search']})
 
     def test_other_plugins(self):
         out = self.Stream()
