@@ -22,7 +22,7 @@ def _redirect_template(user_template=None):
 
 
 def _add_redirect_to_commit(commit, template, src, dst,
-                            use_directory_urls=True):
+                            use_directory_urls):
     if os.path.splitext(src)[1] == '.html':
         reldst = os.path.relpath(dst, os.path.dirname(src))
         href = '/'.join(reldst.split(os.path.sep))
@@ -81,15 +81,15 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
     with git_utils.Commit(branch, message) as commit:
         commit.delete_files([version_str] + list(info.aliases))
 
-        for f in git_utils.walk_real_files(cfg.site_dir):
-            canonical_file = f.copy(destdir, cfg.site_dir)
+        for f in git_utils.walk_real_files(cfg['site_dir']):
+            canonical_file = f.copy(destdir, cfg['site_dir'])
             commit.add_file(canonical_file)
             for d in alias_destdirs:
-                alias_file = f.copy(d, cfg.site_dir)
+                alias_file = f.copy(d, cfg['site_dir'])
                 if redirect:
                     _add_redirect_to_commit(
                         commit, t, alias_file.path, canonical_file.path,
-                        cfg.use_directory_urls
+                        cfg['use_directory_urls']
                     )
                 else:
                     commit.add_file(alias_file)
@@ -172,7 +172,7 @@ def alias(cfg, version, aliases, update_aliases=False, redirect=True,
                 if redirect:
                     _add_redirect_to_commit(
                         commit, t, alias_file.path, canonical_file.path,
-                        cfg.use_directory_urls
+                        cfg['use_directory_urls']
                     )
                 else:
                     commit.add_file(alias_file)

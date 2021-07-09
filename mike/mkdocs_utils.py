@@ -1,22 +1,34 @@
+import mkdocs.config
 import os
 import re
 import subprocess
 import yaml
+from collections.abc import Iterable
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 
 docs_version_var = 'MIKE_DOCS_VERSION'
 
 
-class ConfigData:
-    def __init__(self, config_file):
-        with open(config_file) as f:
-            config = yaml.load(f, Loader=yaml.Loader)
-        self.site_dir = os.path.join(os.path.dirname(config_file),
-                                     config.get('site_dir', 'site'))
-        self.remote_name = config.get('remote_name', 'origin')
-        self.remote_branch = config.get('remote_branch', 'gh-pages')
-        self.use_directory_urls = config.get('use_directory_urls', True)
+def _open_config(config_file=None):
+    if config_file is None:
+        config_file = ['mkdocs.yml', 'mkdocs.yaml']
+    elif not isinstance(config_file, Iterable) or isinstance(config_file, str):
+        config_file = [config_file]
+
+    exc = None
+    for i in config_file:
+        try:
+            return open(i, 'rb')
+        except FileNotFoundError as e:
+            if not exc:
+                exc = e
+    raise exc
+
+
+def load_config(config_file=None, **kwargs):
+    with _open_config(config_file) as f:
+        return mkdocs.config.load_config(f, **kwargs)
 
 
 @contextmanager

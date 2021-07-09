@@ -84,20 +84,20 @@ def add_git_arguments(parser, *, commit=True, prefix=True):
 
 def load_mkdocs_config(args, strict=False):
     try:
-        cfg = mkdocs_utils.ConfigData(args.config_file)
+        cfg = mkdocs_utils.load_config(args.config_file)
         if args.branch is None:
-            args.branch = cfg.remote_branch
+            args.branch = cfg['remote_branch']
         if args.remote is None:
-            args.remote = cfg.remote_name
+            args.remote = cfg['remote_name']
         return cfg
-    except OSError:
+    except FileNotFoundError as e:
         if strict:
-            raise RuntimeError('{!r} not found'.format(args.config_file))
+            raise
         if args.branch is None or args.remote is None:
-            raise RuntimeError((
-                '{!r} not found; pass --config-file or set ' +
-                '--remote/--branch explicitly'
-            ).format(args.config_file))
+            raise FileNotFoundError(
+                '{}; pass --config-file or set --remote/--branch explicitly'
+                .format(str(e))
+            )
 
 
 def check_remote_status(args, strict=False):

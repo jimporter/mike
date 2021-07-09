@@ -11,7 +11,7 @@ from mike import git_utils
 
 @unittest.skipIf(platform.system() == 'Windows',
                  "SIGINT doesn't work on windows")
-class TestList(unittest.TestCase):
+class TestServe(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('serve')
         git_init()

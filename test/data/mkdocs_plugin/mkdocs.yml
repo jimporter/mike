@@ -1,5 +1,5 @@
 site_name: test
-site_url: https://example.com/
+site_url: https://example.invalid/
 theme:
   name: mkdocs
 plugins:

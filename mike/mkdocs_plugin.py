@@ -9,7 +9,7 @@ from .mkdocs_utils import docs_version_var
 
 try:
     from mkdocs.exceptions import PluginError
-except ImportError:
+except ImportError:  # pragma: no cover
     PluginError = ValueError
 
 

@@ -10,13 +10,12 @@ from .mock_server import MockRequest, MockServer
 from mike import commands, git_utils, versions
 
 
-class MockConfig:
-    def __init__(self, site_dir, remote_name='origin',
-                 remote_branch='gh-pages', use_directory_urls=True):
-        self.site_dir = site_dir
-        self.remote_name = remote_name
-        self.remote_branch = remote_branch
-        self.use_directory_urls = use_directory_urls
+def mock_config(site_dir, remote_name='origin',
+                remote_branch='gh-pages', use_directory_urls=True):
+    return {'site_dir': site_dir,
+            'remote_name': remote_name,
+            'remote_branch': remote_branch,
+            'use_directory_urls': use_directory_urls}
 
 
 class TestListVersions(unittest.TestCase):
@@ -42,7 +41,7 @@ class TestListVersions(unittest.TestCase):
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir(self.stage_dir)
-        self.cfg = MockConfig(self.stage)
+        self.cfg = mock_config(self.stage)
         git_init()
         commit_files(['page.html', 'file.txt', 'dir/index.html'])
 
@@ -75,10 +74,10 @@ class TestDeploy(TestBase):
 
     def setUp(self):
         super().setUp()
-        self.cfg.site_dir = os.path.join(self.cfg.site_dir, 'site')
+        self.cfg['site_dir'] = os.path.join(self.cfg['site_dir'], 'site')
 
     def _mock_build(self):
-        copytree(self.stage, self.cfg.site_dir)
+        copytree(self.stage, self.cfg['site_dir'])
 
     def _test_deploy(self, expected_message=None,
                      expected_versions=[versions.VersionInfo('1.0')],
@@ -90,8 +89,8 @@ class TestDeploy(TestBase):
                 .format(rev, expected_versions[0].version)
             )
 
-        if os.path.exists(self.cfg.site_dir):
-            shutil.rmtree(self.cfg.site_dir)
+        if os.path.exists(self.cfg['site_dir']):
+            shutil.rmtree(self.cfg['site_dir'])
         self._test_state(expected_message, expected_versions, **kwargs)
 
     def _mock_commit(self):
@@ -134,7 +133,7 @@ class TestDeploy(TestBase):
             self.assertRegex(f.read(), match_redir('../../1.0/dir/'))
 
     def test_aliases_no_directory_urls(self):
-        self.cfg.use_directory_urls = False
+        self.cfg['use_directory_urls'] = False
         with commands.deploy(self.cfg, '1.0', aliases=['latest']):
             self._mock_build()
         check_call_silent(['git', 'checkout', 'gh-pages'])
@@ -365,7 +364,7 @@ class TestAlias(TestBase):
 
     def test_alias_no_directory_urls(self):
         self._deploy()
-        self.cfg.use_directory_urls = False
+        self.cfg['use_directory_urls'] = False
         commands.alias(self.cfg, '1.0', ['greatest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
@@ -465,7 +464,7 @@ class TestAlias(TestBase):
 class TestRetitle(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('retitle')
-        self.cfg = MockConfig(self.stage)
+        self.cfg = mock_config(self.stage)
         git_init()
         commit_files(['file.txt'])
 
@@ -527,7 +526,7 @@ class TestRetitle(unittest.TestCase):
 class TestSetDefault(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('set_default')
-        self.cfg = MockConfig(self.stage)
+        self.cfg = mock_config(self.stage)
         git_init()
         commit_files(['file.txt'])
 

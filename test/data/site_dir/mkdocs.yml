@@ -1,4 +1,5 @@
 site_name: test
+site_url: https://example.invalid/
 theme: mkdocs
 site_dir: built_docs
 

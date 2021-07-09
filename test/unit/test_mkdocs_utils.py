@@ -8,48 +8,63 @@ from .. import *
 from mike import mkdocs_utils
 
 
-class TestConfigData(unittest.TestCase):
+# This mostly just tests `load_config` from MkDocs, but we want to be sure it
+# behaves as we want it.
+class TestLoadConfig(unittest.TestCase):
     def test_default(self):
         os.chdir(os.path.join(test_data_dir, 'basic_theme'))
-        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
-        self.assertEqual(cfg.site_dir, 'site')
-        self.assertEqual(cfg.remote_name, 'origin')
-        self.assertEqual(cfg.remote_branch, 'gh-pages')
-        self.assertEqual(cfg.use_directory_urls, True)
+        cfg = mkdocs_utils.load_config()
+        self.assertEqual(cfg['site_dir'], os.path.abspath('site'))
+        self.assertEqual(cfg['remote_name'], 'origin')
+        self.assertEqual(cfg['remote_branch'], 'gh-pages')
+        self.assertEqual(cfg['use_directory_urls'], True)
 
     def test_abs_path(self):
-        cfg = mkdocs_utils.ConfigData(
+        cfg = mkdocs_utils.load_config(
             os.path.join(test_data_dir, 'basic_theme', 'mkdocs.yml')
         )
-        self.assertEqual(cfg.site_dir,
+        self.assertEqual(cfg['site_dir'],
                          os.path.join(test_data_dir, 'basic_theme', 'site'))
-        self.assertEqual(cfg.remote_name, 'origin')
-        self.assertEqual(cfg.remote_branch, 'gh-pages')
-        self.assertEqual(cfg.use_directory_urls, True)
+        self.assertEqual(cfg['remote_name'], 'origin')
+        self.assertEqual(cfg['remote_branch'], 'gh-pages')
+        self.assertEqual(cfg['use_directory_urls'], True)
 
     def test_custom_site_dir(self):
         os.chdir(os.path.join(test_data_dir, 'site_dir'))
-        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
-        self.assertEqual(cfg.site_dir, 'built_docs')
-        self.assertEqual(cfg.remote_name, 'origin')
-        self.assertEqual(cfg.remote_branch, 'gh-pages')
-        self.assertEqual(cfg.use_directory_urls, True)
+        cfg = mkdocs_utils.load_config()
+        self.assertEqual(cfg['site_dir'], os.path.abspath('built_docs'))
+        self.assertEqual(cfg['remote_name'], 'origin')
+        self.assertEqual(cfg['remote_branch'], 'gh-pages')
+        self.assertEqual(cfg['use_directory_urls'], True)
 
     def test_remote(self):
         os.chdir(os.path.join(test_data_dir, 'remote'))
-        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
-        self.assertEqual(cfg.site_dir, 'site')
-        self.assertEqual(cfg.remote_name, 'myremote')
-        self.assertEqual(cfg.remote_branch, 'mybranch')
-        self.assertEqual(cfg.use_directory_urls, True)
+        cfg = mkdocs_utils.load_config()
+        self.assertEqual(cfg['site_dir'], os.path.abspath('site'))
+        self.assertEqual(cfg['remote_name'], 'myremote')
+        self.assertEqual(cfg['remote_branch'], 'mybranch')
+        self.assertEqual(cfg['use_directory_urls'], True)
 
     def test_no_directory_urls(self):
         os.chdir(os.path.join(test_data_dir, 'no_directory_urls'))
-        cfg = mkdocs_utils.ConfigData('mkdocs.yml')
-        self.assertEqual(cfg.site_dir, 'site')
-        self.assertEqual(cfg.remote_name, 'origin')
-        self.assertEqual(cfg.remote_branch, 'gh-pages')
-        self.assertEqual(cfg.use_directory_urls, False)
+        cfg = mkdocs_utils.load_config()
+        self.assertEqual(cfg['site_dir'], os.path.abspath('site'))
+        self.assertEqual(cfg['remote_name'], 'origin')
+        self.assertEqual(cfg['remote_branch'], 'gh-pages')
+        self.assertEqual(cfg['use_directory_urls'], False)
+
+    def test_nonexist(self):
+        os.chdir(os.path.join(test_data_dir, 'basic_theme'))
+        with self.assertRaisesRegex(FileNotFoundError, r"'nonexist.yml'"):
+            mkdocs_utils.load_config('nonexist.yml')
+        with self.assertRaisesRegex(FileNotFoundError, r"'nonexist.yml'"):
+            mkdocs_utils.load_config(['nonexist.yml', 'nonexist2.yml'])
+
+        cfg = mkdocs_utils.load_config(['nonexist.yml', 'mkdocs.yml'])
+        self.assertEqual(cfg['site_dir'], os.path.abspath('site'))
+        self.assertEqual(cfg['remote_name'], 'origin')
+        self.assertEqual(cfg['remote_branch'], 'gh-pages')
+        self.assertEqual(cfg['use_directory_urls'], True)
 
 
 class TestInjectPlugin(unittest.TestCase):
