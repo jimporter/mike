@@ -1,9 +1,10 @@
 import mkdocs.config
+import mkdocs.utils
 import os
 import re
 import subprocess
 import yaml
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 
@@ -33,8 +34,8 @@ def load_config(config_file=None, **kwargs):
 
 @contextmanager
 def inject_plugin(config_file):
-    with open(config_file) as f:
-        config = yaml.load(f, Loader=yaml.Loader)
+    with _open_config(config_file) as f:
+        config = mkdocs.utils.yaml_load(f)
 
     plugins = config.setdefault('plugins', ['search'])
     for i in plugins:
@@ -43,11 +44,16 @@ def inject_plugin(config_file):
             yield config_file
             return
 
-    plugins.insert(0, 'mike')
+    if isinstance(plugins, Mapping):
+        config['plugins'] = {'mike': {}}
+        config['plugins'].update(plugins)
+    else:
+        plugins.insert(0, 'mike')
+
     with NamedTemporaryFile(mode='w', dir=os.path.dirname(config_file),
                             prefix='mike-mkdocs', suffix='.yml',
                             delete=False) as f:
-        yaml.dump(config, f)
+        yaml.dump(config, f, sort_keys=False)
 
     try:
         yield f.name

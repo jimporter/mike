@@ -8,6 +8,23 @@ from .. import *
 from mike import mkdocs_utils
 
 
+class Stream(StringIO):
+    def __init__(self, name, data=''):
+        super().__init__(data)
+        self.name = name
+
+    def close(self):
+        pass
+
+
+def mock_open_files(files):
+    def wrapper(filename, *args, **kwargs):
+        name = os.path.basename(filename)
+        return Stream(name, files[name])
+
+    return wrapper
+
+
 # This mostly just tests `load_config` from MkDocs, but we want to be sure it
 # behaves as we want it.
 class TestLoadConfig(unittest.TestCase):
@@ -68,14 +85,8 @@ class TestLoadConfig(unittest.TestCase):
 
 
 class TestInjectPlugin(unittest.TestCase):
-    class Stream(StringIO):
-        name = 'mike-mkdocs.yml'
-
-        def close(self):
-            pass
-
     def test_no_plugins(self):
-        out = self.Stream()
+        out = Stream('mike-mkdocs.yml')
         cfg = '{}'
         with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
@@ -89,7 +100,7 @@ class TestInjectPlugin(unittest.TestCase):
         self.assertEqual(newcfg, {'plugins': ['mike', 'search']})
 
     def test_other_plugins(self):
-        out = self.Stream()
+        out = Stream('mike-mkdocs.yml')
         cfg = 'plugins:\n  - foo\n  - bar:\n      option: true'
         with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
@@ -101,11 +112,31 @@ class TestInjectPlugin(unittest.TestCase):
             mremove.assert_called_once()
 
         self.assertEqual(newcfg, {'plugins': [
-            'mike', 'foo', {'bar': {'option': True}}
+            'mike', 'foo', {'bar': {'option': True}},
         ]})
 
+    def test_other_plugins_dict(self):
+        out = Stream('mike-mkdocs.yml')
+        cfg = 'plugins:\n  foo: {}\n  bar:\n    option: true'
+        with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
+             mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
+                        return_value=out), \
+             mock.patch('os.remove') as mremove:  # noqa
+            with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
+                self.assertEqual(f, out.name)
+                newcfg = yaml.load(out.getvalue(), Loader=yaml.Loader)
+            mremove.assert_called_once()
+
+        self.assertEqual(newcfg, {'plugins': {
+            'mike': {}, 'foo': {}, 'bar': {'option': True},
+        }})
+        self.assertEqual(
+            list(newcfg['plugins'].items()),
+            [('mike', {}), ('foo', {}), ('bar', {'option': True})]
+        )
+
     def test_mike_plugin(self):
-        out = self.Stream()
+        out = Stream('mike-mkdocs.yml')
         cfg = 'plugins:\n  - mike'
         with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
@@ -117,7 +148,7 @@ class TestInjectPlugin(unittest.TestCase):
             mremove.assert_not_called()
 
     def test_mike_plugin_options(self):
-        out = self.Stream()
+        out = Stream('mike-mkdocs.yml')
         cfg = 'plugins:\n  - mike:\n      option: true'
         with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
@@ -127,6 +158,29 @@ class TestInjectPlugin(unittest.TestCase):
                 self.assertEqual(f, 'mkdocs.yml')
                 self.assertEqual(out.getvalue(), '')
             mremove.assert_not_called()
+
+    def test_inherit(self):
+        out = Stream('mike-mkdocs.yml')
+        main_cfg = 'INHERIT: mkdocs-base.yml\nplugins:\n  foo: {}\n'
+        base_cfg = 'plugins:\n  bar: {}\n'
+        files = {'mkdocs.yml': main_cfg, 'mkdocs-base.yml': base_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)), \
+             mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
+                        return_value=out), \
+             mock.patch('os.path.exists', return_value=True), \
+             mock.patch('os.remove') as mremove:  # noqa
+            with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
+                self.assertEqual(f, 'mike-mkdocs.yml')
+                newcfg = yaml.load(out.getvalue(), Loader=yaml.Loader)
+            mremove.assert_called_once()
+
+        self.assertEqual(newcfg, {'plugins': {
+            'mike': {}, 'bar': {}, 'foo': {},
+        }})
+        self.assertEqual(
+            list(newcfg['plugins'].items()),
+            [('mike', {}), ('bar', {}), ('foo', {})]
+        )
 
 
 class TestBuild(unittest.TestCase):

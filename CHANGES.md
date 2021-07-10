@@ -1,5 +1,15 @@
 # Changes
 
+## v1.1.0 (in progress)
+
+- Add support for [`!ENV`][mkdocs-env] and [`INHERIT`][mkdocs-inherit] in
+  `mkdocs.yml`
+
+[mkdocs-env]: https://www.mkdocs.org/user-guide/configuration/#environment-variables
+[mkdocs-inherit]: https://www.mkdocs.org/user-guide/configuration/#configuration-inheritance
+
+---
+
 ## v1.0.1 (2021-05-31)
 
 ### Bug fixes
