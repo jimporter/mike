@@ -116,7 +116,7 @@ def check_remote_status(args, strict=False):
             sys.stderr.write('warning: {}\n'.format(msg))
 
 
-def deploy(args):
+def deploy(parser, args):
     cfg = load_mkdocs_config(args, strict=True)
     check_remote_status(args, strict=True)
     with commands.deploy(cfg, args.version, args.title, args.alias,
@@ -129,7 +129,7 @@ def deploy(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
-def delete(args):
+def delete(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.delete(args.version, args.all, branch=args.branch,
@@ -138,7 +138,7 @@ def delete(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
-def alias(args):
+def alias(parser, args):
     cfg = load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.alias(cfg, args.version, args.alias, args.update_aliases,
@@ -148,7 +148,7 @@ def alias(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
-def retitle(args):
+def retitle(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.retitle(args.version, args.title, branch=args.branch,
@@ -157,7 +157,7 @@ def retitle(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
-def list_versions(args):
+def list_versions(parser, args):
     def print_version(info):
         version = str(info.version)
         aliases = (' [{}]'.format(', '.join(sorted(info.aliases)))
@@ -192,7 +192,7 @@ def list_versions(args):
             print_version(i)
 
 
-def set_default(args):
+def set_default(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.set_default(args.version, args.template, branch=args.branch,
@@ -201,10 +201,14 @@ def set_default(args):
         git_utils.push_branch(args.remote, args.branch, args.force)
 
 
-def serve(args):
+def serve(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args)
     commands.serve(args.dev_addr, branch=args.branch)
+
+
+def help(parser, args):
+    parser.parse_args(args.subcommand + ['--help'])
 
 
 def main():
@@ -304,8 +308,15 @@ def main():
                          help=('IP address and port to serve from ' +
                                '(default: %(default)s)'))
 
+    help_p = subparsers.add_parser(
+        'help', help='show this help message and exit', add_help=False
+    )
+    help_p.set_defaults(func=help)
+    help_p.add_argument('subcommand', metavar='CMD', nargs=argparse.REMAINDER,
+                        help='subcommand to request help for')
+
     args = parser.parse_args()
     try:
-        return args.func(args)
+        return args.func(parser, args)
     except Exception as e:
         parser.exit(1, 'error: {}\n'.format(str(e)))
