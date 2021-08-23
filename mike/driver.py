@@ -220,7 +220,7 @@ def dump_completion(parser, args):
     try:
         import shtab
         print(shtab.complete(parser, shell=args.shell))
-    except ImportError:
+    except ImportError:  # pragma: no cover
         print('shtab not found; install via `pip install shtab`')
         return 1
 
