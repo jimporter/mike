@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 
 from . import commands
@@ -47,6 +48,10 @@ users from the root of the site to that version.
 
 serve_desc = """
 Start the development server, serving pages from the target branch.
+"""
+
+dump_completion_desc = """
+Print shell-completion functions.
 """
 
 
@@ -211,6 +216,15 @@ def help(parser, args):
     parser.parse_args(args.subcommand + ['--help'])
 
 
+def dump_completion(parser, args):
+    try:
+        import shtab
+        print(shtab.complete(parser, shell=args.shell))
+    except ImportError:
+        print('shtab not found; install via `pip install shtab`')
+        return 1
+
+
 def main():
     parser = argparse.ArgumentParser(prog='mike', description=description)
     subparsers = parser.add_subparsers(metavar='COMMAND')
@@ -314,6 +328,16 @@ def main():
     help_p.set_defaults(func=help)
     help_p.add_argument('subcommand', metavar='CMD', nargs=argparse.REMAINDER,
                         help='subcommand to request help for')
+
+    completion_p = subparsers.add_parser(
+        'dump-completion', description=dump_completion_desc,
+        help='print shell completion script'
+    )
+    completion_p.set_defaults(func=dump_completion)
+    shell = (os.path.basename(os.environ['SHELL'])
+             if 'SHELL' in os.environ else None)
+    completion_p.add_argument('-s', '--shell', metavar='SHELL', default=shell,
+                              help='shell type (default: %(default)s)')
 
     args = parser.parse_args()
     try:

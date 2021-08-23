@@ -39,6 +39,12 @@ is what you might expect:
 pip install mike
 ```
 
+Once you've installed mike, you might also want to set up shell-completion for
+it. If you have [shtab][shtab] installed, you can do this with
+`mike dump-completion`, which will print the shell-completion code for your
+shell. For more details on how to set this up, consult shtab's
+[documentation][shtab-setup].
+
 ## Usage
 
 ### Initialization
@@ -261,4 +267,6 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [bfg9000]: https://jimporter.github.io/bfg9000
 [material-insiders]: https://squidfunk.github.io/mkdocs-material/insiders/
 [setuptools]: https://pythonhosted.org/setuptools/
+[shtab]: https://github.com/iterative/shtab
+[shtab-setup]: https://github.com/iterative/shtab#cli-usage
 [jinja]: https://jinja.palletsprojects.com/
