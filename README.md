@@ -265,7 +265,6 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [codecov-link]: https://codecov.io/gh/jimporter/mike
 
 [bfg9000]: https://jimporter.github.io/bfg9000
-[material-insiders]: https://squidfunk.github.io/mkdocs-material/insiders/
 [setuptools]: https://pythonhosted.org/setuptools/
 [shtab]: https://github.com/iterative/shtab
 [shtab-setup]: https://github.com/iterative/shtab#cli-usage
