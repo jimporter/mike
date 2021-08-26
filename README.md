@@ -41,7 +41,7 @@ pip install mike
 
 Once you've installed mike, you might also want to set up shell-completion for
 it. If you have [shtab][shtab] installed, you can do this with
-`mike dump-completion`, which will print the shell-completion code for your
+`mike generate-completion`, which will print the shell-completion code for your
 shell. For more details on how to set this up, consult shtab's
 [documentation][shtab-setup].
 

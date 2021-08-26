@@ -50,8 +50,9 @@ serve_desc = """
 Start the development server, serving pages from the target branch.
 """
 
-dump_completion_desc = """
-Print shell-completion functions.
+generate_completion_desc = """
+Generate shell-completion functions for bfg9000 and write them to standard
+output. This requires the Python package `shtab`.
 """
 
 
@@ -216,7 +217,7 @@ def help(parser, args):
     parser.parse_args(args.subcommand + ['--help'])
 
 
-def dump_completion(parser, args):
+def generate_completion(parser, args):
     try:
         import shtab
         print(shtab.complete(parser, shell=args.shell))
@@ -330,10 +331,10 @@ def main():
                         help='subcommand to request help for')
 
     completion_p = subparsers.add_parser(
-        'dump-completion', description=dump_completion_desc,
+        'generate-completion', description=generate_completion_desc,
         help='print shell completion script'
     )
-    completion_p.set_defaults(func=dump_completion)
+    completion_p.set_defaults(func=generate_completion)
     shell = (os.path.basename(os.environ['SHELL'])
              if 'SHELL' in os.environ else None)
     completion_p.add_argument('-s', '--shell', metavar='SHELL', default=shell,

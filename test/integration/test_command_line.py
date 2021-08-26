@@ -19,7 +19,7 @@ class HelpTest(unittest.TestCase):
         self.assertRegex(output, r'^usage: mike deploy')
 
 
-class DumpCompletionTest(unittest.TestCase):
+class GenerateCompletionTest(unittest.TestCase):
     def test_completion(self):
-        output = assertPopen(['mike', 'dump-completion', '-sbash'])
+        output = assertPopen(['mike', 'generate-completion', '-sbash'])
         self.assertRegex(output, r'^#!/usr/bin/env bash')

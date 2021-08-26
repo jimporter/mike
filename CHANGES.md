@@ -5,7 +5,7 @@
 ### New features
 - Add support for [`!ENV`][mkdocs-env] and [`INHERIT`][mkdocs-inherit] in
   `mkdocs.yml`
-- Add `mike dump-completion` to generate shell-completion functions
+- Add `mike generate-completion` to generate shell-completion functions
 
 [mkdocs-env]: https://www.mkdocs.org/user-guide/configuration/#environment-variables
 [mkdocs-inherit]: https://www.mkdocs.org/user-guide/configuration/#configuration-inheritance
