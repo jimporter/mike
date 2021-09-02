@@ -231,6 +231,25 @@ in mike, but since your built docs live on a git branch, it's still easy to
 manage: check out your `gh-pages` branch (or wherever your built docs
 live), and commit the necessary files to the root directory.
 
+## Deploying via CI
+
+Since mike just generates commits to an ordinary git branch, it should work
+smoothly with your favorite CI system. However, you should keep in mind that
+some CI systems make shallow clones of your repository, meaning that the CI job
+won't have a local instance of your documentation branch to commit to. This will
+naturally cause issues when trying to push the commit. This is easy to resolve
+though. For Github Actions, you can simply disable shallow clones:
+
+```yaml
+jobs:
+  deploy-docs:
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # fetch all commits/branches
+      # ...
+```
+
 ## For Theme Authors
 
 If you'd like to provide support for mike in your theme, you just need to
