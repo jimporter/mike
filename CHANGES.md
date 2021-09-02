@@ -1,6 +1,6 @@
 # Changes
 
-## v1.1.0 (in progress)
+## v1.1.0 (2021-09-01)
 
 ### New features
 - Add support for [`!ENV`][mkdocs-env] and [`INHERIT`][mkdocs-inherit] in
