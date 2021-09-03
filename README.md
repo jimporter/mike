@@ -227,27 +227,30 @@ state, pass `--rebase`.
 Some special files that you'd like to deploy along with your documentation (such
 as `CNAME`) aren't related to a particular version of the docs, and instead need
 to go in the root directory of your site. There's no special handling for this
-in mike, but since your built docs live on a git branch, it's still easy to
+in mike, but since your built docs live on a Git branch, it's still easy to
 manage: check out your `gh-pages` branch (or wherever your built docs
 live), and commit the necessary files to the root directory.
 
 ## Deploying via CI
 
-Since mike just generates commits to an ordinary git branch, it should work
+Since mike just generates commits to an ordinary Git branch, it should work
 smoothly with your favorite CI system. However, you should keep in mind that
 some CI systems make shallow clones of your repository, meaning that the CI job
 won't have a local instance of your documentation branch to commit to. This will
 naturally cause issues when trying to push the commit. This is easy to resolve
-though. For Github Actions, you can simply disable shallow clones:
+though; just manually fetch your `gh-pages` branch (or whichever you deploy to)
+before running mike:
 
-```yaml
-jobs:
-  deploy-docs:
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # fetch all commits/branches
-      # ...
+```sh
+git fetch origin gh-pages --depth=1
+```
+
+You may also need to [configure a Git user][gh-action-commit] so that mike can
+make commits:
+
+```sh
+git config user.name ci-bot
+git config user.email ci-bot@example.com
 ```
 
 ## For Theme Authors
@@ -288,3 +291,4 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [shtab]: https://github.com/iterative/shtab
 [shtab-setup]: https://github.com/iterative/shtab#cli-usage
 [jinja]: https://jinja.palletsprojects.com/
+[gh-action-commit]: https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
