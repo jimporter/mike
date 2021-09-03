@@ -1,9 +1,12 @@
 import logging
 import os
+from typing import Any, Tuple
 from urllib.parse import urljoin
+
 from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
 from mkdocs.structure.files import File
+from mkdocs.utils import warning_filter
 from pkg_resources import iter_entry_points
 
 from .mkdocs_utils import docs_version_var
@@ -14,7 +17,42 @@ except ImportError:  # pragma: no cover
     PluginError = ValueError
 
 
-log = logging.getLogger("mike")
+class LoggerAdapter(logging.LoggerAdapter):
+    """A logger adapter to prefix messages."""
+
+    def __init__(self, prefix: str, logger):
+        """Initialize the object.
+        Arguments:
+            prefix: The string to insert in front of every message.
+            logger: The logger instance.
+        """
+        super().__init__(logger, {})
+        self.prefix = prefix
+
+    def process(self, msg: str, kwargs) -> Tuple[str, Any]:
+        """Process the message.
+        Arguments:
+            msg: The message:
+            kwargs: Remaining arguments.
+        Returns:
+            The processed message.
+        """
+        return f"{self.prefix}: {msg}", kwargs
+
+
+def get_logger(name: str) -> LoggerAdapter:
+    """Return a pre-configured logger.
+    Arguments:
+        name: The name to use with `logging.getLogger`.
+    Returns:
+        A logger configured to work well in MkDocs.
+    """
+    logger = logging.getLogger(f"mkdocs.plugins.{name}")
+    logger.addFilter(warning_filter)
+    return LoggerAdapter(name, logger)
+
+
+log = get_logger("mkdocs.plugin.mike")
 
 
 def get_theme_dir(theme_name):
@@ -48,7 +86,7 @@ class MikePlugin(BasePlugin):
             theme_dir = get_theme_dir(config['theme'].name)
         except ValueError as err:
             log.warning(
-                "%s. Continuing without adding the docs versioning menu.",
+                "%s. Continuing without adding a versioning menu to the docs.",
                 str(err))
             return files
 
