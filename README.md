@@ -234,20 +234,27 @@ live), and commit the necessary files to the root directory.
 ## Deploying via CI
 
 Since mike just generates commits to an ordinary git branch, it should work
-smoothly with your favorite CI system. However, you should keep in mind that
-some CI systems make shallow clones of your repository, meaning that the CI job
-won't have a local instance of your documentation branch to commit to. This will
-naturally cause issues when trying to push the commit. This is easy to resolve
-though. For Github Actions, you can simply disable shallow clones:
+smoothly with your favorite CI system. 
 
-```yaml
-jobs:
-  deploy-docs:
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # fetch all commits/branches
-      # ...
+However, you should keep in mind that some CI systems make shallow clones of
+your repository with only the current commit, meaning that the CI job won't have
+a local instance of your documentation branch to commit to. This will naturally
+cause issues when trying to push the commit. This is easy to resolve though. You
+can simply manually fetch your `gh-pages` branch (or whichever you deploy to)
+before running your deploy.
+
+```bash
+git fetch origin gh-pages --depth=1
+```
+
+You may also need to set a git user so that mike can make commits. Simply
+use [`git config` command](https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup#_your_identity)
+to do so. If you're using GitHub Actions, you can impersonate the 
+`github-actions[bot]` user with the following config commands:
+
+```bash
+git config user.name github-actions[bot]
+git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 ```
 
 ## For Theme Authors
