@@ -1,3 +1,4 @@
+import logging
 import os
 from urllib.parse import urljoin
 from mkdocs.config import config_options
@@ -11,6 +12,9 @@ try:
     from mkdocs.exceptions import PluginError
 except ImportError:  # pragma: no cover
     PluginError = ValueError
+
+
+log = logging.getLogger("mike")
 
 
 def get_theme_dir(theme_name):
@@ -42,7 +46,10 @@ class MikePlugin(BasePlugin):
 
         try:
             theme_dir = get_theme_dir(config['theme'].name)
-        except ValueError:
+        except ValueError as err:
+            log.warning(
+                "%s. Continuing without adding the docs versioning menu.",
+                str(err))
             return files
 
         for path, prop in [('css', 'css'), ('js', 'javascript')]:
