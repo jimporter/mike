@@ -243,9 +243,9 @@ class TestCommit(unittest.TestCase):
         self.stage = stage_dir('commit')
         git_init()
 
-    def _add_file(self, name, branch='master'):
+    def _add_file(self, name, branch='master', data='this is some text'):
         with git_utils.Commit(branch, 'add file') as commit:
-            commit.add_file(git_utils.FileInfo(name, 'this is some text'))
+            commit.add_file(git_utils.FileInfo(name, data))
 
     def test_add_file(self):
         self._add_file('file.txt')
@@ -253,6 +253,13 @@ class TestCommit(unittest.TestCase):
         assertDirectory('.', {'file.txt'})
         with open('file.txt') as f:
             self.assertEqual(f.read(), 'this is some text')
+
+    def test_add_file_unicode(self):
+        self._add_file('file.txt', data='レッサーパンダ')
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'file.txt'})
+        with open('file.txt', encoding='utf-8') as f:
+            self.assertEqual(f.read(), 'レッサーパンダ')
 
     def test_add_file_to_dir(self):
         self._add_file(os.path.join('dir', 'file.txt'))

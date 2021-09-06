@@ -1,5 +1,13 @@
 # Changes
 
+## v1.1.1 (in progress)
+
+### Bug fixes
+
+- Fix support for Unicode in redirection templates
+
+---
+
 ## v1.1.0 (2021-09-01)
 
 ### New features

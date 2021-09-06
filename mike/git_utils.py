@@ -130,6 +130,8 @@ def try_rebase_branch(remote, branch, force=False):
 
 class FileInfo:
     def __init__(self, path, data, mode=0o100644):
+        if isinstance(data, str):
+            data = data.encode('utf-8')
         self.path = path
         self.data = data
         self.mode = mode
@@ -171,9 +173,16 @@ class Commit:
                 self.finish()
 
     def _write(self, data):
-        if isinstance(data, str):  # pragma: no branch
+        if isinstance(data, str):
             data = data.encode('utf-8')
         return self._pipe.stdin.write(data)
+
+    def _write_data(self, data):
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        self._write('data {}\n'.format(len(data)))
+        self._write(data)
+        self._write('\n')
 
     def _start_commit(self, branch, message):
         name = get_config('user.name')
@@ -190,9 +199,7 @@ class Commit:
         self._write('committer {name}<{email}> {time}\n'.format(
             name=name + ' ' if name else '', email=email, time=make_when()
         ))
-        self._write('data {length}\n{message}\n'.format(
-            length=len(message), message=message
-        ))
+        self._write_data(message)
         try:
             head = get_latest_commit(branch)
             self._write('from {}\n'.format(head))
@@ -210,9 +217,7 @@ class Commit:
         self._write('M {mode:06o} inline {path}\n'.format(
             path=git_path(file_info.path), mode=file_info.mode
         ))
-        self._write('data {}\n'.format(len(file_info.data)))
-        self._write(file_info.data)
-        self._write('\n')
+        self._write_data(file_info.data)
 
     def finish(self):
         if self._finished:
