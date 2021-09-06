@@ -175,6 +175,13 @@ class Commit:
             data = data.encode('utf-8')
         return self._pipe.stdin.write(data)
 
+    def _write_file_contents(self, contents):
+        if isinstance(contents, str):
+            contents = contents.encode("utf-8")
+
+        self._write('data {}\n'.format(len(contents)))
+        self._write(contents)
+
     def _start_commit(self, branch, message):
         name = get_config('user.name')
         if re.search(r'[<>\n]', name):
@@ -210,8 +217,7 @@ class Commit:
         self._write('M {mode:06o} inline {path}\n'.format(
             path=git_path(file_info.path), mode=file_info.mode
         ))
-        self._write('data {}\n'.format(len(file_info.data)))
-        self._write(file_info.data)
+        self._write_file_contents(file_info.data)
         self._write('\n')
 
     def finish(self):
