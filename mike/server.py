@@ -8,8 +8,8 @@ from . import git_utils
 from .app_version import version
 
 
-def _to_git_path(path):
-    path = posixpath.normpath(urlparse.urlsplit(path).path)
+def _to_git_path(url):
+    path = posixpath.normpath(urlparse.unquote(url.path))
     return path[1:]
 
 
@@ -29,10 +29,10 @@ class GitBranchHTTPHandler(BaseHTTPRequestHandler):
             self.wfile.write(body)
 
     def send_headers(self):
-        path = _to_git_path(self.path)
+        url = urlparse.urlsplit(self.path)
+        path = _to_git_path(url)
         try:
             if stat.S_ISDIR(git_utils.file_mode(self.branch, path)):
-                url = urlparse.urlsplit(self.path)
                 if not url.path.endswith('/'):
                     # Redirect the browser to a URL with a slash at the end,
                     # like Apache.

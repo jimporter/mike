@@ -5,6 +5,7 @@
 ### Bug fixes
 
 - Fix support for Unicode in redirection templates
+- Properly decode paths in the development server
 
 ---
 
