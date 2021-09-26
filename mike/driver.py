@@ -1,8 +1,7 @@
-import argparse
 import os
 import sys
 
-from . import commands
+from . import arguments, commands
 from . import git_utils
 from . import mkdocs_utils
 from .app_version import version as app_version
@@ -54,23 +53,6 @@ generate_completion_desc = """
 Generate shell-completion functions for bfg9000 and write them to standard
 output. This requires the Python package `shtab`.
 """
-
-
-class CompletingArgumentParser(argparse.ArgumentParser):
-    @staticmethod
-    def _wrap_complete(action):
-        def wrapper(*args, complete=None, **kwargs):
-            argument = action(*args, **kwargs)
-            if complete is not None:
-                argument.complete = complete
-            return argument
-
-        return wrapper
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for k, v in self._registries['action'].items():
-            self._registries['action'][k] = self._wrap_complete(v)
 
 
 def add_git_arguments(parser, *, commit=True, prefix=True):
@@ -245,7 +227,7 @@ def generate_completion(parser, args):
 
 
 def main():
-    parser = CompletingArgumentParser(prog='mike', description=description)
+    parser = arguments.ArgumentParser(prog='mike', description=description)
     subparsers = parser.add_subparsers(metavar='COMMAND')
     subparsers.required = True
 
@@ -345,7 +327,7 @@ def main():
         'help', help='show this help message and exit', add_help=False
     )
     help_p.set_defaults(func=help)
-    help_p.add_argument('subcommand', metavar='CMD', nargs=argparse.REMAINDER,
+    help_p.add_argument('subcommand', metavar='CMD', nargs=arguments.REMAINDER,
                         help='subcommand to request help for')
 
     completion_p = subparsers.add_parser(
