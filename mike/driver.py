@@ -56,11 +56,28 @@ output. This requires the Python package `shtab`.
 """
 
 
+class CompletingArgumentParser(argparse.ArgumentParser):
+    @staticmethod
+    def _wrap_complete(action):
+        def wrapper(*args, complete=None, **kwargs):
+            argument = action(*args, **kwargs)
+            if complete is not None:
+                argument.complete = complete
+            return argument
+
+        return wrapper
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for k, v in self._registries['action'].items():
+            self._registries['action'][k] = self._wrap_complete(v)
+
+
 def add_git_arguments(parser, *, commit=True, prefix=True):
     # Add this whenever we add git arguments since we pull the remote and
     # branch from mkdocs.yml.
     parser.add_argument('-F', '--config-file', metavar='FILE',
-                        default='mkdocs.yml',
+                        default='mkdocs.yml', complete='file',
                         help='the MkDocs configuration file to use')
 
     git = parser.add_argument_group('git arguments')
@@ -78,6 +95,7 @@ def add_git_arguments(parser, *, commit=True, prefix=True):
 
     if prefix:
         git.add_argument('--prefix', metavar='PATH', default='',
+                         complete='directory',
                          help=('subdirectory within {branch} where docs are ' +
                                'located'))
 
@@ -227,7 +245,7 @@ def generate_completion(parser, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='mike', description=description)
+    parser = CompletingArgumentParser(prog='mike', description=description)
     subparsers = parser.add_subparsers(metavar='COMMAND')
     subparsers.required = True
 
@@ -246,7 +264,7 @@ def main():
     deploy_p.add_argument('--no-redirect', dest='redirect', default=True,
                           action='store_false',
                           help='make copies of docs for each alias')
-    deploy_p.add_argument('-T', '--template',
+    deploy_p.add_argument('-T', '--template', complete='file',
                           help='the template file to use for redirects')
     add_git_arguments(deploy_p)
     deploy_p.add_argument('version', metavar='VERSION',
@@ -273,7 +291,7 @@ def main():
     alias_p.add_argument('--no-redirect', dest='redirect', default=True,
                          action='store_false',
                          help='make copies of docs for each alias')
-    alias_p.add_argument('-T', '--template',
+    alias_p.add_argument('-T', '--template', complete='file',
                          help='the template file to use for redirects')
     add_git_arguments(alias_p)
     alias_p.add_argument('version', metavar='VERSION',
@@ -307,7 +325,7 @@ def main():
         help='set the default version for your docs'
     )
     set_default_p.set_defaults(func=set_default)
-    set_default_p.add_argument('-T', '--template',
+    set_default_p.add_argument('-T', '--template', complete='file',
                                help='the template file to use')
     add_git_arguments(set_default_p)
     set_default_p.add_argument('version', metavar='VERSION',

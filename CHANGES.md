@@ -1,5 +1,13 @@
 # Changes
 
+## v1.1.2 (in progress)
+
+### Bug fixes
+
+- Improve support for shell-completion
+
+---
+
 ## v1.1.1 (2021-09-13)
 
 ### Bug fixes
