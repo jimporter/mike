@@ -1,6 +1,6 @@
 # Changes
 
-## v1.1.2 (in progress)
+## v1.1.2 (2021-10-03)
 
 ### Bug fixes
 
