@@ -32,14 +32,15 @@ class Coverage(Command):
             'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
         })
 
-        subprocess.check_call(['coverage', 'erase'])
-        subprocess.check_call(
+        subprocess.run(['coverage', 'erase'], check=True)
+        subprocess.run(
             ['coverage', 'run', 'setup.py', 'test'] +
             (['-q'] if self.verbose == 0 else []) +
             (['-s', self.test_suite] if self.test_suite else []),
-            env=env
+            env=env, check=True
         )
-        subprocess.check_call(['coverage', 'combine'])
+        subprocess.run(['coverage', 'combine'], check=True,
+                       stdout=subprocess.DEVNULL)
 
 
 custom_cmds = {
