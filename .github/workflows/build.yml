@@ -26,13 +26,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          pip install codecov '.[test]'
+          pip install '.[test]'
       - name: Run tests
         run: |
           python setup.py coverage -q
+          coverage xml
       - name: Upload coverage
-        run: |
-          codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
   lint:
     runs-on: ubuntu-latest
 
