@@ -14,7 +14,7 @@ def _to_git_path(url):
 
 
 class GitBranchHTTPHandler(BaseHTTPRequestHandler):
-    server_version = "MikeHTTP/" + version
+    server_version = 'MikeHTTP/' + version
 
     # Note: Set this in a subclass!
     branch = None

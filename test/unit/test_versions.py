@@ -47,7 +47,7 @@ class TestVersionInfo(unittest.TestCase):
                                     "^'foo/bar' is not a valid alias$"):
             VersionInfo('1.0', aliases=['foo/bar'])
         with self.assertRaisesRegex(ValueError,
-                                    "^duplicated version and alias$"):
+                                    '^duplicated version and alias$'):
             VersionInfo('1.0', aliases=['1.0'])
 
     def test_equality(self):

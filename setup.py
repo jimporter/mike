@@ -123,8 +123,8 @@ setup(
 
     install_requires=(['mkdocs >= 1.0', 'jinja2', 'pyyaml >= 5.1', 'verspec']),
     extras_require={
-        'dev': ['coverage', 'flake8 >= 3.0', 'shtab'],
-        'test': ['coverage', 'flake8 >= 3.0', 'shtab'],
+        'dev': ['coverage', 'flake8 >= 3.0', 'flake8-quotes', 'shtab'],
+        'test': ['coverage', 'flake8 >= 3.0', 'flake8-quotes', 'shtab'],
     },
 
     entry_points={
