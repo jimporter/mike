@@ -60,12 +60,19 @@ def make_when(timestamp=None):
     return '{} {}'.format(timestamp, timezone)
 
 
-def get_config(key):
+def get_config(key, encoding='utf-8'):
     cmd = ['git', 'config', key]
-    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, encoding=encoding)
     if p.returncode != 0:
         raise GitError('error getting config {!r}'.format(key), p.stderr)
     return p.stdout.strip()
+
+
+def get_commit_encoding():
+    try:
+        return get_config('i18n.commitEncoding')
+    except GitError:
+        return 'utf-8'
 
 
 def get_latest_commit(rev, short=False):
@@ -185,11 +192,12 @@ class Commit:
         self._write('\n')
 
     def _start_commit(self, branch, message):
-        name = get_config('user.name')
+        encoding = get_commit_encoding()
+        name = get_config('user.name', encoding)
         if re.search(r'[<>\n]', name):
             raise GitError('invalid user.name: {!r}'.format(name))
 
-        email = get_config('user.email')
+        email = get_config('user.email', encoding)
         if not email:
             raise GitError('user.email is not set')
         if re.search(r'[<>\n]', email):

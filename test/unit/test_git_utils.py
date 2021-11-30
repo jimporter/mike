@@ -30,6 +30,19 @@ class TestGetConfig(unittest.TestCase):
         self.assertRaises(git_utils.GitError, git_utils.get_config, 'nonexist')
 
 
+class TestGetCommitEncoding(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('get_commit_encoding')
+        git_init()
+
+    def test_explicit(self):
+        check_call_silent(['git', 'config', 'i18n.commitEncoding', 'ascii'])
+        self.assertEqual(git_utils.get_commit_encoding(), 'ascii')
+
+    def test_default(self):
+        self.assertEqual(git_utils.get_commit_encoding(), 'utf-8')
+
+
 class TestGetLatestCommit(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('get_latest_commit')

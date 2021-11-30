@@ -1,5 +1,11 @@
 # Changes
 
+## v2.0.0 (in progress)
+
+- Fix retrieval of Git user name/email when using non-UTF8 encodings
+
+---
+
 ## v1.1.2 (2021-10-03)
 
 ### Bug fixes
