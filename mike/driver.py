@@ -59,7 +59,7 @@ def add_git_arguments(parser, *, commit=True, prefix=True):
     # Add this whenever we add git arguments since we pull the remote and
     # branch from mkdocs.yml.
     parser.add_argument('-F', '--config-file', metavar='FILE',
-                        default='mkdocs.yml', complete='file',
+                        default=None, complete='file',
                         help='the MkDocs configuration file to use')
 
     git = parser.add_argument_group('git arguments')
