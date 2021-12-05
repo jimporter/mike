@@ -252,6 +252,20 @@ class TestDeploy(DeployTestCase):
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
+class TestDeployMkdocsYaml(DeployTestCase):
+    def setUp(self):
+        self.stage = stage_dir('deploy_mkdocs_yaml')
+        git_init()
+        copytree(os.path.join(test_data_dir, 'mkdocs_yaml'), self.stage)
+        check_call_silent(['git', 'add', 'mkdocs.yaml', 'docs'])
+        check_call_silent(['git', 'commit', '-m', 'initial commit'])
+
+    def test_default(self):
+        assertPopen(['mike', 'deploy', '1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy()
+
+
 class TestDeployPlugin(DeployTestCase):
     def setUp(self):
         self.stage = stage_dir('deploy_plugin')

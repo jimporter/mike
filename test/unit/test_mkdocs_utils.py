@@ -85,10 +85,21 @@ class TestLoadConfig(unittest.TestCase):
 
 
 class TestInjectPlugin(unittest.TestCase):
+    @staticmethod
+    def mock_open(read_data):
+        m = mock.mock_open(read_data=read_data)
+
+        def wrapper(file, *args, **kwargs):
+            result = m(file, *args, **kwargs)
+            result.name = file
+            return result
+
+        return wrapper
+
     def test_no_plugins(self):
         out = Stream('mike-mkdocs.yml')
         cfg = '{}'
-        with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
+        with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
              mock.patch('os.remove') as mremove:  # noqa
@@ -102,7 +113,7 @@ class TestInjectPlugin(unittest.TestCase):
     def test_other_plugins(self):
         out = Stream('mike-mkdocs.yml')
         cfg = 'plugins:\n  - foo\n  - bar:\n      option: true'
-        with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
+        with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
              mock.patch('os.remove') as mremove:  # noqa
@@ -118,7 +129,7 @@ class TestInjectPlugin(unittest.TestCase):
     def test_other_plugins_dict(self):
         out = Stream('mike-mkdocs.yml')
         cfg = 'plugins:\n  foo: {}\n  bar:\n    option: true'
-        with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
+        with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
              mock.patch('os.remove') as mremove:  # noqa
@@ -138,7 +149,7 @@ class TestInjectPlugin(unittest.TestCase):
     def test_mike_plugin(self):
         out = Stream('mike-mkdocs.yml')
         cfg = 'plugins:\n  - mike'
-        with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
+        with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
              mock.patch('os.remove') as mremove:  # noqa
@@ -150,7 +161,7 @@ class TestInjectPlugin(unittest.TestCase):
     def test_mike_plugin_options(self):
         out = Stream('mike-mkdocs.yml')
         cfg = 'plugins:\n  - mike:\n      option: true'
-        with mock.patch('builtins.open', mock.mock_open(read_data=cfg)), \
+        with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
              mock.patch('os.remove') as mremove:  # noqa

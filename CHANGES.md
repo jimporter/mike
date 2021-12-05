@@ -2,6 +2,11 @@
 
 ## v2.0.0 (in progress)
 
+### New features
+- Look for both `mkdocs.yml` and `mkdocs.yaml` configuration files
+
+### Bug fixes
+
 - Fix retrieval of Git user name/email when using non-UTF8 encodings
 
 ---

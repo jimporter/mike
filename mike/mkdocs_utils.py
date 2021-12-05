@@ -35,6 +35,7 @@ def load_config(config_file=None, **kwargs):
 @contextmanager
 def inject_plugin(config_file):
     with _open_config(config_file) as f:
+        config_file = f.name
         config = mkdocs.utils.yaml_load(f)
 
     plugins = config.setdefault('plugins', ['search'])
