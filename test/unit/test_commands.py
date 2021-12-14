@@ -604,6 +604,6 @@ class TestServe(unittest.TestCase):
         handler_name = 'mike.server.GitBranchHTTPHandler'
         with mock.patch('http.server.HTTPServer', MyMockServer), \
              mock.patch(handler_name + '.wbufsize', -1), \
-             mock.patch(handler_name + '.log_message') as m:  # noqa
+             mock.patch(handler_name + '.log_message') as m:
             commands.serve(branch='branch', verbose=False)
             self.assertEqual(m.call_args[0][1:3], ('GET / HTTP/1.1', '200'))

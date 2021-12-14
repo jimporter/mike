@@ -102,7 +102,7 @@ class TestInjectPlugin(unittest.TestCase):
         with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, out.name)
                 newcfg = yaml.load(out.getvalue(), Loader=yaml.Loader)
@@ -116,7 +116,7 @@ class TestInjectPlugin(unittest.TestCase):
         with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, out.name)
                 newcfg = yaml.load(out.getvalue(), Loader=yaml.Loader)
@@ -132,7 +132,7 @@ class TestInjectPlugin(unittest.TestCase):
         with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, out.name)
                 newcfg = yaml.load(out.getvalue(), Loader=yaml.Loader)
@@ -152,7 +152,7 @@ class TestInjectPlugin(unittest.TestCase):
         with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, 'mkdocs.yml')
                 self.assertEqual(out.getvalue(), '')
@@ -164,7 +164,7 @@ class TestInjectPlugin(unittest.TestCase):
         with mock.patch('builtins.open', self.mock_open(read_data=cfg)), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, 'mkdocs.yml')
                 self.assertEqual(out.getvalue(), '')
@@ -179,7 +179,7 @@ class TestInjectPlugin(unittest.TestCase):
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=out), \
              mock.patch('os.path.exists', return_value=True), \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, 'mike-mkdocs.yml')
                 newcfg = yaml.load(out.getvalue(), Loader=yaml.Loader)
