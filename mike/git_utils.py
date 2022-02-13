@@ -17,6 +17,8 @@ import os
 import re
 import subprocess as sp
 import sys
+import textwrap
+import threading
 import time
 import unicodedata
 
@@ -28,7 +30,11 @@ BranchStatus = Enum('BranchState', ['even', 'ahead', 'behind', 'diverged'])
 class GitError(Exception):
     def __init__(self, message, stderr=None):
         if stderr:
-            message += ': "{}"'.format(stderr.strip())
+            stderr = stderr.strip()
+            if '\n' in stderr:
+                message += ':\n' + textwrap.indent(stderr, '  ')
+            else:
+                message += ': "{}"'.format(stderr)
         super().__init__(message)
 
 
@@ -40,6 +46,11 @@ class GitBranchDiverged(GitError):
 class GitRevUnrelated(GitError):
     def __init__(self, branch1, branch2):
         super().__init__('{} is unrelated to {}'.format(branch1, branch2))
+
+
+class GitCommitError(GitError):
+    def __init__(self, stderr):
+        super().__init__('error writing commit', stderr)
 
 
 def git_path(path):
@@ -160,9 +171,14 @@ class FileInfo:
 class Commit:
     def __init__(self, branch, message):
         cmd = ['git', 'fast-import', '--date-format=raw', '--quiet', '--done']
-
-        self._pipe = sp.Popen(cmd, stdin=sp.PIPE, universal_newlines=False)
+        self._pipe = sp.Popen(cmd, stdin=sp.PIPE, stderr=sp.PIPE,
+                              universal_newlines=False)
         self._finished = False
+
+        self._stderr = b''
+        self._read_thread = threading.Thread(target=self._read)
+        self._read_thread.start()
+
         try:
             self._start_commit(branch, message)
         except Exception:
@@ -179,10 +195,21 @@ class Commit:
             else:
                 self.finish()
 
+    def _read(self):
+        while True:
+            line = self._pipe.stderr.readline()
+            if not line:
+                break
+            self._stderr += line
+        self._pipe.stderr.close()
+
     def _write(self, data):
         if isinstance(data, str):
             data = data.encode('utf-8')
-        return self._pipe.stdin.write(data)
+        try:
+            return self._pipe.stdin.write(data)
+        except BrokenPipeError:  # pragma: no cover
+            raise GitCommitError(self._stderr.decode('utf-8'))
 
     def _write_data(self, data):
         if isinstance(data, str):
@@ -234,8 +261,9 @@ class Commit:
 
         self._write('done\n')
         self._pipe.stdin.close()
-        if self._pipe.wait() != 0:  # pragma: no cover
-            raise GitError('failed to process commit')
+        self._read_thread.join()
+        if self._pipe.wait() != 0:
+            raise GitCommitError(self._stderr.decode('utf-8'))
 
     def abort(self):
         if self._finished:
@@ -247,6 +275,7 @@ class Commit:
         except BrokenPipeError:  # pragma: no cover
             pass
         self._pipe.terminate()
+        self._read_thread.join()
         self._pipe.wait()
 
 

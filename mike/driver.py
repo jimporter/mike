@@ -345,6 +345,6 @@ def main():
     try:
         return args.func(parser, args)
     except Exception as e:
-        if args.debug:
+        if args.debug:  # pragma: no cover
             raise
         parser.exit(1, 'error: {}\n'.format(str(e)))
