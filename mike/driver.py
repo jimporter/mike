@@ -232,6 +232,8 @@ def main():
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + app_version)
+    parser.add_argument('--debug', action='store_true',
+                        help='report extra information for debugging mike')
 
     deploy_p = subparsers.add_parser(
         'deploy', description=deploy_desc,
@@ -343,4 +345,6 @@ def main():
     try:
         return args.func(parser, args)
     except Exception as e:
+        if args.debug:
+            raise
         parser.exit(1, 'error: {}\n'.format(str(e)))

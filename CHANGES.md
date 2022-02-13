@@ -3,7 +3,9 @@
 ## v2.0.0 (in progress)
 
 ### New features
+
 - Look for both `mkdocs.yml` and `mkdocs.yaml` configuration files
+- Add a `--debug` flag to help diagnose bugs with mike
 
 ### Bug fixes
 

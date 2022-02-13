@@ -160,8 +160,8 @@ class FileInfo:
 class Commit:
     def __init__(self, branch, message):
         cmd = ['git', 'fast-import', '--date-format=raw', '--quiet', '--done']
-        self._pipe = sp.Popen(cmd, stdin=sp.PIPE, stderr=sp.DEVNULL,
-                              universal_newlines=False)
+
+        self._pipe = sp.Popen(cmd, stdin=sp.PIPE, universal_newlines=False)
         self._finished = False
         try:
             self._start_commit(branch, message)

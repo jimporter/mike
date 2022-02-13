@@ -7,7 +7,8 @@ class HelpTest(unittest.TestCase):
     def test_help(self):
         output = assertPopen(['mike', 'help'])
         self.assertRegex(
-            output, r'^usage: mike \[-h\] \[--version\] COMMAND \.\.\.'
+            output, (r'^usage: mike \[-h\] \[--version\] \[--debug\] '
+                     r'COMMAND \.\.\.')
         )
 
     def test_help_subcommand(self):
