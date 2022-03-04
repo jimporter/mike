@@ -73,7 +73,7 @@ class Versions:
         return result
 
     def dumps(self):
-        return json.dumps([i.to_json() for i in iter(self)])
+        return json.dumps([i.to_json() for i in iter(self)], indent=2)
 
     def __iter__(self):
         return (i for _, i in sorted(self._data.items(), reverse=True))
