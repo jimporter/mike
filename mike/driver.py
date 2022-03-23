@@ -320,8 +320,8 @@ def main():
     serve_p.set_defaults(func=serve)
     add_git_arguments(serve_p, commit=False, prefix=False)
     serve_p.add_argument('-a', '--dev-addr', default='localhost:8000',
-                         metavar='IP:PORT',
-                         help=('IP address and port to serve from ' +
+                         metavar='HOST[:PORT]',
+                         help=('Host address and port to serve from ' +
                                '(default: %(default)s)'))
 
     help_p = subparsers.add_parser(

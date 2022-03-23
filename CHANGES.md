@@ -6,6 +6,8 @@
 
 - Look for both `mkdocs.yml` and `mkdocs.yaml` configuration files
 - Add a `--debug` flag to help diagnose bugs with mike
+- Port number is now optional for `--dev-addr` in `mike serve`, defaulting to
+  8000
 
 ### Bug fixes
 

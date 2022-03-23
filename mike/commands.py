@@ -230,11 +230,12 @@ def serve(address='localhost:8000', *, branch='gh-pages', verbose=True):
     class Handler(server.GitBranchHTTPHandler):
         branch = my_branch
 
-    host, port = address.split(':')
-    httpd = http.server.HTTPServer((host, int(port)), Handler)
+    host, *port = address.split(':', 1)
+    port = int(port[0]) if port else 8000
+    httpd = http.server.HTTPServer((host, port), Handler)
 
     if verbose:
-        print('Starting server at http://{}/'.format(address))
+        print('Starting server at http://{}:{}/'.format(host, port))
         print('Press Ctrl+C to quit.')
     try:
         httpd.serve_forever()
