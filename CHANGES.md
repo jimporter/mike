@@ -12,6 +12,8 @@
 ### Bug fixes
 
 - Fix retrieval of Git user name/email when using non-UTF8 encodings
+- Fix version selector for `mkdocs` and `readthedocs` themes when
+  `use_directory_urls` is false
 
 ---
 

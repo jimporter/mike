@@ -1,31 +1,38 @@
 window.addEventListener("DOMContentLoaded", function() {
-  function normalizePath(path) {
-    var normalized = [];
+  function expandPath(path) {
+    // Get the base directory components.
+    var expanded = window.location.pathname.split("/");
+    expanded.pop();
+    var isSubdir = false;
+
     path.split("/").forEach(function(bit, i) {
-      if (bit === "." || (bit === "" && i !== 0)) {
-        return;
+      if (bit === "" && i === 0) {
+        isSubdir = false;
+        expanded = [""];
+      } else if (bit === "." || bit === "") {
+        isSubdir = true;
       } else if (bit === "..") {
-        if (normalized.length === 1 && normalized[0] === "") {
+        if (expanded.length === 1) {
           // We must be trying to .. past the root!
           throw new Error("invalid path");
-        } else if (normalized.length === 0 ||
-                   normalized[normalized.length - 1] === "..") {
-          normalized.push("..");
         } else {
-          normalized.pop();
+          isSubdir = true;
+          expanded.pop();
         }
       } else {
-        normalized.push(bit);
+        isSubdir = false;
+        expanded.push(bit);
       }
     });
-    return normalized.join("/");
+
+    if (isSubdir)
+      expanded.push("");
+    return expanded.join("/");
   }
 
   // `base_url` comes from the base.html template for this theme.
-  var REL_BASE_URL = base_url;
-  var ABS_BASE_URL = normalizePath(window.location.pathname + "/" +
-                                   REL_BASE_URL);
-  var CURRENT_VERSION = ABS_BASE_URL.split("/").pop();
+  var ABS_BASE_URL = expandPath(base_url);
+  var CURRENT_VERSION = ABS_BASE_URL.match(/\/([^\/]+)\/$/)[1];
 
   function makeSelect(options, selected) {
     var select = document.createElement("select");
@@ -41,7 +48,7 @@ window.addEventListener("DOMContentLoaded", function() {
   }
 
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", REL_BASE_URL + "/../versions.json");
+  xhr.open("GET", ABS_BASE_URL + "../versions.json");
   xhr.onload = function() {
     var versions = JSON.parse(this.responseText);
 
@@ -54,7 +61,7 @@ window.addEventListener("DOMContentLoaded", function() {
       return {text: i.title, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
-      window.location.href = REL_BASE_URL + "/../" + this.value + "/";
+      window.location.href = ABS_BASE_URL + "../" + this.value + "/";
     });
 
     var container = document.createElement("div");
