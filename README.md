@@ -253,6 +253,14 @@ git config user.name ci-bot
 git config user.email ci-bot@example.com
 ```
 
+Alternately, you can set the environment variables `GIT_COMMITTER_NAME` and
+`GIT_COMMITTER_EMAIL` (as well as `GIT_COMMITTER_DATE` if you like):
+
+```sh
+GIT_COMMITTER_NAME=ci-bot GIT_COMMITTER_EMAIL=ci-bot@example.com \
+mike deploy 1.0
+```
+
 ## For Theme Authors
 
 If you'd like to provide support for mike in your theme, you just need to

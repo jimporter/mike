@@ -5,6 +5,7 @@
 ### New features
 
 - Look for both `mkdocs.yml` and `mkdocs.yaml` configuration files
+- Support `GIT_COMMITTER_(NAME|EMAIL|DATE)` when generating commits
 - Add a `--debug` flag to help diagnose bugs with mike
 - Port number is now optional for `--dev-addr` in `mike serve`, defaulting to
   8000

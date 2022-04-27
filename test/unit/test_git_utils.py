@@ -1,7 +1,6 @@
 import os
 import sys
 import unittest
-from unittest import mock
 
 from .. import *
 from mike import git_utils
@@ -361,22 +360,37 @@ class TestCommit(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'master'])
         assertDirectory('.', {'file.txt'})
 
-    def test_invalid_username(self):
-        check_call_silent(['git', 'config', 'user.name', '<>'])
-        with self.assertRaises(git_utils.GitError):
-            with git_utils.Commit('master', 'add file'):
-                pass
+    def test_username(self):
+        check_call_silent(['git', 'config', 'user.name', 'name'])
+        self._add_file('file.txt')
+        self.assertEqual(check_output(['git', 'log', '--format=%an', '-1']),
+                         'name\n')
 
-    def test_invalid_email(self):
-        check_call_silent(['git', 'config', 'user.email', '<>'])
-        with self.assertRaises(git_utils.GitError):
-            with git_utils.Commit('master', 'add file'):
-                pass
+        check_call_silent(['git', 'config', 'user.name', ''])
+        self._add_file('file.txt')
+        self.assertEqual(check_output(['git', 'log', '--format=%an', '-1']),
+                         '\n')
 
-        with mock.patch('mike.git_utils.get_config', return_value=''), \
-             self.assertRaises(git_utils.GitError):
-            with git_utils.Commit('master', 'add file'):
-                pass
+        check_call_silent(['git', 'config', 'user.name', '<name>'])
+        self._add_file('file.txt')
+        self.assertEqual(check_output(['git', 'log', '--format=%an', '-1']),
+                         'name\n')
+
+    def test_email(self):
+        check_call_silent(['git', 'config', 'user.email', 'email'])
+        self._add_file('file.txt')
+        self.assertEqual(check_output(['git', 'log', '--format=%ae', '-1']),
+                         'email\n')
+
+        check_call_silent(['git', 'config', 'user.email', ''])
+        self._add_file('file.txt')
+        self.assertEqual(check_output(['git', 'log', '--format=%ae', '-1']),
+                         '\n')
+
+        check_call_silent(['git', 'config', 'user.email', '<email>'])
+        self._add_file('file.txt')
+        self.assertEqual(check_output(['git', 'log', '--format=%ae', '-1']),
+                         'email\n')
 
     def test_invalid_commit(self):
         with self.assertRaises(git_utils.GitCommitError):

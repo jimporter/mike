@@ -205,19 +205,20 @@ class Commit:
 
     def _start_commit(self, branch, message):
         encoding = get_commit_encoding()
-        name = get_config('user.name', encoding)
-        if re.search(r'[<>\n]', name):
-            raise GitError('invalid user.name: {!r}'.format(name))
 
-        email = get_config('user.email', encoding)
-        if not email:
-            raise GitError('user.email is not set')
-        if re.search(r'[<>\n]', email):
-            raise GitError('invalid user.email: {!r}'.format(email))
+        name = os.getenv('GIT_COMMITTER_NAME',
+                         get_config('user.name', encoding))
+        name = re.sub(r'[<>\n]', '', name)
+
+        email = os.getenv('GIT_COMMITTER_EMAIL',
+                          get_config('user.email', encoding))
+        email = re.sub(r'[<>\n]', '', email)
+
+        when = os.getenv('GIT_COMMITTER_DATE', make_when())
 
         self._write('commit refs/heads/{}\n'.format(branch))
         self._write('committer {name}<{email}> {time}\n'.format(
-            name=name + ' ' if name else '', email=email, time=make_when()
+            name=name + ' ' if name else '', email=email, time=when
         ))
         self._write_data(message)
         try:
