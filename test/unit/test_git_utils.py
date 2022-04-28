@@ -397,6 +397,12 @@ class TestCommit(unittest.TestCase):
             with git_utils.Commit('master', 'add file') as commit:
                 commit._write('invalid\n')
 
+    def test_invalid_arguments(self):
+        with self.assertRaises(TypeError):
+            with git_utils.Commit('master', None) as commit:
+                # Ensure Commit.abort() was called.
+                self.assertEqual(commit._finished, True)
+
 
 class TestPushBranch(unittest.TestCase):
     def setUp(self):
