@@ -85,7 +85,7 @@ class TestDeploy(DeployTestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
 
         with open('latest/index.html') as f:
-            self.assertEqual(f.read(), 'Redirecting to ../1.0/')
+            self.assertEqual(f.read(), 'Redirecting to ../1.0/\n')
 
     def test_update(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])
