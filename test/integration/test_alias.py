@@ -87,7 +87,7 @@ class TestAlias(AliasTestCase):
         self._test_alias()
 
         with open('latest/index.html') as f:
-            self.assertEqual(f.read(), 'Redirecting to ../1.0/')
+            self.assertEqual(f.read(), 'Redirecting to ../1.0/\n')
 
     def test_from_subdir(self):
         self._deploy()

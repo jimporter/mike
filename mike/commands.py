@@ -18,7 +18,8 @@ def _redirect_template(user_template=None):
     f = (open(user_template, 'rb') if user_template else
          resource_stream(__name__, 'templates/redirect.html'))
     with f:
-        return Template(f.read().decode('utf-8'), autoescape=True)
+        return Template(f.read().decode('utf-8'), autoescape=True,
+                        keep_trailing_newline=True)
 
 
 def _add_redirect_to_commit(commit, template, src, dst,
