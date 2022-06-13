@@ -60,6 +60,7 @@ are being built:
 plugins:
   - mike:
       # these fields are all optional; the defaults are as below...
+      deploy_prefix: ''        # the root directory to put the docs in
       version_selector: true   # set to false to leave out the version selector
       css_dir: css             # the directory to put the version selector's CSS
       javascript_dir: js       # the directory to put the version selector's JS
@@ -109,9 +110,9 @@ If you'd like to specify a title for this version that doesn't match the version
 string, you can pass `-t TITLE`/`--title=TITLE` as well.
 
 In addition, you can specify where to deploy your docs via `-b`/`--branch`,
-`-r`/`--remote`, and `--prefix`, specifying the branch, remote, and directory
-prefix within the branch, respectively. Finally, to push your docs to a remote
-branch, simply add `-p`/`--push` to your command.
+`-r`/`--remote`, and `--deploy-prefix`, specifying the branch, remote, and
+directory prefix within the branch, respectively. Finally, to push your docs to
+a remote branch, simply add `-p`/`--push` to your command.
 
 ### Viewing Your Docs
 

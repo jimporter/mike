@@ -29,12 +29,13 @@ class ListTestCase(unittest.TestCase):
 
         with git_utils.Commit('gh-pages', 'commit message') as commit:
             commit.add_file(git_utils.FileInfo(
-                os.path.join(self.prefix, 'versions.json'),
+                os.path.join(self.deploy_prefix, 'versions.json'),
                 all_versions.dumps()
             ))
 
     def _get_list(self, options=[]):
-        extra_args = ['--prefix', self.prefix] if self.prefix else []
+        extra_args = (['--deploy-prefix', self.deploy_prefix]
+                      if self.deploy_prefix else [])
         return subprocess.run(
             ['mike', 'list'] + options + extra_args,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -50,7 +51,7 @@ class ListTestCase(unittest.TestCase):
 
 
 class TestList(ListTestCase):
-    prefix = ''
+    deploy_prefix = ''
 
     def test_list(self):
         self._check_list()
@@ -178,8 +179,8 @@ class TestList(ListTestCase):
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), origin_rev)
 
 
-class TestListPrefix(ListTestCase):
-    prefix = 'prefix'
+class TestListDeployPrefix(ListTestCase):
+    deploy_prefix = 'prefix'
 
     def test_list(self):
         self._check_list()

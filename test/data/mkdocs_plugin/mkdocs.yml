@@ -3,7 +3,8 @@ site_url: https://example.invalid/
 theme:
   name: mkdocs
 plugins:
-  - mike
+  - mike:
+      deploy_prefix: prefix
 
 nav:
   - Home: index.md

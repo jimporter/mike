@@ -5,6 +5,7 @@ from . import arguments, commands
 from . import git_utils
 from . import mkdocs_utils
 from .app_version import version as app_version
+from .mkdocs_plugin import MikePlugin
 
 description = """
 mike is a utility to make it easy to deploy multiple versions of your
@@ -55,7 +56,7 @@ output. This requires the Python package `shtab`.
 """
 
 
-def add_git_arguments(parser, *, commit=True, prefix=True):
+def add_git_arguments(parser, *, commit=True, deploy_prefix=True):
     # Add this whenever we add git arguments since we pull the remote and
     # branch from mkdocs.yml.
     parser.add_argument('-F', '--config-file', metavar='FILE', complete='file',
@@ -74,11 +75,11 @@ def add_git_arguments(parser, *, commit=True, prefix=True):
         git.add_argument('-f', '--force', action='store_true',
                          help='force push when pushing')
 
-    if prefix:
-        git.add_argument('--prefix', metavar='PATH', default='',
+    if deploy_prefix:
+        git.add_argument('--deploy-prefix', metavar='PATH',
                          complete='directory',
-                         help=('subdirectory within {branch} where docs are ' +
-                               'located'))
+                         help=('subdirectory within {branch} where generated '
+                               'docs should be deployed to'))
 
     group = git.add_mutually_exclusive_group()
     group.add_argument('--rebase', action='store_true',
@@ -94,10 +95,16 @@ def load_mkdocs_config(args, strict=False):
             args.branch = cfg['remote_branch']
         if args.remote is None:
             args.remote = cfg['remote_name']
+        if hasattr(args, 'deploy_prefix') and args.deploy_prefix is None:
+            plugin = cfg['plugins'].get('mike') or MikePlugin.default()
+            args.deploy_prefix = plugin.config['deploy_prefix']
         return cfg
     except FileNotFoundError as e:
         if strict:
             raise
+
+        if hasattr(args, 'deploy_prefix') and args.deploy_prefix is None:
+            args.deploy_prefix = MikePlugin.default().config['deploy_prefix']
         if args.branch is None or args.remote is None:
             raise FileNotFoundError(
                 '{}; pass --config-file or set --remote/--branch explicitly'
@@ -127,7 +134,7 @@ def deploy(parser, args):
     with commands.deploy(cfg, args.version, args.title, args.alias,
                          args.update_aliases, args.redirect, args.template,
                          branch=args.branch, message=args.message,
-                         prefix=args.prefix):
+                         deploy_prefix=args.deploy_prefix):
         with mkdocs_utils.inject_plugin(args.config_file) as config_file:
             mkdocs_utils.build(config_file, args.version)
     if args.push:
@@ -138,7 +145,7 @@ def delete(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.delete(args.version, args.all, branch=args.branch,
-                    message=args.message, prefix=args.prefix)
+                    message=args.message, deploy_prefix=args.deploy_prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -148,7 +155,7 @@ def alias(parser, args):
     check_remote_status(args, strict=True)
     commands.alias(cfg, args.version, args.alias, args.update_aliases,
                    args.redirect, args.template, branch=args.branch,
-                   message=args.message, prefix=args.prefix)
+                   message=args.message, deploy_prefix=args.deploy_prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -157,7 +164,7 @@ def retitle(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.retitle(args.version, args.title, branch=args.branch,
-                     message=args.message, prefix=args.prefix)
+                     message=args.message, deploy_prefix=args.deploy_prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -178,7 +185,7 @@ def list_versions(parser, args):
 
     load_mkdocs_config(args)
     check_remote_status(args)
-    all_versions = commands.list_versions(args.branch, args.prefix)
+    all_versions = commands.list_versions(args.branch, args.deploy_prefix)
 
     if args.version:
         try:
@@ -201,7 +208,8 @@ def set_default(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.set_default(args.version, args.template, branch=args.branch,
-                         message=args.message, prefix=args.prefix)
+                         message=args.message,
+                         deploy_prefix=args.deploy_prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -318,7 +326,7 @@ def main():
         'serve', description=serve_desc, help='serve docs locally for testing'
     )
     serve_p.set_defaults(func=serve)
-    add_git_arguments(serve_p, commit=False, prefix=False)
+    add_git_arguments(serve_p, commit=False, deploy_prefix=False)
     serve_p.add_argument('-a', '--dev-addr', default='localhost:8000',
                          metavar='HOST[:PORT]',
                          help=('Host address and port to serve from ' +

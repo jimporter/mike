@@ -187,9 +187,9 @@ class TestDeploy(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('^commit message$')
 
-    def test_prefix(self):
+    def test_deploy_prefix(self):
         with commands.deploy(self.cfg, '1.0', aliases=['latest'],
-                             prefix='prefix'):
+                             deploy_prefix='prefix'):
             self._mock_build()
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
@@ -255,11 +255,12 @@ class TestDeploy(TestBase):
 class TestDelete(TestBase):
     stage_dir = 'delete'
 
-    def _deploy(self, branch='gh-pages', prefix=''):
+    def _deploy(self, branch='gh-pages', deploy_prefix=''):
         with commands.deploy(self.cfg, '1.0', aliases=['stable'],
-                             branch=branch, prefix=prefix):
+                             branch=branch, deploy_prefix=deploy_prefix):
             pass
-        with commands.deploy(self.cfg, '2.0', branch=branch, prefix=prefix):
+        with commands.deploy(self.cfg, '2.0', branch=branch,
+                             deploy_prefix=deploy_prefix):
             pass
 
     def _test_delete(self, expected_message=None,
@@ -306,15 +307,15 @@ class TestDelete(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete('^commit message$')
 
-    def test_prefix(self):
-        self._deploy(prefix='prefix')
-        commands.delete(['1.0'], prefix='prefix')
+    def test_deploy_prefix(self):
+        self._deploy(deploy_prefix='prefix')
+        commands.delete(['1.0'], deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete(directory='prefix')
 
-    def test_prefix_delete_all(self):
-        self._deploy(prefix='prefix')
-        commands.delete(all=True, prefix='prefix')
+    def test_deploy_prefix_delete_all(self):
+        self._deploy(deploy_prefix='prefix')
+        commands.delete(all=True, deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
 
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
@@ -333,9 +334,9 @@ class TestDelete(TestBase):
 class TestAlias(TestBase):
     stage_dir = 'alias'
 
-    def _deploy(self, branch='gh-pages', prefix=''):
+    def _deploy(self, branch='gh-pages', deploy_prefix=''):
         with commands.deploy(self.cfg, '1.0', aliases=['latest'],
-                             branch=branch, prefix=prefix):
+                             branch=branch, deploy_prefix=deploy_prefix):
             pass
 
     def _test_alias(self, expected_message=None, expected_src='1.0',
@@ -447,9 +448,9 @@ class TestAlias(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias('^commit message$')
 
-    def test_prefix(self):
-        self._deploy(prefix='prefix')
-        commands.alias(self.cfg, '1.0', ['greatest'], prefix='prefix')
+    def test_deploy_prefix(self):
+        self._deploy(deploy_prefix='prefix')
+        commands.alias(self.cfg, '1.0', ['greatest'], deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(directory='prefix')
 
@@ -468,8 +469,9 @@ class TestRetitle(unittest.TestCase):
         git_init()
         commit_files(['file.txt'])
 
-    def _deploy(self, branch='gh-pages', prefix=''):
-        with commands.deploy(self.cfg, '1.0', branch=branch, prefix=prefix):
+    def _deploy(self, branch='gh-pages', deploy_prefix=''):
+        with commands.deploy(self.cfg, '1.0', branch=branch,
+                             deploy_prefix=deploy_prefix):
             pass
 
     def _test_retitle(self, expected_message=None, directory='.'):
@@ -510,9 +512,9 @@ class TestRetitle(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_retitle('commit message')
 
-    def test_prefix(self):
-        self._deploy(prefix='prefix')
-        commands.retitle('1.0', '1.0.1', prefix='prefix')
+    def test_deploy_prefix(self):
+        self._deploy(deploy_prefix='prefix')
+        commands.retitle('1.0', '1.0.1', deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_retitle(directory='prefix')
 
@@ -530,8 +532,9 @@ class TestSetDefault(unittest.TestCase):
         git_init()
         commit_files(['file.txt'])
 
-    def _deploy(self, branch='gh-pages', prefix=''):
-        with commands.deploy(self.cfg, '1.0', branch=branch, prefix=prefix):
+    def _deploy(self, branch='gh-pages', deploy_prefix=''):
+        with commands.deploy(self.cfg, '1.0', branch=branch,
+                             deploy_prefix=deploy_prefix):
             pass
 
     def _test_default(self, expr=match_redir('1.0/'), expected_message=None,
@@ -574,9 +577,9 @@ class TestSetDefault(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default(expected_message='commit message')
 
-    def test_prefix(self):
-        self._deploy(prefix='prefix')
-        commands.set_default('1.0', prefix='prefix')
+    def test_deploy_prefix(self):
+        self._deploy(deploy_prefix='prefix')
+        commands.set_default('1.0', deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default(directory='prefix')
 

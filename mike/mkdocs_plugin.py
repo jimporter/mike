@@ -22,12 +22,19 @@ def get_theme_dir(theme_name):
 
 class MikePlugin(BasePlugin):
     config_scheme = (
+        ('deploy_prefix', config_options.Type(str, default='')),
         ('version_selector', config_options.Type(bool, default=True)),
         ('canonical_version',
          config_options.Type((str, type(None)), default=None)),
         ('css_dir', config_options.Type(str, default='css')),
         ('javascript_dir', config_options.Type(str, default='js')),
     )
+
+    @classmethod
+    def default(cls):
+        plugin = cls()
+        plugin.load_config({})
+        return plugin
 
     def on_config(self, config):
         version = os.environ.get(docs_version_var)

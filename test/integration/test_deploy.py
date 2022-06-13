@@ -122,8 +122,8 @@ class TestDeploy(DeployTestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy('commit message')
 
-    def test_prefix(self):
-        assertPopen(['mike', 'deploy', '1.0', '--prefix', 'prefix'])
+    def test_deploy_prefix(self):
+        assertPopen(['mike', 'deploy', '1.0', '--deploy-prefix', 'prefix'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(directory='prefix')
 
@@ -277,7 +277,7 @@ class TestDeployPlugin(DeployTestCase):
     def test_default(self):
         assertPopen(['mike', 'deploy', '1.0'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy()
+        self._test_deploy(directory='prefix')
 
 
 class TestDeployCustomSiteDir(DeployTestCase):

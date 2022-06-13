@@ -6,9 +6,13 @@
 
 - Look for both `mkdocs.yml` and `mkdocs.yaml` configuration files
 - Support `GIT_COMMITTER_(NAME|EMAIL|DATE)` when generating commits
+- Allow specifying `deploy_prefix` in the `mike` MkDocs plugin
 - Add a `--debug` flag to help diagnose bugs with mike
 - Port number is now optional for `--dev-addr` in `mike serve`, defaulting to
   8000
+
+### Breaking changes
+- `--prefix` is now `--deploy-prefix`
 
 ### Bug fixes
 

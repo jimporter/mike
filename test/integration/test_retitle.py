@@ -7,10 +7,10 @@ from mike import git_utils, versions
 
 
 class RetitleTestCase(unittest.TestCase):
-    def _deploy(self, branch=None, versions=['1.0'], prefix=''):
+    def _deploy(self, branch=None, versions=['1.0'], deploy_prefix=''):
         extra_args = ['-b', branch] if branch else []
-        if prefix:
-            extra_args.extend(['--prefix', prefix])
+        if deploy_prefix:
+            extra_args.extend(['--deploy-prefix', deploy_prefix])
         for i in versions:
             assertPopen(['mike', 'deploy', i] + extra_args)
 
@@ -81,9 +81,10 @@ class TestRetitle(RetitleTestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_retitle('commit message')
 
-    def test_prefix(self):
-        self._deploy(prefix='prefix')
-        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '--prefix', 'prefix'])
+    def test_deploy_prefix(self):
+        self._deploy(deploy_prefix='prefix')
+        assertPopen(['mike', 'retitle', '1.0', '1.0.1', '--deploy-prefix',
+                     'prefix'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_retitle(directory='prefix')
 
