@@ -24,6 +24,8 @@ def get_theme_dir(theme_name):
 class MikePlugin(BasePlugin):
     config_scheme = (
         ('alias_type', config_options.Type(str, default='redirect')),
+        ('redirect_template',
+         config_options.Type((str, type(None)), default=None)),
         ('deploy_prefix', config_options.Type(str, default='')),
         ('version_selector', config_options.Type(bool, default=True)),
         ('canonical_version',

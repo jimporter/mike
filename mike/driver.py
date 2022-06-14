@@ -100,6 +100,7 @@ def load_mkdocs_config(args, strict=False):
         maybe_set(args, cfg, 'branch', 'remote_branch')
         maybe_set(args, cfg, 'remote', 'remote_name')
         maybe_set(args, plugin.config, 'alias_type')
+        maybe_set(args, plugin.config, 'template', 'redirect_template')
         maybe_set(args, plugin.config, 'deploy_prefix')
         return cfg
     except FileNotFoundError as e:
@@ -108,6 +109,7 @@ def load_mkdocs_config(args, strict=False):
 
         plugin = MikePlugin.default()
         maybe_set(args, plugin.config, 'alias_type')
+        maybe_set(args, plugin.config, 'template', 'redirect_template')
         maybe_set(args, plugin.config, 'deploy_prefix')
         if args.branch is None or args.remote is None:
             raise FileNotFoundError(

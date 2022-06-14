@@ -61,6 +61,7 @@ plugins:
   - mike:
       # These fields are all optional; the defaults are as below...
       alias_type: redirect
+      redirect_template: null
       deploy_prefix: ''
       canonical_version: null
       version_selector: true
@@ -71,6 +72,8 @@ plugins:
 * `alias_type`: The method to create aliases; one of:
   * `redirect`: Create an HTML redirect for each page of the documentation
   * `copy`: Copy all the files of the documentation to the alias's path
+* `redirect_template`: The template file to use when creating HTML redirects; if
+  `null`, use the default template
 * `deploy_prefix`: The root directory to put the docs in
 * `canonical_version`: The version to use for the `<link rel="canonical">`;
   pass `null` to use the version specified via `mike deploy`
