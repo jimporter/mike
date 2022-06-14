@@ -29,7 +29,8 @@ def _open_config(config_file=None):
 
 def load_config(config_file=None, **kwargs):
     with _open_config(config_file) as f:
-        return mkdocs.config.load_config(f, **kwargs)
+        cfg = mkdocs.config.load_config(f, **kwargs)
+        return cfg['plugins'].run_event('config', cfg)
 
 
 @contextmanager

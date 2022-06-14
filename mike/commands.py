@@ -2,6 +2,7 @@ import http.server
 import os
 import posixpath
 from contextlib import contextmanager
+from enum import Enum
 from jinja2 import Template
 from pkg_resources import resource_stream
 
@@ -12,6 +13,7 @@ from .app_version import version as app_version
 from .versions import Versions
 
 versions_file = 'versions.json'
+AliasType = Enum('AliasType', ['redirect', 'copy'])
 
 
 def _format_deploy_prefix(deploy_prefix):
@@ -57,8 +59,8 @@ def make_nojekyll():
 
 @contextmanager
 def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
-           redirect=True, template=None, *, branch='gh-pages', message=None,
-           deploy_prefix=''):
+           alias_type=AliasType.redirect, template=None, *, branch='gh-pages',
+           message=None, deploy_prefix=''):
     if message is None:
         message = (
             'Deployed {rev} to {doc_version}{deploy_prefix} with MkDocs ' +
@@ -80,7 +82,7 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
     # Let the caller perform the build.
     yield
 
-    if redirect and info.aliases:
+    if alias_type == AliasType.redirect and info.aliases:
         t = _redirect_template(template)
 
     with git_utils.Commit(branch, message) as commit:
@@ -91,13 +93,15 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
             commit.add_file(canonical_file)
             for d in alias_destdirs:
                 alias_file = f.copy(d, cfg['site_dir'])
-                if redirect:
+                if alias_type == AliasType.redirect:
                     _add_redirect_to_commit(
                         commit, t, alias_file.path, canonical_file.path,
                         cfg['use_directory_urls']
                     )
-                else:
+                elif alias_type == AliasType.copy:
                     commit.add_file(alias_file)
+                else:  # pragma: no cover
+                    raise ValueError('unrecognized alias type')
 
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
         commit.add_file(make_nojekyll())
@@ -141,8 +145,9 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
             commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 
-def alias(cfg, version, aliases, update_aliases=False, redirect=True,
-          template=None, *, branch='gh-pages', message=None, deploy_prefix=''):
+def alias(cfg, version, aliases, update_aliases=False,
+          alias_type=AliasType.redirect, template=None, *, branch='gh-pages',
+          message=None, deploy_prefix=''):
     all_versions = list_versions(branch, deploy_prefix)
     try:
         real_version = all_versions.find(version, strict=True)[0]
@@ -164,7 +169,7 @@ def alias(cfg, version, aliases, update_aliases=False, redirect=True,
                                       update_aliases=update_aliases)
     destdirs = [os.path.join(deploy_prefix, i) for i in new_aliases]
 
-    if redirect and destdirs:
+    if alias_type == AliasType.redirect and destdirs:
         t = _redirect_template(template)
 
     with git_utils.Commit(branch, message) as commit:
@@ -174,13 +179,16 @@ def alias(cfg, version, aliases, update_aliases=False, redirect=True,
         for canonical_file in git_utils.walk_files(branch, canonical_dir):
             for d in destdirs:
                 alias_file = canonical_file.copy(d, canonical_dir)
-                if redirect:
+                if alias_type == AliasType.redirect:
                     _add_redirect_to_commit(
                         commit, t, alias_file.path, canonical_file.path,
                         cfg['use_directory_urls']
                     )
-                else:
+                elif alias_type == AliasType.copy:
                     commit.add_file(alias_file)
+                else:  # pragma: no cover
+                    raise ValueError('unrecognized alias type')
+
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 

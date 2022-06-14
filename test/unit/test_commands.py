@@ -148,7 +148,7 @@ class TestDeploy(TestBase):
 
     def test_aliases_copy(self):
         with commands.deploy(self.cfg, '1.0', aliases=['latest'],
-                             redirect=False):
+                             alias_type=commands.AliasType.copy):
             self._mock_build()
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
@@ -383,7 +383,8 @@ class TestAlias(TestBase):
 
     def test_alias_copy(self):
         self._deploy()
-        commands.alias(self.cfg, '1.0', ['greatest'], redirect=False)
+        commands.alias(self.cfg, '1.0', ['greatest'],
+                       alias_type=commands.AliasType.copy)
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(redirect=['latest'])
 

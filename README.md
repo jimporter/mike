@@ -59,14 +59,25 @@ are being built:
 ```yaml
 plugins:
   - mike:
-      # these fields are all optional; the defaults are as below...
-      deploy_prefix: ''        # the root directory to put the docs in
-      version_selector: true   # set to false to leave out the version selector
-      css_dir: css             # the directory to put the version selector's CSS
-      javascript_dir: js       # the directory to put the version selector's JS
-      canonical_version: null  # the version for <link rel="canonical">; `null`
-                               # uses the version specified via `mike deploy`
+      # These fields are all optional; the defaults are as below...
+      alias_type: redirect
+      deploy_prefix: ''
+      canonical_version: null
+      version_selector: true
+      css_dir: css
+      javascript_dir: js
 ```
+
+* `alias_type`: The method to create aliases; one of:
+  * `redirect`: Create an HTML redirect for each page of the documentation
+  * `copy`: Copy all the files of the documentation to the alias's path
+* `deploy_prefix`: The root directory to put the docs in
+* `canonical_version`: The version to use for the `<link rel="canonical">`;
+  pass `null` to use the version specified via `mike deploy`
+* `version_selector`: True if the version selector should be shown on pages;
+  false otherwise
+* `css_dir`: The directory to place the version selector's CSS
+* `javascript_dir`: The directory to place the version selector's Javascript
 
 Note: If you have existing documentation on your `gh-pages` branch, you may also
 want to delete the old documentation before building your new versioned docs via
@@ -101,10 +112,10 @@ releasing a new version and updating the `latest` alias to point to this new
 version), you can pass `-u`/`--update-aliases` to allow this.
 
 By default, aliases create a simple HTML redirect to the real version of the
-docs; to create a copy of the docs for each alias, you can pass `--no-redirect`.
-If you're using redirects, you can customize the redirect template with
-`-T`/`--template`; this takes a path to a [Jinja][jinja] template that accepts
-an `{{href}}` variable.
+docs; to create a copy of the docs for each alias, you can pass
+`--alias-type=copy`. If you're using redirects, you can customize the redirect
+template with `-T`/`--template`; this takes a path to a [Jinja][jinja] template
+that accepts an `{{href}}` variable.
 
 If you'd like to specify a title for this version that doesn't match the version
 string, you can pass `-t TITLE`/`--title=TITLE` as well.

@@ -69,7 +69,7 @@ class TestDeploy(DeployTestCase):
             self.assertRegex(f.read(), match_redir('../1.0/'))
 
     def test_aliases_copy(self):
-        assertPopen(['mike', 'deploy', '1.0', 'latest', '--no-redirect'])
+        assertPopen(['mike', 'deploy', '1.0', 'latest', '--alias-type=copy'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])

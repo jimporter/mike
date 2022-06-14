@@ -67,7 +67,7 @@ class TestAlias(AliasTestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(expected_versions=[
             versions.VersionInfo('2.0', aliases=['latest']),
-            versions.VersionInfo('1.0', ),
+            versions.VersionInfo('1.0'),
         ])
 
         with open('latest/index.html') as f:
@@ -75,7 +75,7 @@ class TestAlias(AliasTestCase):
 
     def test_alias_copy(self):
         self._deploy()
-        assertPopen(['mike', 'alias', '1.0', 'latest', '--no-redirect'])
+        assertPopen(['mike', 'alias', '1.0', 'latest', '--alias-type=copy'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(redirect=False)
 

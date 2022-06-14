@@ -33,55 +33,47 @@ class TestGetThemeDir(unittest.TestCase):
         self.assertRaises(ValueError, mkdocs_plugin.get_theme_dir, 'nonexist')
 
 
-class TestMkdocsPluginOnConfig(unittest.TestCase):
+class PluginTest(unittest.TestCase):
+    def make_plugin(self, **kwargs):
+        p = mkdocs_plugin.MikePlugin()
+        p.config = {k: v.default for k, v in p.config_scheme}
+        p.config.update(kwargs)
+        return p
+
+
+class TestMkdocsPluginOnConfig(PluginTest):
     def test_site_url(self):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
-            p = mkdocs_plugin.MikePlugin()
-            p.config = {'canonical_version': None}
             config = {'site_url': 'https://example.com/'}
-            p.on_config(config)
+            self.make_plugin().on_config(config)
             self.assertEqual(config['site_url'], 'https://example.com/1.0')
 
     def test_no_site_url(self):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
-            p = mkdocs_plugin.MikePlugin()
-            p.config = {'canonical_version': None}
             config = {'site_url': ''}
-            p.on_config(config)
+            self.make_plugin().on_config(config)
             self.assertEqual(config['site_url'], '')
 
     def test_explicit_canonical(self):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
-            p = mkdocs_plugin.MikePlugin()
-            p.config = {'canonical_version': 'latest'}
             config = {'site_url': 'https://example.com/'}
-            p.on_config(config)
+            self.make_plugin(canonical_version='latest').on_config(config)
             self.assertEqual(config['site_url'], 'https://example.com/latest')
 
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
-            p = mkdocs_plugin.MikePlugin()
-            p.config = {'canonical_version': ''}
             config = {'site_url': 'https://example.com/'}
-            p.on_config(config)
+            self.make_plugin(canonical_version='').on_config(config)
             self.assertEqual(config['site_url'], 'https://example.com/')
 
     def test_no_version(self):
         with mock.patch('os.environ', {}):
-            p = mkdocs_plugin.MikePlugin()
-            p.config = {'canonical_version': None}
             config = {'site_url': 'https://example.com/'}
-            p.on_config(config)
+            self.make_plugin().on_config(config)
             self.assertEqual(config['site_url'], 'https://example.com/')
 
 
-class TestMkdocsPluginOnFiles(unittest.TestCase):
+class TestMkdocsPluginOnFiles(PluginTest):
     MockTheme = namedtuple('MockTheme', ['name'])
-
-    def make_plugin(self, version_selector=True):
-        p = mkdocs_plugin.MikePlugin()
-        p.config = {'version_selector': version_selector, 'css_dir': 'css',
-                    'javascript_dir': 'js'}
-        return p
 
     def make_config(self, theme, extra_css=[], extra_javascript=[]):
         return {'theme': self.MockTheme(theme),
@@ -107,5 +99,5 @@ class TestMkdocsPluginOnFiles(unittest.TestCase):
 
     def test_no_version_select(self):
         cfg = self.make_config('mkdocs')
-        files = self.make_plugin(False).on_files([], cfg)
+        files = self.make_plugin(version_selector=False).on_files([], cfg)
         self.assertEqual(files, [])

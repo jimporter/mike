@@ -89,22 +89,26 @@ def add_git_arguments(parser, *, commit=True, deploy_prefix=True):
 
 
 def load_mkdocs_config(args, strict=False):
+    def maybe_set(args, cfg, field, cfg_field=None):
+        if getattr(args, field, object()) is None:
+            setattr(args, field, cfg[cfg_field or field])
+
     try:
         cfg = mkdocs_utils.load_config(args.config_file)
-        if args.branch is None:
-            args.branch = cfg['remote_branch']
-        if args.remote is None:
-            args.remote = cfg['remote_name']
-        if hasattr(args, 'deploy_prefix') and args.deploy_prefix is None:
-            plugin = cfg['plugins'].get('mike') or MikePlugin.default()
-            args.deploy_prefix = plugin.config['deploy_prefix']
+        plugin = cfg['plugins'].get('mike') or MikePlugin.default()
+
+        maybe_set(args, cfg, 'branch', 'remote_branch')
+        maybe_set(args, cfg, 'remote', 'remote_name')
+        maybe_set(args, plugin.config, 'alias_type')
+        maybe_set(args, plugin.config, 'deploy_prefix')
         return cfg
     except FileNotFoundError as e:
         if strict:
             raise
 
-        if hasattr(args, 'deploy_prefix') and args.deploy_prefix is None:
-            args.deploy_prefix = MikePlugin.default().config['deploy_prefix']
+        plugin = MikePlugin.default()
+        maybe_set(args, plugin.config, 'alias_type')
+        maybe_set(args, plugin.config, 'deploy_prefix')
         if args.branch is None or args.remote is None:
             raise FileNotFoundError(
                 '{}; pass --config-file or set --remote/--branch explicitly'
@@ -132,7 +136,7 @@ def deploy(parser, args):
     cfg = load_mkdocs_config(args, strict=True)
     check_remote_status(args, strict=True)
     with commands.deploy(cfg, args.version, args.title, args.alias,
-                         args.update_aliases, args.redirect, args.template,
+                         args.update_aliases, args.alias_type, args.template,
                          branch=args.branch, message=args.message,
                          deploy_prefix=args.deploy_prefix):
         with mkdocs_utils.inject_plugin(args.config_file) as config_file:
@@ -154,7 +158,7 @@ def alias(parser, args):
     cfg = load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.alias(cfg, args.version, args.alias, args.update_aliases,
-                   args.redirect, args.template, branch=args.branch,
+                   args.alias_type, args.template, branch=args.branch,
                    message=args.message, deploy_prefix=args.deploy_prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
@@ -252,9 +256,11 @@ def main():
                           help='short descriptive title for this version')
     deploy_p.add_argument('-u', '--update-aliases', action='store_true',
                           help='update aliases pointing to other versions')
-    deploy_p.add_argument('--no-redirect', dest='redirect', default=True,
-                          action='store_false',
-                          help='make copies of docs for each alias')
+    deploy_p.add_argument('--alias-type', metavar='TYPE',
+                          type=lambda x: commands.AliasType[x],
+                          choices=list(commands.AliasType),
+                          help=('method for creating aliases (one of: ' +
+                                '%(choices)s; default: redirect)'))
     deploy_p.add_argument('-T', '--template', complete='file',
                           help='the template file to use for redirects')
     add_git_arguments(deploy_p)
@@ -279,9 +285,11 @@ def main():
     alias_p.set_defaults(func=alias)
     alias_p.add_argument('-u', '--update-aliases', action='store_true',
                          help='update aliases pointing to other versions')
-    alias_p.add_argument('--no-redirect', dest='redirect', default=True,
-                         action='store_false',
-                         help='make copies of docs for each alias')
+    alias_p.add_argument('--alias-type', metavar='TYPE',
+                         type=lambda x: commands.AliasType[x],
+                         choices=list(commands.AliasType),
+                         help=('method for creating aliases (one of: ' +
+                               '%(choices)s; default: redirect)'))
     alias_p.add_argument('-T', '--template', complete='file',
                          help='the template file to use for redirects')
     add_git_arguments(alias_p)

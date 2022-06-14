@@ -6,6 +6,7 @@ from mkdocs.structure.files import File
 from pkg_resources import iter_entry_points
 
 from .mkdocs_utils import docs_version_var
+from .commands import AliasType
 
 try:
     from mkdocs.exceptions import PluginError
@@ -22,6 +23,7 @@ def get_theme_dir(theme_name):
 
 class MikePlugin(BasePlugin):
     config_scheme = (
+        ('alias_type', config_options.Type(str, default='redirect')),
         ('deploy_prefix', config_options.Type(str, default='')),
         ('version_selector', config_options.Type(bool, default=True)),
         ('canonical_version',
@@ -34,6 +36,7 @@ class MikePlugin(BasePlugin):
     def default(cls):
         plugin = cls()
         plugin.load_config({})
+        plugin.on_config({})
         return plugin
 
     def on_config(self, config):
@@ -42,6 +45,7 @@ class MikePlugin(BasePlugin):
             if self.config['canonical_version'] is not None:
                 version = self.config['canonical_version']
             config['site_url'] = urljoin(config['site_url'], version)
+        self.config['alias_type'] = AliasType[self.config['alias_type']]
 
     def on_files(self, files, config):
         if not self.config['version_selector']:
