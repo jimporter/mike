@@ -4,20 +4,8 @@ from collections import namedtuple
 from unittest import mock
 
 from .. import *
+from mike import mkdocs_plugin
 from mike.mkdocs_utils import docs_version_var
-
-
-class MockPlugins:
-    BasePlugin = object
-
-
-# Mock importing `mkdocs.plugins`, since it can't be imported normally.
-real_import = __import__
-with mock.patch('builtins.__import__', lambda name, *args, **kwargs: (
-    MockPlugins if name == 'mkdocs.plugins' else
-    real_import(name, *args, **kwargs)
-)):
-    from mike import mkdocs_plugin
 
 
 class TestGetThemeDir(unittest.TestCase):
