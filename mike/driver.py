@@ -262,7 +262,7 @@ def main():
                           type=lambda x: commands.AliasType[x],
                           choices=list(commands.AliasType),
                           help=('method for creating aliases (one of: ' +
-                                '%(choices)s; default: redirect)'))
+                                '%(choices)s; default: symlink)'))
     deploy_p.add_argument('-T', '--template', complete='file',
                           help='the template file to use for redirects')
     add_git_arguments(deploy_p)
@@ -291,7 +291,7 @@ def main():
                          type=lambda x: commands.AliasType[x],
                          choices=list(commands.AliasType),
                          help=('method for creating aliases (one of: ' +
-                               '%(choices)s; default: redirect)'))
+                               '%(choices)s; default: symlink)'))
     alias_p.add_argument('-T', '--template', complete='file',
                          help='the template file to use for redirects')
     add_git_arguments(alias_p)

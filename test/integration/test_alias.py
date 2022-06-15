@@ -1,9 +1,11 @@
 import os
+import sys
 import unittest
 
 from . import assertPopen, assertOutput
 from .. import *
 from mike import git_utils, versions
+from mike.commands import AliasType
 
 
 class AliasTestCase(unittest.TestCase):
@@ -17,7 +19,7 @@ class AliasTestCase(unittest.TestCase):
     def _test_alias(self, expected_message=None,
                     expected_versions=[
                         versions.VersionInfo('1.0', aliases=['latest'])
-                    ], redirect=True, directory='.'):
+                    ], alias_type=AliasType.symlink, directory='.'):
         message = assertPopen(['git', 'log', '-1', '--pretty=%B']).rstrip()
         if expected_message:
             self.assertEqual(message, expected_message)
@@ -32,8 +34,10 @@ class AliasTestCase(unittest.TestCase):
                       v_str + '/css/version-select.css',
                       v_str + '/js/version-select.js'}
             for a in v.aliases:
-                files |= {a, a + '/index.html'}
-                if not redirect:
+                files.add(a)
+                if alias_type != AliasType.symlink:
+                    files |= {a + '/index.html'}
+                if alias_type == AliasType.copy:
                     files |= {a + '/css/version-select.css',
                               a + '/js/version-select.js'}
         assertDirectory(directory, files, allow_extra=True)
@@ -51,15 +55,19 @@ class TestAlias(AliasTestCase):
         check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
         check_call_silent(['git', 'commit', '-m', 'initial commit'])
 
+    @unittest.skipIf(sys.platform == 'win32' and sys.version_info < (3, 8),
+                     'this version of realpath fails to resolve symlinks')
     def test_alias(self):
         self._deploy()
         assertPopen(['mike', 'alias', '1.0', 'latest'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
+        self.assertTrue(os.path.islink('latest'))
+        self.assertEqual(os.path.normcase(os.path.realpath('latest')),
+                         os.path.normcase(os.path.abspath('1.0')))
 
-        with open('latest/index.html') as f:
-            self.assertRegex(f.read(), match_redir('../1.0/'))
-
+    @unittest.skipIf(sys.platform == 'win32' and sys.version_info < (3, 8),
+                     'this version of realpath fails to resolve symlinks')
     def test_update_aliases(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])
         assertPopen(['mike', 'deploy', '2.0'])
@@ -69,25 +77,36 @@ class TestAlias(AliasTestCase):
             versions.VersionInfo('2.0', aliases=['latest']),
             versions.VersionInfo('1.0'),
         ])
+        self.assertTrue(os.path.islink('latest'))
+        self.assertEqual(os.path.normcase(os.path.realpath('latest')),
+                         os.path.normcase(os.path.abspath('2.0')))
+
+    def test_alias_redirect(self):
+        self._deploy()
+        assertPopen(['mike', 'alias', '1.0', 'latest',
+                     '--alias-type=redirect'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(alias_type=AliasType.redirect)
 
         with open('latest/index.html') as f:
-            self.assertRegex(f.read(), match_redir('../2.0/'))
+            self.assertRegex(f.read(), match_redir('../1.0/'))
+
+    def test_alias_custom_redirect(self):
+        self._deploy()
+        assertPopen(['mike', 'alias', '1.0', 'latest',
+                     '--alias-type=redirect', '-T',
+                     os.path.join(test_data_dir, 'template.html')])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(alias_type=AliasType.redirect)
+
+        with open('latest/index.html') as f:
+            self.assertEqual(f.read(), 'Redirecting to ../1.0/\n')
 
     def test_alias_copy(self):
         self._deploy()
         assertPopen(['mike', 'alias', '1.0', 'latest', '--alias-type=copy'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias(redirect=False)
-
-    def test_aliases_custom_template(self):
-        self._deploy()
-        assertPopen(['mike', 'alias', '1.0', 'latest', '-T',
-                     os.path.join(test_data_dir, 'template.html')])
-        check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias()
-
-        with open('latest/index.html') as f:
-            self.assertEqual(f.read(), 'Redirecting to ../1.0/\n')
+        self._test_alias(alias_type=AliasType.copy)
 
     def test_from_subdir(self):
         self._deploy()
@@ -277,9 +296,10 @@ class TestAliasNoDirectoryUrls(AliasTestCase):
         check_call_silent(['git', 'add', 'mkdocs.yml', 'docs'])
         check_call_silent(['git', 'commit', '-m', 'initial commit'])
 
-    def test_default(self):
+    def test_alias_redirect(self):
         self._deploy()
-        assertPopen(['mike', 'alias', '1.0', 'latest'])
+        assertPopen(['mike', 'alias', '1.0', 'latest',
+                     '--alias-type=redirect'])
         check_call_silent(['git', 'checkout', 'gh-pages'])
 
         with open('latest/index.html') as f:

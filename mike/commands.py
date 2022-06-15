@@ -13,7 +13,7 @@ from .app_version import version as app_version
 from .versions import Versions
 
 versions_file = 'versions.json'
-AliasType = Enum('AliasType', ['redirect', 'copy'])
+AliasType = Enum('AliasType', ['symlink', 'copy', 'redirect'])
 
 
 def _format_deploy_prefix(deploy_prefix):
@@ -59,7 +59,7 @@ def make_nojekyll():
 
 @contextmanager
 def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
-           alias_type=AliasType.redirect, template=None, *, branch='gh-pages',
+           alias_type=AliasType.symlink, template=None, *, branch='gh-pages',
            message=None, deploy_prefix=''):
     if message is None:
         message = (
@@ -100,8 +100,15 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
                     )
                 elif alias_type == AliasType.copy:
                     commit.add_file(alias_file)
-                else:  # pragma: no cover
+                elif alias_type != AliasType.symlink:  # pragma: no cover
                     raise ValueError('unrecognized alias type')
+
+        if alias_type == AliasType.symlink:
+            for d in alias_destdirs:
+                base_dir = os.path.join(d, '..')
+                commit.add_file(git_utils.FileInfo(
+                    d, os.path.relpath(destdir, base_dir), mode=0o120000
+                ))
 
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
         commit.add_file(make_nojekyll())
@@ -146,7 +153,7 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
 
 
 def alias(cfg, version, aliases, update_aliases=False,
-          alias_type=AliasType.redirect, template=None, *, branch='gh-pages',
+          alias_type=AliasType.symlink, template=None, *, branch='gh-pages',
           message=None, deploy_prefix=''):
     all_versions = list_versions(branch, deploy_prefix)
     try:
@@ -186,8 +193,15 @@ def alias(cfg, version, aliases, update_aliases=False,
                     )
                 elif alias_type == AliasType.copy:
                     commit.add_file(alias_file)
-                else:  # pragma: no cover
+                elif alias_type != AliasType.symlink:  # pragma: no cover
                     raise ValueError('unrecognized alias type')
+
+        if alias_type == AliasType.symlink:
+            for d in destdirs:
+                base_dir = os.path.join(d, '..')
+                commit.add_file(git_utils.FileInfo(
+                    d, os.path.relpath(canonical_dir, base_dir), mode=0o120000
+                ))
 
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 

@@ -275,11 +275,29 @@ def push_branch(remote, branch, force=False):
                        p.stderr)
 
 
-def file_mode(branch, filename):
+def real_path(branch, filename):
+    path = ''
+    for i in git_path(filename).split('/'):
+        if path:
+            path += '/'
+        curr_path = path + i
+        mode = file_mode(branch, curr_path, follow_symlinks=False)
+        if mode == 0o120000:
+            curr_path = path + read_file(branch, curr_path,
+                                         universal_newlines=True,
+                                         follow_symlinks=False)
+        path = curr_path
+    return path
+
+
+def file_mode(branch, filename, follow_symlinks=True):
     filename = filename.rstrip('/')
     # The root directory of the repo is, well... a directory.
     if not filename:
         return 0o040000
+
+    if follow_symlinks:
+        filename = real_path(branch, filename)
 
     cmd = ['git', 'ls-tree', '--full-tree', '--', branch, git_path(filename)]
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
@@ -291,7 +309,11 @@ def file_mode(branch, filename):
     return int(p.stdout.split(' ', 1)[0], 8)
 
 
-def read_file(branch, filename, universal_newlines=False):
+def read_file(branch, filename, universal_newlines=False,
+              follow_symlinks=True):
+    if follow_symlinks:
+        filename = real_path(branch, filename)
+
     cmd = ['git', 'show', '{branch}:{filename}'.format(
         branch=branch, filename=git_path(filename)
     )]

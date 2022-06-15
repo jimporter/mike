@@ -29,7 +29,7 @@ class TestLoadMkdocsConfig(unittest.TestCase):
                               deploy_prefix=None)
         self.assertIsInstance(driver.load_mkdocs_config(args),
                               mkdocs.config.Config)
-        self.assertEqual(args.alias_type, AliasType.redirect)
+        self.assertEqual(args.alias_type, AliasType.symlink)
         self.assertEqual(args.template, None)
         self.assertEqual(args.deploy_prefix, '')
 
@@ -54,7 +54,7 @@ class TestLoadMkdocsConfig(unittest.TestCase):
                               deploy_prefix=None)
         with mock.patch('builtins.open', side_effect=FileNotFoundError):
             self.assertIs(driver.load_mkdocs_config(args), None)
-            self.assertEqual(args.alias_type, AliasType.redirect)
+            self.assertEqual(args.alias_type, AliasType.symlink)
             self.assertEqual(args.template, None)
             self.assertEqual(args.deploy_prefix, '')
 

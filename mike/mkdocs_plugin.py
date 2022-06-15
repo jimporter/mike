@@ -23,7 +23,7 @@ def get_theme_dir(theme_name):
 
 class MikePlugin(BasePlugin):
     config_scheme = (
-        ('alias_type', config_options.Type(str, default='redirect')),
+        ('alias_type', config_options.Type(str, default='symlink')),
         ('redirect_template',
          config_options.Type((str, type(None)), default=None)),
         ('deploy_prefix', config_options.Type(str, default='')),

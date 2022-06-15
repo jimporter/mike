@@ -60,7 +60,7 @@ are being built:
 plugins:
   - mike:
       # These fields are all optional; the defaults are as below...
-      alias_type: redirect
+      alias_type: symlink
       redirect_template: null
       deploy_prefix: ''
       canonical_version: null
@@ -70,6 +70,8 @@ plugins:
 ```
 
 * `alias_type`: The method to create aliases; one of:
+  * `symlink`: Create a symbolic link from the alias to the base directory of
+    the documentation
   * `redirect`: Create an HTML redirect for each page of the documentation
   * `copy`: Copy all the files of the documentation to the alias's path
 * `redirect_template`: The template file to use when creating HTML redirects; if
@@ -114,11 +116,12 @@ is already associated with another version, this will return an error. If you
 releasing a new version and updating the `latest` alias to point to this new
 version), you can pass `-u`/`--update-aliases` to allow this.
 
-By default, aliases create a simple HTML redirect to the real version of the
-docs; to create a copy of the docs for each alias, you can pass
-`--alias-type=copy`. If you're using redirects, you can customize the redirect
-template with `-T`/`--template`; this takes a path to a [Jinja][jinja] template
-that accepts an `{{href}}` variable.
+By default, each alias creates a symbolic link to the base directory of the real
+version of the docs; to create a copy of the docs for each alias, you can pass
+`--alias-type=copy`, or to use a simple HTML redirect for each page, you can
+pass `--alias-type=redirect`. If you're using redirects, you can customize the
+redirect template with `-T`/`--template`; this takes a path to a [Jinja][jinja]
+template that accepts an `{{href}}` variable.
 
 If you'd like to specify a title for this version that doesn't match the version
 string, you can pass `-t TITLE`/`--title=TITLE` as well.
@@ -127,6 +130,11 @@ In addition, you can specify where to deploy your docs via `-b`/`--branch`,
 `-r`/`--remote`, and `--deploy-prefix`, specifying the branch, remote, and
 directory prefix within the branch, respectively. Finally, to push your docs to
 a remote branch, simply add `-p`/`--push` to your command.
+
+You can also specify many of these options via your `mkdocs.yml` configuration
+as shown above. For example, `--alias-type` can also be specified via
+`plugins.mike.alias_type`. (For `--branch` and `--remote`, you can use the
+built-in MkDocs fields `remote_branch` and `remote_name`.)
 
 ### Viewing Your Docs
 

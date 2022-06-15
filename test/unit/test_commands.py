@@ -2,12 +2,13 @@ import os
 import re
 import shutil
 import unittest
-from collections.abc import Collection
+from collections.abc import Mapping
 from unittest import mock
 
 from .. import *
 from .mock_server import MockRequest, MockServer
 from mike import commands, git_utils, versions
+from mike.commands import AliasType
 
 
 def mock_config(site_dir, remote_name='origin',
@@ -45,8 +46,8 @@ class TestBase(unittest.TestCase):
         git_init()
         commit_files(['page.html', 'file.txt', 'dir/index.html'])
 
-    def _test_state(self, expected_message, expected_versions, redirect=True,
-                    directory='.'):
+    def _test_state(self, expected_message, expected_versions,
+                    alias_type=AliasType.symlink, directory='.'):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, expected_message)
 
@@ -56,11 +57,14 @@ class TestBase(unittest.TestCase):
             files |= {vstr, vstr + '/page.html', vstr + '/file.txt',
                       vstr + '/dir', vstr + '/dir/index.html'}
             for a in v.aliases:
-                files |= {a, a + '/page.html', a + '/dir',
-                          a + '/dir/index.html'}
-                if ( redirect is False or
-                     (isinstance(redirect, Collection) and
-                      a not in redirect) ):
+                this_alias_type = (alias_type.get(a, AliasType.symlink)
+                                   if isinstance(alias_type, Mapping)
+                                   else alias_type)
+                files.add(a)
+                if this_alias_type != AliasType.symlink:
+                    files |= {a + '/page.html', a + '/dir',
+                              a + '/dir/index.html'}
+                if this_alias_type == AliasType.copy:
                     files.add(a + '/file.txt')
         assertDirectory(directory, files)
 
@@ -102,8 +106,7 @@ class TestDeploy(TestBase):
             commit.add_file(git_utils.FileInfo('1.0/page.html', ''))
             commit.add_file(git_utils.FileInfo('1.0/file.txt', ''))
             commit.add_file(git_utils.FileInfo('1.0/dir/index.html', ''))
-            commit.add_file(git_utils.FileInfo('latest/page.html', ''))
-            commit.add_file(git_utils.FileInfo('latest/dir/index.html', ''))
+            commit.add_file(git_utils.FileInfo('latest', '1.0', mode=0o120000))
 
     def test_default(self):
         with commands.deploy(self.cfg, '1.0'):
@@ -127,39 +130,43 @@ class TestDeploy(TestBase):
             versions.VersionInfo('1.0', aliases=['latest'])
         ])
 
+        self.assertTrue(os.path.islink('latest'))
+
+    def test_aliases_redirect(self):
+        with commands.deploy(self.cfg, '1.0', aliases=['latest'],
+                             alias_type=AliasType.redirect):
+            self._mock_build()
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ], alias_type=AliasType.redirect)
+
         with open('latest/page.html') as f:
             self.assertRegex(f.read(), match_redir('../1.0/page.html'))
         with open('latest/dir/index.html') as f:
             self.assertRegex(f.read(), match_redir('../../1.0/dir/'))
 
-    def test_aliases_no_directory_urls(self):
+    def test_aliases_redirect_no_directory_urls(self):
         self.cfg['use_directory_urls'] = False
-        with commands.deploy(self.cfg, '1.0', aliases=['latest']):
+        with commands.deploy(self.cfg, '1.0', aliases=['latest'],
+                             alias_type=AliasType.redirect):
             self._mock_build()
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
-        ])
+        ], alias_type=AliasType.redirect)
 
         with open('latest/page.html') as f:
             self.assertRegex(f.read(), match_redir('../1.0/page.html'))
         with open('latest/dir/index.html') as f:
             self.assertRegex(f.read(), match_redir('../../1.0/dir/index.html'))
 
-    def test_aliases_copy(self):
-        with commands.deploy(self.cfg, '1.0', aliases=['latest'],
-                             alias_type=commands.AliasType.copy):
-            self._mock_build()
-        check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_deploy(expected_versions=[
-            versions.VersionInfo('1.0', aliases=['latest'])
-        ], redirect=False)
-
     def test_aliases_custom_redirect(self):
         real_open = open
         with mock.patch('builtins.open',
                         mock.mock_open(read_data=b'{{href}}')):
             with commands.deploy(self.cfg, '1.0', aliases=['latest'],
+                                 alias_type=AliasType.redirect,
                                  template='template.html'):
                 # Un-mock `open` so we can copy files for real.
                 with mock.patch('builtins.open', real_open):
@@ -168,12 +175,21 @@ class TestDeploy(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
-        ])
+        ], alias_type=AliasType.redirect)
 
         with open('latest/page.html') as f:
             self.assertEqual(f.read(), '../1.0/page.html')
         with open('latest/dir/index.html') as f:
             self.assertEqual(f.read(), '../../1.0/dir/')
+
+    def test_aliases_copy(self):
+        with commands.deploy(self.cfg, '1.0', aliases=['latest'],
+                             alias_type=AliasType.copy):
+            self._mock_build()
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ], alias_type=AliasType.copy)
 
     def test_branch(self):
         with commands.deploy(self.cfg, '1.0', branch='branch'):
@@ -255,7 +271,8 @@ class TestDeploy(TestBase):
 class TestDelete(TestBase):
     stage_dir = 'delete'
 
-    def _deploy(self, branch='gh-pages', deploy_prefix=''):
+    def _deploy(self, branch='gh-pages', alias_type=AliasType.symlink,
+                deploy_prefix=''):
         with commands.deploy(self.cfg, '1.0', aliases=['stable'],
                              branch=branch, deploy_prefix=deploy_prefix):
             pass
@@ -285,6 +302,18 @@ class TestDelete(TestBase):
             versions.VersionInfo('2.0'),
             versions.VersionInfo('1.0'),
         ])
+
+    def test_delete_redirect(self):
+        self._deploy(alias_type=AliasType.redirect)
+        commands.delete(['1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_delete()
+
+    def test_delete_copy(self):
+        self._deploy(alias_type=AliasType.copy)
+        commands.delete(['1.0'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_delete()
 
     def test_delete_all(self):
         self._deploy()
@@ -358,22 +387,7 @@ class TestAlias(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
 
-        with open('greatest/page.html') as f:
-            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
-        with open('greatest/dir/index.html') as f:
-            self.assertRegex(f.read(), match_redir('../../1.0/dir/'))
-
-    def test_alias_no_directory_urls(self):
-        self._deploy()
-        self.cfg['use_directory_urls'] = False
-        commands.alias(self.cfg, '1.0', ['greatest'])
-        check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias()
-
-        with open('greatest/page.html') as f:
-            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
-        with open('greatest/dir/index.html') as f:
-            self.assertRegex(f.read(), match_redir('../../1.0/dir/index.html'))
+        self.assertTrue(os.path.islink('greatest'))
 
     def test_alias_from_alias(self):
         self._deploy()
@@ -381,26 +395,52 @@ class TestAlias(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias()
 
-    def test_alias_copy(self):
+    def test_alias_redirect(self):
         self._deploy()
         commands.alias(self.cfg, '1.0', ['greatest'],
-                       alias_type=commands.AliasType.copy)
+                       alias_type=AliasType.redirect)
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias(redirect=['latest'])
+        self._test_alias(alias_type={'greatest': AliasType.redirect})
+
+        with open('greatest/page.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
+        with open('greatest/dir/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../../1.0/dir/'))
+
+    def test_alias_redirect_no_directory_urls(self):
+        self._deploy()
+        self.cfg['use_directory_urls'] = False
+        commands.alias(self.cfg, '1.0', ['greatest'],
+                       alias_type=AliasType.redirect)
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(alias_type={'greatest': AliasType.redirect})
+
+        with open('greatest/page.html') as f:
+            self.assertRegex(f.read(), match_redir('../1.0/page.html'))
+        with open('greatest/dir/index.html') as f:
+            self.assertRegex(f.read(), match_redir('../../1.0/dir/index.html'))
 
     def test_alias_custom_redirect(self):
         self._deploy()
         with mock.patch('builtins.open',
                         mock.mock_open(read_data=b'{{href}}')):
             commands.alias(self.cfg, '1.0', ['greatest'],
+                           alias_type=AliasType.redirect,
                            template='template.html')
         check_call_silent(['git', 'checkout', 'gh-pages'])
-        self._test_alias()
+        self._test_alias(alias_type={'greatest': AliasType.redirect})
 
         with open('greatest/page.html') as f:
             self.assertEqual(f.read(), '../1.0/page.html')
         with open('greatest/dir/index.html') as f:
             self.assertEqual(f.read(), '../../1.0/dir/')
+
+    def test_alias_copy(self):
+        self._deploy()
+        commands.alias(self.cfg, '1.0', ['greatest'],
+                       alias_type=AliasType.copy)
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_alias(alias_type={'greatest': AliasType.copy})
 
     def test_alias_overwrite_same(self):
         self._deploy()
