@@ -138,7 +138,8 @@ def deploy(parser, args):
     cfg = load_mkdocs_config(args, strict=True)
     check_remote_status(args, strict=True)
     with commands.deploy(cfg, args.version, args.title, args.alias,
-                         args.update_aliases, args.alias_type, args.template,
+                         args.update_aliases,
+                         commands.AliasType[args.alias_type], args.template,
                          branch=args.branch, message=args.message,
                          deploy_prefix=args.deploy_prefix):
         with mkdocs_utils.inject_plugin(args.config_file) as config_file:
@@ -160,8 +161,9 @@ def alias(parser, args):
     cfg = load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.alias(cfg, args.version, args.alias, args.update_aliases,
-                   args.alias_type, args.template, branch=args.branch,
-                   message=args.message, deploy_prefix=args.deploy_prefix)
+                   commands.AliasType[args.alias_type], args.template,
+                   branch=args.branch, message=args.message,
+                   deploy_prefix=args.deploy_prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch, args.force)
 
@@ -259,8 +261,7 @@ def main():
     deploy_p.add_argument('-u', '--update-aliases', action='store_true',
                           help='update aliases pointing to other versions')
     deploy_p.add_argument('--alias-type', metavar='TYPE',
-                          type=lambda x: commands.AliasType[x],
-                          choices=list(commands.AliasType),
+                          choices=[i.name for i in commands.AliasType],
                           help=('method for creating aliases (one of: ' +
                                 '%(choices)s; default: symlink)'))
     deploy_p.add_argument('-T', '--template', complete='file',
@@ -288,8 +289,7 @@ def main():
     alias_p.add_argument('-u', '--update-aliases', action='store_true',
                          help='update aliases pointing to other versions')
     alias_p.add_argument('--alias-type', metavar='TYPE',
-                         type=lambda x: commands.AliasType[x],
-                         choices=list(commands.AliasType),
+                         choices=[i.name for i in commands.AliasType],
                          help=('method for creating aliases (one of: ' +
                                '%(choices)s; default: symlink)'))
     alias_p.add_argument('-T', '--template', complete='file',

@@ -1,6 +1,6 @@
 import os
 from urllib.parse import urljoin
-from mkdocs.config import config_options
+from mkdocs.config import config_options as opts
 from mkdocs.plugins import BasePlugin
 from mkdocs.structure.files import File
 from pkg_resources import iter_entry_points
@@ -23,15 +23,14 @@ def get_theme_dir(theme_name):
 
 class MikePlugin(BasePlugin):
     config_scheme = (
-        ('alias_type', config_options.Type(str, default='symlink')),
-        ('redirect_template',
-         config_options.Type((str, type(None)), default=None)),
-        ('deploy_prefix', config_options.Type(str, default='')),
-        ('version_selector', config_options.Type(bool, default=True)),
-        ('canonical_version',
-         config_options.Type((str, type(None)), default=None)),
-        ('css_dir', config_options.Type(str, default='css')),
-        ('javascript_dir', config_options.Type(str, default='js')),
+        ('alias_type', opts.Choice(tuple(i.name for i in AliasType),
+                                   default='symlink')),
+        ('redirect_template', opts.Type((str, type(None)), default=None)),
+        ('deploy_prefix', opts.Type(str, default='')),
+        ('version_selector', opts.Type(bool, default=True)),
+        ('canonical_version', opts.Type((str, type(None)), default=None)),
+        ('css_dir', opts.Type(str, default='css')),
+        ('javascript_dir', opts.Type(str, default='js')),
     )
 
     @classmethod
@@ -47,7 +46,6 @@ class MikePlugin(BasePlugin):
             if self.config['canonical_version'] is not None:
                 version = self.config['canonical_version']
             config['site_url'] = urljoin(config['site_url'], version)
-        self.config['alias_type'] = AliasType[self.config['alias_type']]
 
     def on_files(self, files, config):
         if not self.config['version_selector']:

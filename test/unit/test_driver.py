@@ -6,7 +6,6 @@ from unittest import mock
 
 from .. import *
 from mike import driver
-from mike.commands import AliasType
 
 
 class TestLoadMkdocsConfig(unittest.TestCase):
@@ -29,15 +28,15 @@ class TestLoadMkdocsConfig(unittest.TestCase):
                               deploy_prefix=None)
         self.assertIsInstance(driver.load_mkdocs_config(args),
                               mkdocs.config.Config)
-        self.assertEqual(args.alias_type, AliasType.symlink)
+        self.assertEqual(args.alias_type, 'symlink')
         self.assertEqual(args.template, None)
         self.assertEqual(args.deploy_prefix, '')
 
-        args = self.make_args(config_file=path, alias_type=AliasType.copy,
+        args = self.make_args(config_file=path, alias_type='copy',
                               template='file.html', deploy_prefix='prefix')
         self.assertIsInstance(driver.load_mkdocs_config(args),
                               mkdocs.config.Config)
-        self.assertEqual(args.alias_type, AliasType.copy)
+        self.assertEqual(args.alias_type, 'copy')
         self.assertEqual(args.template, 'file.html')
         self.assertEqual(args.deploy_prefix, 'prefix')
 
@@ -54,16 +53,16 @@ class TestLoadMkdocsConfig(unittest.TestCase):
                               deploy_prefix=None)
         with mock.patch('builtins.open', side_effect=FileNotFoundError):
             self.assertIs(driver.load_mkdocs_config(args), None)
-            self.assertEqual(args.alias_type, AliasType.symlink)
+            self.assertEqual(args.alias_type, 'symlink')
             self.assertEqual(args.template, None)
             self.assertEqual(args.deploy_prefix, '')
 
         args = self.make_args(branch='gh-pages', remote='origin',
-                              alias_type=AliasType.copy, template='file.html',
+                              alias_type='copy', template='file.html',
                               deploy_prefix='prefix')
         with mock.patch('builtins.open', side_effect=FileNotFoundError):
             self.assertIs(driver.load_mkdocs_config(args), None)
-            self.assertEqual(args.alias_type, AliasType.copy)
+            self.assertEqual(args.alias_type, 'copy')
             self.assertEqual(args.template, 'file.html')
             self.assertEqual(args.deploy_prefix, 'prefix')
 
