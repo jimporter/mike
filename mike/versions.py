@@ -76,7 +76,12 @@ class Versions:
         return json.dumps([i.to_json() for i in iter(self)], indent=2) + '\n'
 
     def __iter__(self):
-        return (i for _, i in sorted(self._data.items(), reverse=True))
+        def key(info):
+            # Development versions (i.e. those without a leading digit) should
+            # be treated as newer than release versions.
+            return 0 if re.match(r'\d', str(info.version)) else 1, info.version
+
+        return (i for i in sorted(self._data.values(), reverse=True, key=key))
 
     def __len__(self):
         return len(self._data)

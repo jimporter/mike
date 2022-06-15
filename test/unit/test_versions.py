@@ -114,6 +114,40 @@ class TestVersions(unittest.TestCase):
             VersionInfo('1.0'),
         ])
 
+        v = versions.add('2.0')
+        self.assertEqual(v, VersionInfo('2.0'))
+        self.assertEqual(list(versions), [
+            VersionInfo('2.0'),
+            VersionInfo('1.0'),
+        ])
+
+        v = versions.add('0.1')
+        self.assertEqual(v, VersionInfo('0.1'))
+        self.assertEqual(list(versions), [
+            VersionInfo('2.0'),
+            VersionInfo('1.0'),
+            VersionInfo('0.1'),
+        ])
+
+        v = versions.add('post')
+        self.assertEqual(v, VersionInfo('post'))
+        self.assertEqual(list(versions), [
+            VersionInfo('post'),
+            VersionInfo('2.0'),
+            VersionInfo('1.0'),
+            VersionInfo('0.1'),
+        ])
+
+        v = versions.add('pre')
+        self.assertEqual(v, VersionInfo('pre'))
+        self.assertEqual(list(versions), [
+            VersionInfo('post'),
+            VersionInfo('pre'),
+            VersionInfo('2.0'),
+            VersionInfo('1.0'),
+            VersionInfo('0.1'),
+        ])
+
     def test_add_title(self):
         versions = Versions()
         v = versions.add('1.0', '1.0.0')

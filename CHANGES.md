@@ -21,6 +21,8 @@
 
 ### Bug fixes
 
+- Versions without a leading digit are now considered development versions and
+  treated as newer than versions with a leading digit
 - Fix retrieval of Git user name/email when using non-UTF8 encodings
 - Fix version selector for `mkdocs` and `readthedocs` themes when
   `use_directory_urls` is false
