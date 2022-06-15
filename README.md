@@ -4,9 +4,9 @@
 [![Build status][ci-image]][ci-link]
 [![Coverage status][codecov-image]][codecov-link]
 
-**mike** is a Python utility to easily deploy multiple versions of your
-[MkDocs](http://www.mkdocs.org)-powered docs to a Git branch, suitable for
-deploying to Github via `gh-pages`. To see an example of this in action, take a
+**mike** is a Python utility that makes it easy to deploy multiple versions of
+your [MkDocs](http://www.mkdocs.org)-powered docs to a Git branch, suitable for
+hosting on Github via `gh-pages`. To see an example of this in action, take a
 look at the documentation for [bfg9000][bfg9000].
 
 ## Why Use mike?
@@ -77,8 +77,10 @@ plugins:
 * `redirect_template`: The template file to use when creating HTML redirects; if
   `null`, use the default template
 * `deploy_prefix`: The root directory to put the docs in
-* `canonical_version`: The version to use for the `<link rel="canonical">`;
-  pass `null` to use the version specified via `mike deploy`
+* `canonical_version`: The "canonical" version to use for the documentation,
+  useful for telling search engines what pages to prefer (e.g. `latest` if
+  you've defined that as an alias that always points to the latest release); if
+  `null`, mike will use the version specified via `mike deploy`
 * `version_selector`: True if the version selector should be shown on pages;
   false otherwise
 * `css_dir`: The directory to place the version selector's CSS
