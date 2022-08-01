@@ -47,43 +47,6 @@ custom_cmds = {
     'coverage': Coverage,
 }
 
-try:
-    from flake8.main.application import Application as Flake8
-
-    class LintCommand(Command):
-        description = 'run flake8 on source code'
-        user_options = []
-
-        def initialize_options(self):
-            pass
-
-        def finalize_options(self):
-            pass
-
-        def distribution_files(self):
-            return ['setup.py', 'mike', 'test']
-
-        def run(self):
-            flake8 = Flake8()
-            flake8.initialize([])
-            flake8.run_checks(list(self.distribution_files()))
-            flake8.formatter.start()
-            flake8.report_errors()
-            flake8.report_statistics()
-            flake8.report_benchmarks()
-            flake8.formatter.stop()
-            try:
-                flake8.exit()
-            except SystemExit as e:
-                # If successful, don't exit. This allows other commands to run
-                # too.
-                if e.code:
-                    raise
-
-    custom_cmds['lint'] = LintCommand
-except ImportError:
-    pass
-
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
     long_desc = re.sub(r'(^# mike)\n\n(.+\n)*', r'\1', f.read())

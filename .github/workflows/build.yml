@@ -50,4 +50,4 @@ jobs:
           pip install '.[test]'
       - name: Run lint
         run: |
-          python setup.py lint
+          flake8
