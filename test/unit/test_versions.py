@@ -56,12 +56,15 @@ class TestVersionInfo(unittest.TestCase):
         self.assertNotEqual(v, VersionInfo('1.1'))
         self.assertNotEqual(v, VersionInfo('1.0', '1.0.0'))
         self.assertNotEqual(v, VersionInfo('1.0', aliases=['latest']))
+        self.assertNotEqual(v, VersionInfo('1.0.0'))
+        self.assertNotEqual(v, VersionInfo('1.0.0', '1.0'))
 
         v = VersionInfo('1.0', '1.0.0')
         self.assertNotEqual(v, VersionInfo('1.0'))
         self.assertNotEqual(v, VersionInfo('1.1'))
         self.assertEqual(v, VersionInfo('1.0', '1.0.0'))
         self.assertNotEqual(v, VersionInfo('1.0', aliases=['latest']))
+        self.assertNotEqual(v, VersionInfo('1.0.0'))
 
         v = VersionInfo('1.0', aliases=['latest'])
         self.assertNotEqual(v, VersionInfo('1.0'))
@@ -164,6 +167,16 @@ class TestVersions(unittest.TestCase):
             VersionInfo('1.0', aliases={'latest'}),
         ])
 
+    def test_add_alias_similar_to_version(self):
+        versions = Versions()
+        versions.add('1.0.0')
+        v = versions.add('1.0.1', aliases=['1.0'])
+        self.assertEqual(v, VersionInfo('1.0.1', aliases={'1.0'}))
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0.1', aliases={'1.0'}),
+            VersionInfo('1.0.0'),
+        ])
+
     def test_add_overwrite(self):
         versions = Versions()
         versions.add('1.0', '1.0.0', ['latest'])
@@ -192,6 +205,16 @@ class TestVersions(unittest.TestCase):
         self.assertEqual(list(versions), [
             VersionInfo('2.0', aliases={'latest'}),
             VersionInfo('1.0'),
+        ])
+
+    def test_add_update_alias_similar_to_version(self):
+        versions = Versions()
+        versions.add('1.0.0', aliases=['1.0'])
+        v = versions.add('1.0.1', aliases=['1.0'], update_aliases=True)
+        self.assertEqual(v, VersionInfo('1.0.1', aliases={'1.0'}))
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0.1', aliases={'1.0'}),
+            VersionInfo('1.0.0'),
         ])
 
     def test_add_overwrite_alias(self):

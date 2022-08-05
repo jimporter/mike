@@ -9,21 +9,18 @@ def _ensure_version(version):
     return version
 
 
-def _version_pair(version):
-    return _ensure_version(version), str(version)
-
-
 class VersionInfo:
     def __init__(self, version, title=None, aliases=[]):
         self._check_version(str(version), 'version')
         for i in aliases:
             self._check_version(i, 'alias')
 
-        self.version, name = _version_pair(version)
-        self.title = name if title is None else title
+        version_name = str(version)
+        self.version = _ensure_version(version)
+        self.title = version_name if title is None else title
         self.aliases = set(aliases)
 
-        if name in self.aliases:
+        if version_name in self.aliases:
             raise ValueError('duplicated version and alias')
 
     @staticmethod
@@ -33,7 +30,8 @@ class VersionInfo:
             raise ValueError('{!r} is not a valid {}'.format(version, kind))
 
     def __eq__(self, rhs):
-        return (self.version == rhs.version and self.title == rhs.title and
+        return (str(self.version) == str(rhs.version) and
+                self.title == rhs.title and
                 self.aliases == rhs.aliases)
 
     def __repr__(self):
@@ -87,15 +85,15 @@ class Versions:
         return len(self._data)
 
     def __getitem__(self, k):
-        return self._data[_ensure_version(k)]
+        return self._data[str(k)]
 
     def find(self, version, strict=False):
-        version, name = _version_pair(version)
+        version = str(version)
         if version in self._data:
             return (version,)
         for k, v in self._data.items():
-            if name in v.aliases:
-                return (k, name)
+            if version in v.aliases:
+                return (k, version)
         if strict:
             raise KeyError(version)
         return None
@@ -118,7 +116,7 @@ class Versions:
         return removed_aliases
 
     def add(self, version, title=None, aliases=[], update_aliases=False):
-        v = _ensure_version(version)
+        v = str(version)
         removed_aliases = self._ensure_unique_aliases(
             v, aliases, update_aliases
         )

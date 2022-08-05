@@ -21,6 +21,8 @@
 
 ### Bug fixes
 
+- Aliases that are "similar" to preexisting versions (e.g. `1.0` and `1.0.0`)
+  can now be set properly
 - Versions without a leading digit are now considered development versions and
   treated as newer than versions with a leading digit
 - Fix retrieval of Git user name/email when using non-UTF8 encodings
