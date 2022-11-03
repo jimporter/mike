@@ -38,7 +38,8 @@ the target branch.
 
 list_desc = """
 Display a list of the currently-deployed documentation versions on the target
-branch.
+branch. If VERSION is specified, search for that version or alias and display
+only that result.
 """
 
 set_default_desc = """
@@ -319,7 +320,7 @@ def main():
                         help='display the result as JSON')
     add_git_arguments(list_p, commit=False)
     list_p.add_argument('version', metavar='VERSION', nargs='?',
-                        help='version (directory) to deploy this build to')
+                        help='optional version to search for')
 
     set_default_p = subparsers.add_parser(
         'set-default', description=set_default_desc,
