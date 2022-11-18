@@ -207,15 +207,15 @@ class Commit:
     def _start_commit(self, branch, message):
         encoding = get_commit_encoding()
 
-        name = os.getenv('GIT_COMMITTER_NAME',
-                         get_config('user.name', encoding))
+        name = (os.getenv('GIT_COMMITTER_NAME') or
+                get_config('user.name', encoding))
         name = re.sub(r'[<>\n]', '', name)
 
-        email = os.getenv('GIT_COMMITTER_EMAIL',
-                          get_config('user.email', encoding))
+        email = (os.getenv('GIT_COMMITTER_EMAIL') or
+                 get_config('user.email', encoding))
         email = re.sub(r'[<>\n]', '', email)
 
-        when = os.getenv('GIT_COMMITTER_DATE', make_when())
+        when = os.getenv('GIT_COMMITTER_DATE') or make_when()
 
         self._write('commit refs/heads/{}\n'.format(branch))
         self._write('committer {name}<{email}> {time}\n'.format(

@@ -1,9 +1,21 @@
 import os
 import sys
 import unittest
+from contextlib import contextmanager
 
 from .. import *
 from mike import git_utils
+
+
+@contextmanager
+def let_env(**kwargs):
+    orig = dict(os.environ)
+    os.environ.update(kwargs)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(orig)
 
 
 class TestMakeWhen(unittest.TestCase):
@@ -361,36 +373,68 @@ class TestCommit(unittest.TestCase):
         assertDirectory('.', {'file.txt'})
 
     def test_username(self):
+        log_cmd = ['git', 'log', '--format=%an', '-1']
         check_call_silent(['git', 'config', 'user.name', 'name'])
         self._add_file('file.txt')
-        self.assertEqual(check_output(['git', 'log', '--format=%an', '-1']),
-                         'name\n')
+        self.assertEqual(check_output(log_cmd), 'name\n')
 
         check_call_silent(['git', 'config', 'user.name', ''])
         self._add_file('file.txt')
-        self.assertEqual(check_output(['git', 'log', '--format=%an', '-1']),
-                         '\n')
+        self.assertEqual(check_output(log_cmd), '\n')
 
         check_call_silent(['git', 'config', 'user.name', '<name>'])
         self._add_file('file.txt')
-        self.assertEqual(check_output(['git', 'log', '--format=%an', '-1']),
-                         'name\n')
+        self.assertEqual(check_output(log_cmd), 'name\n')
+
+    def test_git_committer_name(self):
+        log_cmd = ['git', 'log', '--format=%an', '-1']
+        with let_env(HOME='/home/nonexist'):
+            self._add_file('file.txt')
+            self.assertEqual(check_output(log_cmd), 'username\n')
+
+            with let_env(GIT_COMMITTER_NAME=''):
+                self._add_file('file.txt')
+            self.assertEqual(check_output(log_cmd), 'username\n')
+
+            check_call_silent(['git', 'config', '--unset', 'user.name'])
+            with self.assertRaises(git_utils.GitError):
+                self._add_file('file.txt')
+
+            with let_env(GIT_COMMITTER_NAME='me'):
+                self._add_file('file.txt')
+            self.assertEqual(check_output(log_cmd), 'me\n')
 
     def test_email(self):
+        log_cmd = ['git', 'log', '--format=%ae', '-1']
         check_call_silent(['git', 'config', 'user.email', 'email'])
         self._add_file('file.txt')
-        self.assertEqual(check_output(['git', 'log', '--format=%ae', '-1']),
-                         'email\n')
+        self.assertEqual(check_output(log_cmd), 'email\n')
 
         check_call_silent(['git', 'config', 'user.email', ''])
         self._add_file('file.txt')
-        self.assertEqual(check_output(['git', 'log', '--format=%ae', '-1']),
-                         '\n')
+        self.assertEqual(check_output(log_cmd), '\n')
 
         check_call_silent(['git', 'config', 'user.email', '<email>'])
         self._add_file('file.txt')
-        self.assertEqual(check_output(['git', 'log', '--format=%ae', '-1']),
-                         'email\n')
+        self.assertEqual(check_output(log_cmd), 'email\n')
+
+    def test_git_committer_email(self):
+        log_cmd = ['git', 'log', '--format=%ae', '-1']
+        with let_env(HOME='/home/nonexist'):
+            self._add_file('file.txt')
+            self.assertEqual(check_output(log_cmd), 'user@site.tld\n')
+
+            with let_env(GIT_COMMITTER_EMAIL=''):
+                self._add_file('file.txt')
+            self.assertEqual(check_output(log_cmd), 'user@site.tld\n')
+
+            check_call_silent(['git', 'config', '--unset', 'user.email'])
+            with self.assertRaises(git_utils.GitError):
+                self._add_file('file.txt')
+
+            with let_env(GIT_COMMITTER_EMAIL='me@here.tld'):
+                self._add_file('file.txt')
+            self.assertEqual(check_output(log_cmd), 'me@here.tld\n')
 
     def test_invalid_commit(self):
         with self.assertRaises(git_utils.GitCommitError):
