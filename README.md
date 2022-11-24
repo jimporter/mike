@@ -238,6 +238,18 @@ is handled.
 For more details on the available options, consult the `--help` command for
 mike.
 
+## Version Ordering
+
+There are lots of versioning schemes out there, but mike tries its best to order
+your versions in a reasonable manner. Version identifiers that "look like"
+versions (e.g. `1.2.3`, `1.0b1`, `v1.0`) are treated as ordinary versions,
+whereas other identifiers, like `devel`, are treated as development versions,
+and placed *above* ordinary versions.
+
+The above scheme should get things right most of the time, but you can always
+post-process your `versions.json` file to manipulate the ordering to suit your
+needs.
+
 ## Staying in Sync
 
 mike will do its best to stay in-sync with your remote repository and will

@@ -23,8 +23,9 @@
 
 - Aliases that are "similar" to preexisting versions (e.g. `1.0` and `1.0.0`)
   can now be set properly
-- Versions without a leading digit are now considered development versions and
-  treated as newer than versions with a leading digit
+- Versions that *don't* start with a digit (or `v` and then a digit) are now
+  treated separately from other versions: they're considered development
+  versions, and thus newer than "ordinary" versions
 - Fix retrieval of Git user name/email when using non-UTF8 encodings
 - Fix version selector for `mkdocs` and `readthedocs` themes when
   `use_directory_urls` is false

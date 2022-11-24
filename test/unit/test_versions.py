@@ -124,12 +124,21 @@ class TestVersions(unittest.TestCase):
             VersionInfo('1.0'),
         ])
 
-        v = versions.add('0.1')
-        self.assertEqual(v, VersionInfo('0.1'))
+        v = versions.add('0.2')
+        self.assertEqual(v, VersionInfo('0.2'))
         self.assertEqual(list(versions), [
             VersionInfo('2.0'),
             VersionInfo('1.0'),
-            VersionInfo('0.1'),
+            VersionInfo('0.2'),
+        ])
+
+        v = versions.add('0.10')
+        self.assertEqual(v, VersionInfo('0.10'))
+        self.assertEqual(list(versions), [
+            VersionInfo('2.0'),
+            VersionInfo('1.0'),
+            VersionInfo('0.10'),
+            VersionInfo('0.2'),
         ])
 
         v = versions.add('post')
@@ -138,7 +147,8 @@ class TestVersions(unittest.TestCase):
             VersionInfo('post'),
             VersionInfo('2.0'),
             VersionInfo('1.0'),
-            VersionInfo('0.1'),
+            VersionInfo('0.10'),
+            VersionInfo('0.2'),
         ])
 
         v = versions.add('pre')
@@ -148,7 +158,40 @@ class TestVersions(unittest.TestCase):
             VersionInfo('pre'),
             VersionInfo('2.0'),
             VersionInfo('1.0'),
-            VersionInfo('0.1'),
+            VersionInfo('0.10'),
+            VersionInfo('0.2'),
+        ])
+
+    def test_sort_development_versions(self):
+        versions = Versions()
+        versions.add('alpha')
+        versions.add('beta')
+        versions.add('pre')
+        versions.add('post')
+        versions.add('devel')
+
+        self.assertEqual(list(versions), [
+            VersionInfo('post'),
+            VersionInfo('devel'),
+            VersionInfo('pre'),
+            VersionInfo('beta'),
+            VersionInfo('alpha'),
+        ])
+
+    def test_sort_versions_with_v_prefix(self):
+        versions = Versions()
+        versions.add('v0.2')
+        versions.add('v0.10')
+        versions.add('v1.0')
+        versions.add('v2.0')
+        versions.add('devel')
+
+        self.assertEqual(list(versions), [
+            VersionInfo('devel'),
+            VersionInfo('v2.0'),
+            VersionInfo('v1.0'),
+            VersionInfo('v0.10'),
+            VersionInfo('v0.2'),
         ])
 
     def test_add_title(self):
