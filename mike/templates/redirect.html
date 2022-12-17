@@ -7,7 +7,9 @@
     <meta http-equiv="refresh" content="1; url={{href}}" />
   </noscript>
   <script>
-    window.location.replace("{{href}}" + window.location.hash);
+    window.location.replace(
+      "{{href}}" + window.location.search + window.location.hash
+    );
   </script>
 </head>
 <body>
