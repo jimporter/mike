@@ -117,7 +117,7 @@ def relpaths(paths, base):
 
 
 def match_redir(url):
-    return r'window\.location\.replace\("{}"'.format(re.escape(url))
+    return r'window\.location\.replace\(\s*"{}"'.format(re.escape(url))
 
 
 def assertDirectory(path, contents, include_hidden=False, allow_extra=False):
