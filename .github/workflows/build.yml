@@ -43,9 +43,8 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        # FIXME: Remove the flake8 override when it's not broken.
         run: |
-          pip install '.[test]' flake8==5.0.4
+          pip install '.[test]'
       - name: Run lint
         run: |
           flake8
