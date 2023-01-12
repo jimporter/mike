@@ -29,7 +29,7 @@ class Coverage(Command):
         env.update({
             'PYTHONPATH': pythonpath,
             'COVERAGE_FILE': os.path.join(root_dir, '.coverage'),
-            'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
+            'COVERAGE_PROCESS_START': os.path.join(root_dir, 'setup.cfg'),
         })
 
         subprocess.run(['coverage', 'erase'], check=True)
