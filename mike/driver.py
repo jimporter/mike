@@ -281,7 +281,7 @@ def main():
                           help='delete everything')
     add_git_arguments(delete_p)
     delete_p.add_argument('version', nargs='*', metavar='VERSION',
-                          help='version (directory) to delete')
+                          help='version (directory) or alias to delete')
 
     alias_p = subparsers.add_parser(
         'alias', description=alias_desc, help='alias docs from a branch'
