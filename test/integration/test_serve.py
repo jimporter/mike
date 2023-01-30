@@ -1,7 +1,7 @@
 import os
-import platform
 import signal
 import subprocess
+import sys
 import time
 import unittest
 
@@ -9,7 +9,7 @@ from .. import *
 from mike import git_utils
 
 
-@unittest.skipIf(platform.system() == 'Windows',
+@unittest.skipIf(sys.platform == 'win32',
                  "SIGINT doesn't work on windows")
 class TestServe(unittest.TestCase):
     def setUp(self):
