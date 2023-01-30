@@ -181,6 +181,12 @@ class Commit:
             else:
                 self.finish()
 
+    @staticmethod
+    def _escape_path(path):
+        if re.search(r'[\n\"]', path):
+            return '"' + re.sub(r'[\n\"\\]', r'\\\g<0>', path) + '"'
+        return path
+
     def _read(self):
         while True:
             line = self._pipe.stderr.readline()
@@ -233,11 +239,12 @@ class Commit:
             self._write('deleteall\n')
         else:
             for f in files:
-                self._write('D {}\n'.format(git_path(f)))
+                self._write('D {}\n'.format(self._escape_path(git_path(f))))
 
     def add_file(self, file_info):
         self._write('M {mode:06o} inline {path}\n'.format(
-            path=git_path(file_info.path), mode=file_info.mode
+            path=self._escape_path(git_path(file_info.path)),
+            mode=file_info.mode
         ))
         self._write_data(file_info.data)
 

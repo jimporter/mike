@@ -285,6 +285,15 @@ class TestCommit(unittest.TestCase):
         with open('file.txt', encoding='utf-8') as f:
             self.assertEqual(f.read(), 'レッサーパンダ')
 
+    @unittest.skipIf(sys.platform == 'win32',
+                     "oddly-named files don't work on windows")
+    def test_add_file_escaped_name(self):
+        self._add_file('my "file".txt')
+        check_call_silent(['git', 'checkout', 'master'])
+        assertDirectory('.', {'my "file".txt'})
+        with open('my "file".txt') as f:
+            self.assertEqual(f.read(), 'this is some text')
+
     def test_add_file_to_dir(self):
         self._add_file(os.path.join('dir', 'file.txt'))
         check_call_silent(['git', 'checkout', 'master'])

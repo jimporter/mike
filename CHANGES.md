@@ -30,6 +30,7 @@
 - Fix version selector for `mkdocs` and `readthedocs` themes when
   `use_directory_urls` is false
 - When redirecting to another page, include the `?search`
+- Support file names with double-quotes or newlines
 
 ---
 
