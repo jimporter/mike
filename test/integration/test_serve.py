@@ -9,8 +9,7 @@ from .. import *
 from mike import git_utils
 
 
-@unittest.skipIf(sys.platform == 'win32',
-                 "SIGINT doesn't work on windows")
+@unittest.skipIf(sys.platform == 'win32', "SIGINT doesn't work on windows")
 class TestServe(unittest.TestCase):
     def setUp(self):
         self.stage = stage_dir('serve')
