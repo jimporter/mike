@@ -47,12 +47,20 @@ shell. For more details on how to set this up, consult shtab's
 
 ## Usage
 
-### Initialization
+### Before Using Mike
 
-Before using mike for the first time, you may want to add the mike plugin
-to your `mkdocs.yml` file. This plugin is added by default when building your
-documentation with mike, but by adding it explicitly, you can configure how it
-works. The plugin adds a version selector to supported themes as well as
+Before using mike for the first time, you may want to use [`mike delete
+--all`](#deleting-docs) to delete any old documentation on your `gh-pages`
+branch before building your new versioned docs. (If you prefer, you can also
+manually move your old documentation to a subdirectory of your `gh-pages` branch
+so that it's still accessible.)
+
+### Configuration
+
+To help integrate into the MkDocs build process, mike uses an MkDocs plugin.
+This plugin is added by default when building your documentation with mike, but
+by adding it explicitly to your `mkdocs.yml` file, you can configure how the
+plugin works. The plugin adds a version selector to supported themes as well as
 updating the `site_url` (if you set it) to point to the version of the docs that
 are being built:
 
@@ -85,10 +93,6 @@ plugins:
   false otherwise
 * `css_dir`: The directory to place the version selector's CSS
 * `javascript_dir`: The directory to place the version selector's Javascript
-
-Note: If you have existing documentation on your `gh-pages` branch, you may also
-want to delete the old documentation before building your new versioned docs via
-[`mike delete --all`](#deleting-docs).)
 
 ### Building Your Docs
 
