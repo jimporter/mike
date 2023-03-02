@@ -73,8 +73,6 @@ def add_git_arguments(parser, *, commit=True, deploy_prefix=True):
         git.add_argument('-m', '--message', help='commit message')
         git.add_argument('-p', '--push', action='store_true',
                          help='push to {remote}/{branch} after commit')
-        git.add_argument('-f', '--force', action='store_true',
-                         help='force push when pushing')
 
     if deploy_prefix:
         git.add_argument('--deploy-prefix', metavar='PATH',
@@ -146,7 +144,7 @@ def deploy(parser, args):
         with mkdocs_utils.inject_plugin(args.config_file) as config_file:
             mkdocs_utils.build(config_file, args.version)
     if args.push:
-        git_utils.push_branch(args.remote, args.branch, args.force)
+        git_utils.push_branch(args.remote, args.branch)
 
 
 def delete(parser, args):
@@ -155,7 +153,7 @@ def delete(parser, args):
     commands.delete(args.version, args.all, branch=args.branch,
                     message=args.message, deploy_prefix=args.deploy_prefix)
     if args.push:
-        git_utils.push_branch(args.remote, args.branch, args.force)
+        git_utils.push_branch(args.remote, args.branch)
 
 
 def alias(parser, args):
@@ -166,7 +164,7 @@ def alias(parser, args):
                    branch=args.branch, message=args.message,
                    deploy_prefix=args.deploy_prefix)
     if args.push:
-        git_utils.push_branch(args.remote, args.branch, args.force)
+        git_utils.push_branch(args.remote, args.branch)
 
 
 def retitle(parser, args):
@@ -175,7 +173,7 @@ def retitle(parser, args):
     commands.retitle(args.version, args.title, branch=args.branch,
                      message=args.message, deploy_prefix=args.deploy_prefix)
     if args.push:
-        git_utils.push_branch(args.remote, args.branch, args.force)
+        git_utils.push_branch(args.remote, args.branch)
 
 
 def list_versions(parser, args):
@@ -220,7 +218,7 @@ def set_default(parser, args):
                          message=args.message,
                          deploy_prefix=args.deploy_prefix)
     if args.push:
-        git_utils.push_branch(args.remote, args.branch, args.force)
+        git_utils.push_branch(args.remote, args.branch)
 
 
 def serve(parser, args):

@@ -18,6 +18,8 @@
 
 - `--prefix` is now `--deploy-prefix`
 - `--no-redirect` is now `--alias-type=copy`
+- Removed `-f` / `--force` from subcommands that can push (this option was too
+  error-prone, and users who really need to force-push can use Git directly)
 
 ### Bug fixes
 

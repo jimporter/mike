@@ -273,9 +273,8 @@ class Commit:
         self._pipe.wait()
 
 
-def push_branch(remote, branch, force=False):
-    cmd = (['git', 'push'] + (['--force'] if force else []) +
-           ['--', remote, branch])
+def push_branch(remote, branch):
+    cmd = ['git', 'push', '--', remote, branch]
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     if p.returncode != 0:
         raise GitError('failed to push branch {} to {}'.format(branch, remote),

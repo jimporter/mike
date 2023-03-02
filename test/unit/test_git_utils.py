@@ -486,18 +486,6 @@ class TestPushBranch(unittest.TestCase):
         self.assertRaises(git_utils.GitError, git_utils.push_branch, 'origin',
                           'master')
 
-    def test_force_push(self):
-        with pushd(self.origin):
-            commit_files(['file2.txt'], 'add file2')
-
-        commit_files(['file2.txt'], 'add file2 from clone')
-        clone_rev = git_utils.get_latest_commit('master')
-        git_utils.push_branch('origin', 'master', force=True)
-
-        with pushd(self.origin):
-            origin_rev = git_utils.get_latest_commit('master')
-            self.assertEqual(origin_rev, clone_rev)
-
 
 class TestRealPath(unittest.TestCase):
     def setUp(self):
