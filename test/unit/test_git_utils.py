@@ -75,6 +75,66 @@ class TestGetLatestCommit(unittest.TestCase):
                           'nonexist')
 
 
+class TestGetRef(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('get_ref')
+        git_init()
+        commit_files(['file.txt'], 'initial commit')
+
+    def test_ref(self):
+        self.assertEqual(git_utils.get_ref('master'), 'refs/heads/master')
+
+    def test_nonexistent_branch(self):
+        self.assertRaises(git_utils.GitError, git_utils.get_ref, 'nonexist')
+
+    def test_allow_nonexistent_branch(self):
+        self.assertEqual(git_utils.get_ref('nonexist', nonexist_ok=True),
+                         'refs/heads/nonexist')
+
+
+class TestUpdateRef(unittest.TestCase):
+    def setUp(self):
+        self.origin = stage_dir('update_ref')
+        git_init()
+        commit_files(['file.txt'], 'initial commit')
+        check_call_silent(['git', 'checkout', '-b', 'branch'])
+
+    def test_ahead(self):
+        commit_files(['file2.txt'], 'second commit')
+
+        rev = git_utils.get_latest_commit('master')
+        git_utils.update_ref('branch', rev)
+        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
+
+    def test_behind(self):
+        check_call_silent(['git', 'checkout', 'master'])
+        commit_files(['file2.txt'], 'second commit')
+
+        rev = git_utils.get_latest_commit('master')
+        git_utils.update_ref('branch', rev)
+        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
+
+    def test_diverged(self):
+        commit_files(['file2.txt'], 'second commit')
+        check_call_silent(['git', 'checkout', 'master'])
+        commit_files(['file2-master.txt'], 'second commit')
+
+        rev = git_utils.get_latest_commit('master')
+        git_utils.update_ref('branch', rev)
+        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
+
+    def test_nonexistent_branch(self):
+        rev = git_utils.get_latest_commit('branch')
+        git_utils.update_ref('branch-2', 'branch')
+        self.assertEqual(git_utils.get_latest_commit('branch-2'), rev)
+
+    def test_nonexistent_ref(self):
+        rev = git_utils.get_latest_commit('branch')
+        self.assertRaises(git_utils.GitError, git_utils.update_ref,
+                          'branch', 'nonexist')
+        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
+
+
 class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
     def setUp(self):
         self.origin = stage_dir('get_merge_base')
@@ -127,44 +187,6 @@ class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
     def test_nonexistent_branch(self):
         self.assertRaises(git_utils.GitError, git_utils.get_merge_base,
                           'nonexist', 'nonexist')
-
-
-class TestUpdateRef(unittest.TestCase):
-    def setUp(self):
-        self.origin = stage_dir('update_ref')
-        git_init()
-        commit_files(['file.txt'], 'initial commit')
-        check_call_silent(['git', 'checkout', '-b', 'branch'])
-
-    def test_ahead(self):
-        commit_files(['file2.txt'], 'second commit')
-
-        rev = git_utils.get_latest_commit('master')
-        git_utils.update_ref('branch', rev)
-        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
-
-    def test_behind(self):
-        check_call_silent(['git', 'checkout', 'master'])
-        commit_files(['file2.txt'], 'second commit')
-
-        rev = git_utils.get_latest_commit('master')
-        git_utils.update_ref('branch', rev)
-        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
-
-    def test_diverged(self):
-        commit_files(['file2.txt'], 'second commit')
-        check_call_silent(['git', 'checkout', 'master'])
-        commit_files(['file2-master.txt'], 'second commit')
-
-        rev = git_utils.get_latest_commit('master')
-        git_utils.update_ref('branch', rev)
-        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
-
-    def test_nonexistent_ref(self):
-        rev = git_utils.get_latest_commit('branch')
-        self.assertRaises(git_utils.GitError, git_utils.update_ref,
-                          'branch', 'nonexist')
-        self.assertEqual(git_utils.get_latest_commit('branch'), rev)
 
 
 class TestTryRebaseBranch(unittest.TestCase):

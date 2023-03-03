@@ -71,12 +71,29 @@ def get_commit_encoding():
         return 'utf-8'
 
 
-def get_latest_commit(rev, short=False):
+def get_latest_commit(rev, *, short=False):
     cmd = ['git', 'rev-parse'] + (['--short'] if short else []) + [rev]
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     if p.returncode != 0:
         raise GitError('error getting latest commit', p.stderr)
     return p.stdout.strip()
+
+
+def get_ref(branch, *, nonexist_ok=False):
+    cmd = ['git', 'rev-parse', '--symbolic-full-name', branch]
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        if nonexist_ok:
+            return 'refs/heads/{}'.format(branch)
+        raise GitError('error getting git ref for {}'.format(branch), p.stderr)
+    return p.stdout.strip()
+
+
+def update_ref(branch, new_ref):
+    cmd = ['git', 'update-ref', get_ref(branch, nonexist_ok=True), new_ref]
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        raise GitError('error updating ref for {}'.format(branch), p.stderr)
 
 
 def has_branch(branch):
@@ -107,13 +124,6 @@ def compare_branches(branch1, branch2):
         return BranchStatus.even if base == latest2 else BranchStatus.behind
     else:
         return BranchStatus.ahead if base == latest2 else BranchStatus.diverged
-
-
-def update_ref(branch, new_ref):
-    cmd = ['git', 'update-ref', 'refs/heads/{}'.format(branch), new_ref]
-    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    if p.returncode != 0:
-        raise GitError('error updating ref for {}'.format(branch), p.stderr)
 
 
 def try_rebase_branch(remote, branch, force=False):
@@ -223,7 +233,7 @@ class Commit:
 
         when = os.getenv('GIT_COMMITTER_DATE') or make_when()
 
-        self._write('commit refs/heads/{}\n'.format(branch))
+        self._write('commit {}\n'.format(get_ref(branch, nonexist_ok=True)))
         self._write('committer {name}<{email}> {time}\n'.format(
             name=name + ' ' if name else '', email=email, time=when
         ))
