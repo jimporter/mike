@@ -122,8 +122,8 @@ def check_remote_status(args, strict=False):
         return
 
     try:
-        git_utils.try_rebase_branch(args.remote, args.branch,
-                                    force=args.rebase)
+        git_utils.update_from_upstream(args.remote, args.branch,
+                                       rebase=args.rebase)
     except (git_utils.GitBranchDiverged, git_utils.GitRevUnrelated) as e:
         msg = (str(e) + '\n  Pass --ignore to ignore this or --rebase to ' +
                'rebase onto remote')

@@ -189,20 +189,20 @@ class TestGetMergeBaseAndCompareBranches(unittest.TestCase):
                           'nonexist', 'nonexist')
 
 
-class TestTryRebaseBranch(unittest.TestCase):
+class TestUpdateFromUpstream(unittest.TestCase):
     def setUp(self):
-        self.origin = stage_dir('try_rebase_branch_origin')
+        self.origin = stage_dir('update_from_upstream_origin')
         git_init()
         commit_files(['file.txt'], 'initial commit')
 
-        self.stage = stage_dir('try_rebase_branch')
+        self.stage = stage_dir('update_from_upstream')
         check_call_silent(['git', 'clone', self.origin, '.'])
         git_config()
 
     def test_even(self):
         old_rev = git_utils.get_latest_commit('master')
 
-        git_utils.try_rebase_branch('origin', 'master')
+        git_utils.update_from_upstream('origin', 'master')
         new_rev = git_utils.get_latest_commit('master')
         self.assertEqual(old_rev, new_rev)
 
@@ -210,7 +210,7 @@ class TestTryRebaseBranch(unittest.TestCase):
         commit_files(['file2.txt'], 'add file2')
         old_rev = git_utils.get_latest_commit('master')
 
-        git_utils.try_rebase_branch('origin', 'master')
+        git_utils.update_from_upstream('origin', 'master')
         new_rev = git_utils.get_latest_commit('master')
         self.assertEqual(old_rev, new_rev)
 
@@ -221,7 +221,7 @@ class TestTryRebaseBranch(unittest.TestCase):
             origin_rev = git_utils.get_latest_commit('master')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        git_utils.try_rebase_branch('origin', 'master')
+        git_utils.update_from_upstream('origin', 'master')
         new_rev = git_utils.get_latest_commit('master')
         self.assertNotEqual(old_rev, origin_rev)
         self.assertEqual(new_rev, origin_rev)
@@ -234,11 +234,11 @@ class TestTryRebaseBranch(unittest.TestCase):
         check_call_silent(['git', 'fetch', 'origin'])
 
         self.assertRaises(git_utils.GitBranchDiverged,
-                          git_utils.try_rebase_branch, 'origin', 'master')
+                          git_utils.update_from_upstream, 'origin', 'master')
         new_rev = git_utils.get_latest_commit('master')
         self.assertEqual(old_rev, new_rev)
 
-    def test_diverged_force(self):
+    def test_diverged_rebase(self):
         commit_files(['file2.txt'], 'add file2')
         old_rev = git_utils.get_latest_commit('master')
         with pushd(self.origin):
@@ -246,7 +246,7 @@ class TestTryRebaseBranch(unittest.TestCase):
             origin_rev = git_utils.get_latest_commit('master')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        git_utils.try_rebase_branch('origin', 'master', force=True)
+        git_utils.update_from_upstream('origin', 'master', rebase=True)
         new_rev = git_utils.get_latest_commit('master')
         self.assertNotEqual(old_rev, origin_rev)
         self.assertEqual(new_rev, origin_rev)
@@ -257,14 +257,14 @@ class TestTryRebaseBranch(unittest.TestCase):
         with pushd(self.origin):
             origin_rev = git_utils.get_latest_commit('master')
 
-        git_utils.try_rebase_branch('origin', 'master')
+        git_utils.update_from_upstream('origin', 'master')
         local_rev = git_utils.get_latest_commit('master')
         self.assertEqual(local_rev, origin_rev)
 
     def test_nonexistent_remote(self):
         old_rev = git_utils.get_latest_commit('master')
         check_call_silent(['git', 'fetch', 'origin'])
-        git_utils.try_rebase_branch('upstream', 'master')
+        git_utils.update_from_upstream('upstream', 'master')
         new_rev = git_utils.get_latest_commit('master')
 
         self.assertEqual(old_rev, new_rev)

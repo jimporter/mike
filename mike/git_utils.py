@@ -126,12 +126,12 @@ def compare_branches(branch1, branch2):
         return BranchStatus.ahead if base == latest2 else BranchStatus.diverged
 
 
-def try_rebase_branch(remote, branch, force=False):
+def update_from_upstream(remote, branch, rebase=False):
     remote_branch = '{}/{}'.format(remote, branch)
     if not has_branch(remote_branch):
         return
 
-    if force or not has_branch(branch):
+    if rebase or not has_branch(branch):
         update_ref(branch, get_latest_commit(remote_branch))
     else:
         status = compare_branches(branch, remote_branch)
