@@ -242,12 +242,11 @@ class TestDeploy(DeployTestCase):
         check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
         git_config()
 
-        with pushd(self.stage):
-            with git_utils.Commit('gh-pages', 'add file') as commit:
-                commit.add_file(git_utils.FileInfo(
-                    'file2-origin.txt', 'this is some text'
-                ))
-            origin_rev = git_utils.get_latest_commit('gh-pages')
+        with pushd(self.stage), \
+             git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file2-origin.txt', 'this is some text'
+            ))
 
         with git_utils.Commit('gh-pages', 'add file') as commit:
             commit.add_file(git_utils.FileInfo(
@@ -258,16 +257,13 @@ class TestDeploy(DeployTestCase):
 
         assertOutput(self, ['mike', 'deploy', '1.0'], output=(
             'error: gh-pages has diverged from origin/gh-pages\n' +
-            '  Pass --ignore to ignore this or --rebase to rebase onto ' +
-            'remote\n'
+            "  If you're sure this is intended, retry with " +
+            '--ignore-remote-status\n'
         ), returncode=1)
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        assertPopen(['mike', 'deploy', '1.0', '--ignore'])
+        assertPopen(['mike', 'deploy', '1.0', '--ignore-remote-status'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
-
-        assertPopen(['mike', 'deploy', '1.0', '--rebase'])
-        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
 class TestDeployMkdocsYaml(DeployTestCase):

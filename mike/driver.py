@@ -80,11 +80,8 @@ def add_git_arguments(parser, *, commit=True, deploy_prefix=True):
                          help=('subdirectory within {branch} where generated '
                                'docs should be deployed to'))
 
-    group = git.add_mutually_exclusive_group()
-    group.add_argument('--rebase', action='store_true',
-                       help='rebase with remote')
-    group.add_argument('--ignore', action='store_true',
-                       help='ignore remote status')
+    git.add_argument('--ignore-remote-status', action='store_true',
+                     help="don't check status of remote branch")
 
 
 def load_mkdocs_config(args, strict=False):
@@ -118,19 +115,17 @@ def load_mkdocs_config(args, strict=False):
 
 
 def check_remote_status(args, strict=False):
-    if args.ignore:
+    if args.ignore_remote_status:
         return
 
     try:
-        git_utils.update_from_upstream(args.remote, args.branch,
-                                       rebase=args.rebase)
+        git_utils.update_from_upstream(args.remote, args.branch)
     except (git_utils.GitBranchDiverged, git_utils.GitRevUnrelated) as e:
-        msg = (str(e) + '\n  Pass --ignore to ignore this or --rebase to ' +
-               'rebase onto remote')
         if strict:
-            raise ValueError(msg)
+            raise ValueError(str(e) + "\n  If you're sure this is intended, " +
+                             'retry with --ignore-remote-status')
         else:
-            sys.stderr.write('warning: {}\n'.format(msg))
+            sys.stderr.write('warning: {}\n'.format(e))
 
 
 def deploy(parser, args):
@@ -364,4 +359,4 @@ def main():
     except Exception as e:
         if args.debug:  # pragma: no cover
             raise
-        parser.exit(1, 'error: {}\n'.format(str(e)))
+        parser.exit(1, 'error: {}\n'.format(e))

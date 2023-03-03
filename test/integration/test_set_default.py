@@ -166,7 +166,6 @@ class TestSetDefault(SetDefaultTestCase):
 
         with pushd(self.stage):
             self._deploy(versions=['2.0'])
-            origin_rev = git_utils.get_latest_commit('gh-pages')
 
         self._deploy(versions=['2.1'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
@@ -174,16 +173,13 @@ class TestSetDefault(SetDefaultTestCase):
 
         assertOutput(self, ['mike', 'set-default', '1.0'], output=(
             'error: gh-pages has diverged from origin/gh-pages\n' +
-            '  Pass --ignore to ignore this or --rebase to rebase onto ' +
-            'remote\n'
+            "  If you're sure this is intended, retry with " +
+            '--ignore-remote-status\n'
         ), returncode=1)
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        assertPopen(['mike', 'set-default', '--ignore', '1.0'])
+        assertPopen(['mike', 'set-default', '--ignore-remote-status', '1.0'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
-
-        assertPopen(['mike', 'set-default', '--rebase', '1.0'])
-        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
 class TestSetDefaultOtherRemote(SetDefaultTestCase):

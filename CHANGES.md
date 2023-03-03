@@ -18,8 +18,12 @@
 
 - `--prefix` is now `--deploy-prefix`
 - `--no-redirect` is now `--alias-type=copy`
-- Removed `-f` / `--force` from subcommands that can push (this option was too
-  error-prone, and users who really need to force-push can use Git directly)
+- `--ignore` is now `--ignore-remote-status`
+- `-f` / `--force` is no longer supported on subcommands that can push (this
+  option was too error-prone, and users who really need to force-push can use
+  Git directly)
+- `--rebase` is no longer supported (instead of using this, it's better to use
+  Git to resolve any conflicts)
 
 ### Bug fixes
 

@@ -238,19 +238,6 @@ class TestUpdateFromUpstream(unittest.TestCase):
         new_rev = git_utils.get_latest_commit('master')
         self.assertEqual(old_rev, new_rev)
 
-    def test_diverged_rebase(self):
-        commit_files(['file2.txt'], 'add file2')
-        old_rev = git_utils.get_latest_commit('master')
-        with pushd(self.origin):
-            commit_files(['file2-origin.txt'], 'add file2')
-            origin_rev = git_utils.get_latest_commit('master')
-        check_call_silent(['git', 'fetch', 'origin'])
-
-        git_utils.update_from_upstream('origin', 'master', rebase=True)
-        new_rev = git_utils.get_latest_commit('master')
-        self.assertNotEqual(old_rev, origin_rev)
-        self.assertEqual(new_rev, origin_rev)
-
     def test_nonexistent_local(self):
         check_call_silent(['git', 'checkout', '-b', 'branch'])
         check_call_silent(['git', 'branch', '-d', 'master'])

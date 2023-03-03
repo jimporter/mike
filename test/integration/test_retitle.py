@@ -167,7 +167,6 @@ class TestRetitle(RetitleTestCase):
 
         with pushd(self.stage):
             self._deploy(versions=['2.0'])
-            origin_rev = git_utils.get_latest_commit('gh-pages')
 
         self._deploy(versions=['2.1'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
@@ -175,16 +174,14 @@ class TestRetitle(RetitleTestCase):
 
         assertOutput(self, ['mike', 'retitle', '1.0', '1.0.1'], output=(
             'error: gh-pages has diverged from origin/gh-pages\n' +
-            '  Pass --ignore to ignore this or --rebase to rebase onto ' +
-            'remote\n'
+            "  If you're sure this is intended, retry with " +
+            '--ignore-remote-status\n'
         ), returncode=1)
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        assertPopen(['mike', 'retitle', '--ignore', '1.0', '1.0.1'])
+        assertPopen(['mike', 'retitle', '--ignore-remote-status', '1.0',
+                     '1.0.1'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
-
-        assertPopen(['mike', 'retitle', '--rebase', '1.0', '1.0.1'])
-        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
 class TestRetitleOtherRemote(RetitleTestCase):

@@ -16,7 +16,8 @@ class HelpTest(unittest.TestCase):
         self.assertRegex(output, r'^usage: mike deploy')
 
     def test_help_subcommand_extra(self):
-        output = assertPopen(['mike', 'help', 'deploy', '--rebase'])
+        output = assertPopen(['mike', 'help', 'deploy',
+                              '--ignore-remote-status'])
         self.assertRegex(output, r'^usage: mike deploy')
 
 

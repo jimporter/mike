@@ -166,7 +166,6 @@ class TestDelete(DeleteTestCase):
 
         with pushd(self.stage):
             self._deploy(versions=['2.0'])
-            origin_rev = git_utils.get_latest_commit('gh-pages')
 
         self._deploy(versions=['2.1'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
@@ -174,16 +173,13 @@ class TestDelete(DeleteTestCase):
 
         assertOutput(self, ['mike', 'delete', '1.0'], output=(
             'error: gh-pages has diverged from origin/gh-pages\n' +
-            '  Pass --ignore to ignore this or --rebase to rebase onto ' +
-            'remote\n'
+            "  If you're sure this is intended, retry with " +
+            '--ignore-remote-status\n'
         ), returncode=1)
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        assertPopen(['mike', 'delete', '1.0', '--ignore'])
+        assertPopen(['mike', 'delete', '1.0', '--ignore-remote-status'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
-
-        assertPopen(['mike', 'delete', '1.0', '--rebase'])
-        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
 class TestDeleteOtherRemote(DeleteTestCase):

@@ -103,12 +103,11 @@ class TestServe(unittest.TestCase):
         check_call_silent(['git', 'fetch', 'origin', 'gh-pages:gh-pages'])
         git_config()
 
-        with pushd(self.stage):
-            with git_utils.Commit('gh-pages', 'add file') as commit:
-                commit.add_file(git_utils.FileInfo(
-                    'file-origin.txt', 'this is some text'
-                ))
-            origin_rev = git_utils.get_latest_commit('gh-pages')
+        with pushd(self.stage), \
+             git_utils.Commit('gh-pages', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(
+                'file-origin.txt', 'this is some text'
+            ))
 
         with git_utils.Commit('gh-pages', 'add file') as commit:
             commit.add_file(git_utils.FileInfo(
@@ -118,14 +117,9 @@ class TestServe(unittest.TestCase):
         check_call_silent(['git', 'fetch', 'origin'])
 
         self._check_serve(err_output=(
-            'warning: gh-pages has diverged from origin/gh-pages\n' +
-            '  Pass --ignore to ignore this or --rebase to rebase onto ' +
-            'remote\n'
+            'warning: gh-pages has diverged from origin/gh-pages\n'
         ))
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        self._check_serve(['--ignore'])
+        self._check_serve(['--ignore-remote-status'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
-
-        self._check_serve(['--rebase'])
-        self.assertEqual(git_utils.get_latest_commit('gh-pages'), origin_rev)

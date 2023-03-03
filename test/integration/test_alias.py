@@ -217,7 +217,6 @@ class TestAlias(AliasTestCase):
 
         with pushd(self.stage):
             self._deploy(versions=['2.0'])
-            origin_rev = git_utils.get_latest_commit('gh-pages')
 
         self._deploy(versions=['2.1'])
         clone_rev = git_utils.get_latest_commit('gh-pages')
@@ -225,16 +224,14 @@ class TestAlias(AliasTestCase):
 
         assertOutput(self, ['mike', 'alias', '1.0', 'latest'], output=(
             'error: gh-pages has diverged from origin/gh-pages\n' +
-            '  Pass --ignore to ignore this or --rebase to rebase onto ' +
-            'remote\n'
+            "  If you're sure this is intended, retry with " +
+            '--ignore-remote-status\n'
         ), returncode=1)
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
-        assertPopen(['mike', 'alias', '--ignore', '1.0', 'latest'])
+        assertPopen(['mike', 'alias', '--ignore-remote-status', '1.0',
+                     'latest'])
         self.assertEqual(git_utils.get_latest_commit('gh-pages^'), clone_rev)
-
-        assertPopen(['mike', 'alias', '--rebase', '1.0', 'latest'])
-        self.assertEqual(git_utils.get_latest_commit('gh-pages^'), origin_rev)
 
 
 class TestAliasOtherRemote(AliasTestCase):
