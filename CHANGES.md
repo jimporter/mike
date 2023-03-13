@@ -6,6 +6,8 @@
 
 - Deploy aliases using symbolic links by default; this can be configured via
   `--alias-type` on the command line or `alias_type` in the `mike` MkDocs plugin
+- Avoid creating empty commits by default; if you want empty commits, pass
+  `--allow-empty`
 - Look for both `mkdocs.yml` and `mkdocs.yaml` configuration files
 - Support `GIT_COMMITTER_(NAME|EMAIL|DATE)` when generating commits
 - Allow specifying `alias_type`, `redirect_template`, and `deploy_prefix` in the

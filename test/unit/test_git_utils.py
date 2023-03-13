@@ -71,8 +71,27 @@ class TestGetLatestCommit(unittest.TestCase):
         self.assertEqual(rev, expected_rev[0:len(rev)])
 
     def test_nonexistent_branch(self):
-        self.assertRaises(git_utils.GitError, git_utils.get_latest_commit,
-                          'nonexist')
+        with self.assertRaises(git_utils.GitError):
+            git_utils.get_latest_commit('nonexist')
+
+
+class TestCountReachable(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir('count_reachable')
+        git_init()
+        commit_files(['file.txt'], 'initial commit')
+
+    def test_single_commit(self):
+        self.assertEqual(git_utils.count_reachable('master'), 1)
+
+    def test_multiple_commits(self):
+        commit_files(['file-1.txt'], 'commit 2')
+        commit_files(['file-2.txt'], 'commit 3')
+        self.assertEqual(git_utils.count_reachable('master'), 3)
+
+    def test_nonexistent_branch(self):
+        with self.assertRaises(git_utils.GitError):
+            git_utils.count_reachable('nonexist')
 
 
 class TestGetRef(unittest.TestCase):
@@ -257,6 +276,104 @@ class TestUpdateFromUpstream(unittest.TestCase):
         self.assertEqual(old_rev, new_rev)
 
 
+class TestPushBranch(unittest.TestCase):
+    def setUp(self):
+        self.origin = stage_dir('update_branch_origin')
+        git_init()
+        check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
+                           'ignore'])
+        commit_files(['file.txt'], 'initial commit')
+
+        self.stage = stage_dir('update_branch')
+        check_call_silent(['git', 'clone', self.origin, '.'])
+        git_config()
+
+    def test_push(self):
+        commit_files(['file2.txt'], 'add file2')
+        clone_rev = git_utils.get_latest_commit('master')
+        git_utils.push_branch('origin', 'master')
+
+        with pushd(self.origin):
+            origin_rev = git_utils.get_latest_commit('master')
+            self.assertEqual(origin_rev, clone_rev)
+
+    def test_push_fails(self):
+        with pushd(self.origin):
+            commit_files(['file2.txt'], 'add file2')
+
+        commit_files(['file2.txt'], 'add file2 from clone')
+        self.assertRaises(git_utils.GitError, git_utils.push_branch, 'origin',
+                          'master')
+
+
+class TestDeleteBranch(unittest.TestCase):
+    def setUp(self):
+        self.origin = stage_dir('delete_branch')
+        git_init()
+
+    def test_delete(self):
+        with git_utils.Commit('branch', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo('file.txt', 'some text'))
+        self.assertTrue(git_utils.has_branch('branch'))
+        git_utils.delete_branch('branch')
+        self.assertFalse(git_utils.has_branch('branch'))
+
+    def test_nonexistent_branch(self):
+        with self.assertRaises(git_utils.GitError):
+            git_utils.delete_branch('nonexist')
+
+
+class TestIsCommitEmpty(unittest.TestCase):
+    def setUp(self):
+        self.origin = stage_dir('is_commit_empty')
+        git_init()
+
+    def test_empty(self):
+        with git_utils.Commit('master', 'nothing', allow_empty=True):
+            pass
+
+        head = git_utils.get_latest_commit('master')
+        self.assertTrue(git_utils.is_commit_empty(head))
+
+    def test_nonempty(self):
+        with git_utils.Commit('master', 'add file') as commit:
+            commit.add_file(git_utils.FileInfo('file.txt', 'some text'))
+
+        head = git_utils.get_latest_commit('master')
+        self.assertFalse(git_utils.is_commit_empty(head))
+
+    def test_nonexistent_branch(self):
+        with self.assertRaises(git_utils.GitError):
+            git_utils.is_commit_empty('nonexist')
+
+
+class TestDeleteLatestCommit(unittest.TestCase):
+    def setUp(self):
+        self.origin = stage_dir('delete_latest_commit')
+        git_init()
+
+    def _add_file(self, name, branch='master', data='this is some text'):
+        with git_utils.Commit(branch, 'add file') as commit:
+            commit.add_file(git_utils.FileInfo(name, data))
+
+    def test_sole_commit(self):
+        self._add_file('file.txt', 'branch')
+        git_utils.delete_latest_commit('branch')
+        self.assertFalse(git_utils.has_branch('branch'))
+
+    def test_multiple_commits(self):
+        self._add_file('file-1.txt')
+        rev = git_utils.get_latest_commit('master')
+
+        self._add_file('file-2.txt')
+        git_utils.delete_latest_commit('master')
+        self.assertEqual(git_utils.get_latest_commit('master'), rev)
+
+    def test_no_commits(self):
+        with self.assertRaises(git_utils.GitError):
+            git_utils.delete_latest_commit('master')
+
+
 class TestFileInfo(unittest.TestCase):
     def test_copy(self):
         f = git_utils.FileInfo(os.path.join('dir', 'file.txt'), '')
@@ -393,65 +510,65 @@ class TestCommit(unittest.TestCase):
     def test_username(self):
         log_cmd = ['git', 'log', '--format=%an', '-1']
         check_call_silent(['git', 'config', 'user.name', 'name'])
-        self._add_file('file.txt')
+        self._add_file('file-1.txt')
         self.assertEqual(check_output(log_cmd), 'name\n')
 
         check_call_silent(['git', 'config', 'user.name', ''])
-        self._add_file('file.txt')
+        self._add_file('file-2.txt')
         self.assertEqual(check_output(log_cmd), '\n')
 
         check_call_silent(['git', 'config', 'user.name', '<name>'])
-        self._add_file('file.txt')
+        self._add_file('file-3.txt')
         self.assertEqual(check_output(log_cmd), 'name\n')
 
     def test_git_committer_name(self):
         log_cmd = ['git', 'log', '--format=%an', '-1']
         with let_env(HOME='/home/nonexist'):
-            self._add_file('file.txt')
+            self._add_file('file-1.txt')
             self.assertEqual(check_output(log_cmd), 'username\n')
 
             with let_env(GIT_COMMITTER_NAME=''):
-                self._add_file('file.txt')
+                self._add_file('file-2.txt')
             self.assertEqual(check_output(log_cmd), 'username\n')
 
             check_call_silent(['git', 'config', '--unset', 'user.name'])
             with self.assertRaises(git_utils.GitError):
-                self._add_file('file.txt')
+                self._add_file('file-3.txt')
 
             with let_env(GIT_COMMITTER_NAME='me'):
-                self._add_file('file.txt')
+                self._add_file('file-4.txt')
             self.assertEqual(check_output(log_cmd), 'me\n')
 
     def test_email(self):
         log_cmd = ['git', 'log', '--format=%ae', '-1']
         check_call_silent(['git', 'config', 'user.email', 'email'])
-        self._add_file('file.txt')
+        self._add_file('file-1.txt')
         self.assertEqual(check_output(log_cmd), 'email\n')
 
         check_call_silent(['git', 'config', 'user.email', ''])
-        self._add_file('file.txt')
+        self._add_file('file-2.txt')
         self.assertEqual(check_output(log_cmd), '\n')
 
         check_call_silent(['git', 'config', 'user.email', '<email>'])
-        self._add_file('file.txt')
+        self._add_file('file-3.txt')
         self.assertEqual(check_output(log_cmd), 'email\n')
 
     def test_git_committer_email(self):
         log_cmd = ['git', 'log', '--format=%ae', '-1']
         with let_env(HOME='/home/nonexist'):
-            self._add_file('file.txt')
+            self._add_file('file-1.txt')
             self.assertEqual(check_output(log_cmd), 'user@site.tld\n')
 
             with let_env(GIT_COMMITTER_EMAIL=''):
-                self._add_file('file.txt')
+                self._add_file('file-2.txt')
             self.assertEqual(check_output(log_cmd), 'user@site.tld\n')
 
             check_call_silent(['git', 'config', '--unset', 'user.email'])
             with self.assertRaises(git_utils.GitError):
-                self._add_file('file.txt')
+                self._add_file('file-3.txt')
 
             with let_env(GIT_COMMITTER_EMAIL='me@here.tld'):
-                self._add_file('file.txt')
+                self._add_file('file-4.txt')
             self.assertEqual(check_output(log_cmd), 'me@here.tld\n')
 
     def test_invalid_commit(self):
@@ -465,35 +582,27 @@ class TestCommit(unittest.TestCase):
                 # Ensure Commit.abort() was called.
                 self.assertEqual(commit._finished, True)
 
+    def test_empty_commit(self):
+        self._add_file('file.txt')
+        rev = git_utils.get_latest_commit('master')
+        with self.assertRaises(git_utils.GitEmptyCommit):
+            with git_utils.Commit('master', 'nothing'):
+                pass
+        self.assertEqual(git_utils.get_latest_commit('master'), rev)
 
-class TestPushBranch(unittest.TestCase):
-    def setUp(self):
-        self.origin = stage_dir('update_branch_origin')
-        git_init()
-        check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
-                           'ignore'])
-        commit_files(['file.txt'], 'initial commit')
+        with git_utils.Commit('master', 'nothing', allow_empty=True):
+            pass
+        self.assertNotEqual(git_utils.get_latest_commit('master'), rev)
 
-        self.stage = stage_dir('update_branch')
-        check_call_silent(['git', 'clone', self.origin, '.'])
-        git_config()
+    def test_empty_commit_to_new_branch(self):
+        with self.assertRaises(git_utils.GitEmptyCommit):
+            with git_utils.Commit('branch', 'nothing'):
+                pass
+        self.assertFalse(git_utils.has_branch('branch'))
 
-    def test_push(self):
-        commit_files(['file2.txt'], 'add file2')
-        clone_rev = git_utils.get_latest_commit('master')
-        git_utils.push_branch('origin', 'master')
-
-        with pushd(self.origin):
-            origin_rev = git_utils.get_latest_commit('master')
-            self.assertEqual(origin_rev, clone_rev)
-
-    def test_push_fails(self):
-        with pushd(self.origin):
-            commit_files(['file2.txt'], 'add file2')
-
-        commit_files(['file2.txt'], 'add file2 from clone')
-        self.assertRaises(git_utils.GitError, git_utils.push_branch, 'origin',
-                          'master')
+        with git_utils.Commit('branch', 'nothing', allow_empty=True):
+            pass
+        self.assertTrue(git_utils.has_branch('branch'))
 
 
 class TestRealPath(unittest.TestCase):

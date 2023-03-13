@@ -60,7 +60,7 @@ def make_nojekyll():
 @contextmanager
 def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
            alias_type=AliasType.symlink, template=None, *, branch='gh-pages',
-           message=None, deploy_prefix=''):
+           message=None, allow_empty=False, deploy_prefix=''):
     if message is None:
         message = (
             'Deployed {rev} to {doc_version}{deploy_prefix} with MkDocs ' +
@@ -85,7 +85,7 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
     if alias_type == AliasType.redirect and info.aliases:
         t = _redirect_template(template)
 
-    with git_utils.Commit(branch, message) as commit:
+    with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         commit.delete_files([version_str] + list(info.aliases))
 
         for f in git_utils.walk_real_files(cfg['site_dir']):
@@ -115,7 +115,7 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
 
 
 def delete(versions=None, all=False, *, branch='gh-pages', message=None,
-           deploy_prefix=''):
+           allow_empty=False, deploy_prefix=''):
     if not all and versions is None:
         raise ValueError('specify `version` or `all`')
 
@@ -128,7 +128,7 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
             mike_version=app_version
         )
 
-    with git_utils.Commit(branch, message) as commit:
+    with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         if all:
             if deploy_prefix:
                 commit.delete_files([deploy_prefix])
@@ -154,7 +154,7 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
 
 def alias(cfg, version, aliases, update_aliases=False,
           alias_type=AliasType.symlink, template=None, *, branch='gh-pages',
-          message=None, deploy_prefix=''):
+          message=None, allow_empty=False, deploy_prefix=''):
     all_versions = list_versions(branch, deploy_prefix)
     try:
         real_version = all_versions.find(version, strict=True)[0]
@@ -179,7 +179,7 @@ def alias(cfg, version, aliases, update_aliases=False,
     if alias_type == AliasType.redirect and destdirs:
         t = _redirect_template(template)
 
-    with git_utils.Commit(branch, message) as commit:
+    with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         commit.delete_files(destdirs)
 
         canonical_dir = os.path.join(deploy_prefix, str(real_version))
@@ -207,7 +207,7 @@ def alias(cfg, version, aliases, update_aliases=False,
 
 
 def retitle(version, title, *, branch='gh-pages', message=None,
-            deploy_prefix=''):
+            allow_empty=False, deploy_prefix=''):
     if message is None:
         message = (
             'Set title of {doc_version} to {title}{deploy_prefix} with mike ' +
@@ -225,12 +225,12 @@ def retitle(version, title, *, branch='gh-pages', message=None,
     except KeyError:
         raise ValueError('version {!r} does not exist'.format(version))
 
-    with git_utils.Commit(branch, message) as commit:
+    with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 
 def set_default(version, template=None, *, branch='gh-pages', message=None,
-                deploy_prefix=''):
+                allow_empty=False, deploy_prefix=''):
     if message is None:
         message = (
             'Set default version to {doc_version}{deploy_prefix} with mike ' +
@@ -246,7 +246,7 @@ def set_default(version, template=None, *, branch='gh-pages', message=None,
         raise ValueError('version {!r} does not exist'.format(version))
 
     t = _redirect_template(template)
-    with git_utils.Commit(branch, message) as commit:
+    with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         commit.add_file(git_utils.FileInfo(
             os.path.join(deploy_prefix, 'index.html'),
             t.render(href=version + '/')

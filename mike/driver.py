@@ -1,5 +1,6 @@
 import os
 import sys
+from contextlib import contextmanager
 
 from . import arguments, commands
 from . import git_utils
@@ -73,6 +74,8 @@ def add_git_arguments(parser, *, commit=True, deploy_prefix=True):
         git.add_argument('-m', '--message', help='commit message')
         git.add_argument('-p', '--push', action='store_true',
                          help='push to {remote}/{branch} after commit')
+        git.add_argument('--allow-empty', action='store_true',
+                         help='allow commits with no changes')
 
     if deploy_prefix:
         git.add_argument('--deploy-prefix', metavar='PATH',
@@ -128,25 +131,37 @@ def check_remote_status(args, strict=False):
             sys.stderr.write('warning: {}\n'.format(e))
 
 
+@contextmanager
+def handle_empty_commit():
+    try:
+        yield
+    except git_utils.GitEmptyCommit as e:
+        sys.stderr.write(('warning: {}\n  To create a commit anyway, retry ' +
+                          'with --allow-empty\n').format(e))
+
+
 def deploy(parser, args):
     cfg = load_mkdocs_config(args, strict=True)
     check_remote_status(args, strict=True)
-    with commands.deploy(cfg, args.version, args.title, args.alias,
-                         args.update_aliases,
-                         commands.AliasType[args.alias_type], args.template,
-                         branch=args.branch, message=args.message,
-                         deploy_prefix=args.deploy_prefix):
-        with mkdocs_utils.inject_plugin(args.config_file) as config_file:
+    with handle_empty_commit():
+        alias_type = commands.AliasType[args.alias_type]
+        with commands.deploy(cfg, args.version, args.title, args.alias,
+                             args.update_aliases, alias_type, args.template,
+                             branch=args.branch, message=args.message,
+                             allow_empty=args.allow_empty,
+                             deploy_prefix=args.deploy_prefix), \
+             mkdocs_utils.inject_plugin(args.config_file) as config_file:
             mkdocs_utils.build(config_file, args.version)
-    if args.push:
-        git_utils.push_branch(args.remote, args.branch)
+        if args.push:
+            git_utils.push_branch(args.remote, args.branch)
 
 
 def delete(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     commands.delete(args.version, args.all, branch=args.branch,
-                    message=args.message, deploy_prefix=args.deploy_prefix)
+                    message=args.message, allow_empty=args.allow_empty,
+                    deploy_prefix=args.deploy_prefix)
     if args.push:
         git_utils.push_branch(args.remote, args.branch)
 
@@ -154,21 +169,25 @@ def delete(parser, args):
 def alias(parser, args):
     cfg = load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.alias(cfg, args.version, args.alias, args.update_aliases,
-                   commands.AliasType[args.alias_type], args.template,
-                   branch=args.branch, message=args.message,
-                   deploy_prefix=args.deploy_prefix)
-    if args.push:
-        git_utils.push_branch(args.remote, args.branch)
+    with handle_empty_commit():
+        alias_type = commands.AliasType[args.alias_type]
+        commands.alias(cfg, args.version, args.alias, args.update_aliases,
+                       alias_type, args.template, branch=args.branch,
+                       message=args.message, allow_empty=args.allow_empty,
+                       deploy_prefix=args.deploy_prefix)
+        if args.push:
+            git_utils.push_branch(args.remote, args.branch)
 
 
 def retitle(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.retitle(args.version, args.title, branch=args.branch,
-                     message=args.message, deploy_prefix=args.deploy_prefix)
-    if args.push:
-        git_utils.push_branch(args.remote, args.branch)
+    with handle_empty_commit():
+        commands.retitle(args.version, args.title, branch=args.branch,
+                         message=args.message, allow_empty=args.allow_empty,
+                         deploy_prefix=args.deploy_prefix)
+        if args.push:
+            git_utils.push_branch(args.remote, args.branch)
 
 
 def list_versions(parser, args):
@@ -209,11 +228,13 @@ def list_versions(parser, args):
 def set_default(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.set_default(args.version, args.template, branch=args.branch,
-                         message=args.message,
-                         deploy_prefix=args.deploy_prefix)
-    if args.push:
-        git_utils.push_branch(args.remote, args.branch)
+    with handle_empty_commit():
+        commands.set_default(args.version, args.template, branch=args.branch,
+                             message=args.message,
+                             allow_empty=args.allow_empty,
+                             deploy_prefix=args.deploy_prefix)
+        if args.push:
+            git_utils.push_branch(args.remote, args.branch)
 
 
 def serve(parser, args):

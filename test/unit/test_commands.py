@@ -444,7 +444,7 @@ class TestAlias(TestBase):
 
     def test_alias_overwrite_same(self):
         self._deploy()
-        commands.alias(self.cfg, '1.0', ['latest'])
+        commands.alias(self.cfg, '1.0', ['latest'], allow_empty=True)
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(expected_aliases=['latest'])
 

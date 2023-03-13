@@ -102,6 +102,16 @@ class TestSetDefault(SetDefaultTestCase):
             origin_rev = git_utils.get_latest_commit('gh-pages')
             self.assertEqual(origin_rev, clone_rev)
 
+    def test_no_changes(self):
+        self._deploy()
+        assertPopen(['mike', 'set-default', '1.0'])
+        rev = git_utils.get_latest_commit('gh-pages')
+        assertOutput(self, ['mike', 'set-default', '1.0'], output=(
+            'warning: nothing changed in commit\n' +
+            '  To create a commit anyway, retry with --allow-empty\n'
+        ))
+        self.assertEqual(git_utils.get_latest_commit('gh-pages'), rev)
+
     def test_remote_empty(self):
         stage_dir('set_default_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])

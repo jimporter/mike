@@ -38,6 +38,11 @@ class GitCommitError(GitError):
         super().__init__('error writing commit', stderr)
 
 
+class GitEmptyCommit(GitError):
+    def __init__(self):
+        super().__init__('nothing changed in commit')
+
+
 def git_path(path):
     path = os.path.normpath(path)
     # Fix unicode pathnames on macOS; see
@@ -77,6 +82,15 @@ def get_latest_commit(rev, *, short=False):
     if p.returncode != 0:
         raise GitError('error getting latest commit', p.stderr)
     return p.stdout.strip()
+
+
+def count_reachable(rev):
+    cmd = ['git', 'rev-list', '--count', rev]
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode == 0:
+        return int(p.stdout.strip())
+    raise GitError('unable to get number of reachable commits from {}'
+                   .format(rev), p.stderr)
 
 
 def get_ref(branch, *, nonexist_ok=False):
@@ -141,6 +155,37 @@ def update_from_upstream(remote, branch):
             raise GitBranchDiverged(branch, remote_branch)
 
 
+def push_branch(remote, branch):
+    cmd = ['git', 'push', '--', remote, branch]
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        raise GitError('failed to push branch {} to {}'.format(branch, remote),
+                       p.stderr)
+
+
+def delete_branch(branch):
+    cmd = ['git', 'branch', '--delete', '--force', branch]
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode != 0:
+        raise GitError('unable to delete branch {}'.format(branch),
+                       p.stderr)
+
+
+def is_commit_empty(rev):
+    cmd = ['git', 'log', '-1', '--format=', '--name-only', rev]
+    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    if p.returncode == 0:
+        return not p.stdout
+    raise GitError('error getting commit changes', p.stderr)
+
+
+def delete_latest_commit(branch):
+    if count_reachable(branch) > 1:
+        update_ref(branch, get_latest_commit(branch + '^'))
+    else:
+        delete_branch(branch)
+
+
 class FileInfo:
     def __init__(self, path, data, mode=0o100644):
         if isinstance(data, str):
@@ -164,12 +209,13 @@ class FileInfo:
 
 
 class Commit:
-    def __init__(self, branch, message):
+    def __init__(self, branch, message, *, allow_empty=False):
         cmd = ['git', 'fast-import', '--date-format=rfc2822', '--quiet',
                '--done']
         self._pipe = sp.Popen(cmd, stdin=sp.PIPE, stderr=sp.PIPE,
                               universal_newlines=False)
         self._finished = False
+        self._allow_empty = allow_empty
 
         self._stderr = b''
         self._read_thread = threading.Thread(target=self._read)
@@ -221,6 +267,7 @@ class Commit:
         self._write('\n')
 
     def _start_commit(self, branch, message):
+        self._branch = branch
         encoding = get_commit_encoding()
 
         name = (os.getenv('GIT_COMMITTER_NAME') or
@@ -269,6 +316,11 @@ class Commit:
         if self._pipe.wait() != 0:
             raise GitCommitError(self._stderr.decode('utf-8'))
 
+        if ( not self._allow_empty
+             and is_commit_empty(get_latest_commit(self._branch)) ):
+            delete_latest_commit(self._branch)
+            raise GitEmptyCommit()
+
     def abort(self):
         if self._finished:
             raise GitError('commit already finalized')
@@ -281,14 +333,6 @@ class Commit:
         self._pipe.terminate()
         self._read_thread.join()
         self._pipe.wait()
-
-
-def push_branch(remote, branch):
-    cmd = ['git', 'push', '--', remote, branch]
-    p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
-    if p.returncode != 0:
-        raise GitError('failed to push branch {} to {}'.format(branch, remote),
-                       p.stderr)
 
 
 def real_path(branch, filename):
