@@ -20,7 +20,7 @@ class VersionInfo:
         self.title = version_name if title is None else title
         self.aliases = set(aliases)
 
-        if version_name in self.aliases:
+        if str(self.version) in self.aliases:
             raise ValueError('duplicated version and alias')
 
     @staticmethod
@@ -54,6 +54,9 @@ class VersionInfo:
             self.title = title
 
         aliases = set(aliases)
+        if str(self.version) in aliases:
+            raise ValueError('duplicated version and alias')
+
         added = aliases - self.aliases
         self.aliases |= aliases
         return added

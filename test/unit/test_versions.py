@@ -220,6 +220,12 @@ class TestVersions(unittest.TestCase):
             VersionInfo('1.0.0'),
         ])
 
+    def test_add_circular_alias(self):
+        versions = Versions()
+        msg = '^duplicated version and alias$'
+        with self.assertRaisesRegex(ValueError, msg):
+            versions.add('1.0', aliases=['1.0'])
+
     def test_add_overwrite(self):
         versions = Versions()
         versions.add('1.0', '1.0.0', ['latest'])
@@ -341,9 +347,24 @@ class TestVersions(unittest.TestCase):
         versions.add('1.0', '1.0.0', ['latest'])
         versions.add('2.0', '2.0.0')
 
-        msg = r"alias 'latest' already exists for version '1\.0'"
+        msg = r"^alias 'latest' already exists for version '1\.0'$"
         with self.assertRaisesRegex(ValueError, msg):
             versions.update('2.0', aliases=['latest'])
+
+    def test_update_circular_alias(self):
+        versions = Versions()
+        versions.add('1.0', aliases=['latest'])
+        msg = '^duplicated version and alias$'
+        with self.assertRaisesRegex(ValueError, msg):
+            diff = versions.update('1.0', aliases=['1.0'])
+
+        # This is ok, though it's a no-op, since the version is '1.0', and thus
+        # there's no circularity.
+        diff = versions.update('latest', aliases=['latest'])
+        self.assertEqual(diff, set())
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0', '1.0', ['latest']),
+        ])
 
     def test_update_overwrite_alias_update(self):
         versions = Versions()
