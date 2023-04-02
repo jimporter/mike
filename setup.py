@@ -86,7 +86,8 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     include_package_data=True,
 
-    install_requires=(['mkdocs >= 1.0', 'jinja2 >= 2.7', 'pyyaml >= 5.1',
+    install_requires=(['importlib_metadata', 'importlib_resources',
+                       'jinja2 >= 2.7', 'mkdocs >= 1.0', 'pyyaml >= 5.1',
                        'verspec']),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'flake8-quotes', 'shtab'],

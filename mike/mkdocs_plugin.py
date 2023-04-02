@@ -1,9 +1,9 @@
+import importlib_metadata as metadata
 import os
 from urllib.parse import urljoin
 from mkdocs.config import config_options as opts
 from mkdocs.plugins import BasePlugin
 from mkdocs.structure.files import File
-from pkg_resources import iter_entry_points
 
 from .mkdocs_utils import docs_version_var
 from .commands import AliasType
@@ -15,10 +15,11 @@ except ImportError:  # pragma: no cover
 
 
 def get_theme_dir(theme_name):
-    themes = list(iter_entry_points('mike.themes', theme_name))
-    if len(themes) == 0:
+    try:
+        theme = metadata.entry_points(group='mike.themes')[theme_name]
+    except KeyError:
         raise ValueError("theme '{}' unsupported".format(theme_name))
-    return os.path.dirname(themes[0].load().__file__)
+    return os.path.dirname(theme.load().__file__)
 
 
 class MikePlugin(BasePlugin):

@@ -1,10 +1,10 @@
+import importlib_resources as resources
 import http.server
 import os
 import posixpath
 from contextlib import contextmanager
 from enum import Enum
 from jinja2 import Template
-from pkg_resources import resource_stream
 
 from . import git_utils
 from . import mkdocs_utils
@@ -21,9 +21,11 @@ def _format_deploy_prefix(deploy_prefix):
 
 
 def _redirect_template(user_template=None):
-    f = (open(user_template, 'rb') if user_template else
-         resource_stream(__name__, 'templates/redirect.html'))
-    with f:
+    template_file = (
+        user_template or
+        resources.files('mike').joinpath('templates/redirect.html')
+    )
+    with open(template_file, 'rb') as f:
         return Template(f.read().decode('utf-8'), autoescape=True,
                         keep_trailing_newline=True)
 
