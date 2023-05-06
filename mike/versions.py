@@ -91,15 +91,15 @@ class Versions:
     def __getitem__(self, k):
         return self._data[str(k)]
 
-    def find(self, version, strict=False):
-        version = str(version)
-        if version in self._data:
-            return (version,)
+    def find(self, identifier, strict=False):
+        identifier = str(identifier)
+        if identifier in self._data:
+            return (identifier,)
         for k, v in self._data.items():
-            if version in v.aliases:
-                return (k, version)
+            if identifier in v.aliases:
+                return (k, identifier)
         if strict:
-            raise KeyError(version)
+            raise KeyError(identifier)
         return None
 
     def _ensure_unique_aliases(self, version, aliases, update_aliases=False):
@@ -138,8 +138,8 @@ class Versions:
 
         return self._data[v]
 
-    def update(self, version, title=None, aliases=[], update_aliases=False):
-        key = self.find(version, strict=True)
+    def update(self, identifier, title=None, aliases=[], update_aliases=False):
+        key = self.find(identifier, strict=True)
         removed_aliases = self._ensure_unique_aliases(
             key[0], aliases, update_aliases
         )
@@ -159,10 +159,10 @@ class Versions:
             self._data[key[0]].aliases.remove(key[1])
         return item
 
-    def remove(self, version):
-        key = self.find(version, strict=True)
+    def remove(self, identifier):
+        key = self.find(identifier, strict=True)
         return self._remove_by_key(key)
 
-    def difference_update(self, versions):
-        keys = [self.find(i, strict=True) for i in versions]
+    def difference_update(self, identifiers):
+        keys = [self.find(i, strict=True) for i in identifiers]
         return [self._remove_by_key(i) for i in keys]

@@ -145,7 +145,7 @@ def deploy(parser, args):
     check_remote_status(args, strict=True)
     with handle_empty_commit():
         alias_type = commands.AliasType[args.alias_type]
-        with commands.deploy(cfg, args.version, args.title, args.alias,
+        with commands.deploy(cfg, args.version, args.title, args.aliases,
                              args.update_aliases, alias_type, args.template,
                              branch=args.branch, message=args.message,
                              allow_empty=args.allow_empty,
@@ -159,7 +159,7 @@ def deploy(parser, args):
 def delete(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
-    commands.delete(args.version, args.all, branch=args.branch,
+    commands.delete(args.identifiers, args.all, branch=args.branch,
                     message=args.message, allow_empty=args.allow_empty,
                     deploy_prefix=args.deploy_prefix)
     if args.push:
@@ -171,7 +171,7 @@ def alias(parser, args):
     check_remote_status(args, strict=True)
     with handle_empty_commit():
         alias_type = commands.AliasType[args.alias_type]
-        commands.alias(cfg, args.version, args.alias, args.update_aliases,
+        commands.alias(cfg, args.identifier, args.aliases, args.update_aliases,
                        alias_type, args.template, branch=args.branch,
                        message=args.message, allow_empty=args.allow_empty,
                        deploy_prefix=args.deploy_prefix)
@@ -183,7 +183,7 @@ def retitle(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     with handle_empty_commit():
-        commands.retitle(args.version, args.title, branch=args.branch,
+        commands.retitle(args.identifier, args.title, branch=args.branch,
                          message=args.message, allow_empty=args.allow_empty,
                          deploy_prefix=args.deploy_prefix)
         if args.push:
@@ -208,16 +208,17 @@ def list_versions(parser, args):
     check_remote_status(args)
     all_versions = commands.list_versions(args.branch, args.deploy_prefix)
 
-    if args.version:
+    if args.identifier:
         try:
-            key = all_versions.find(args.version, strict=True)
+            key = all_versions.find(args.identifier, strict=True)
             info = all_versions[key[0]]
             if args.json:
                 print(info.dumps())
             else:
                 print_version(info)
         except KeyError:
-            raise ValueError('version {} does not exist'.format(args.version))
+            raise ValueError('identifier {} does not exist'
+                             .format(args.identifier))
     elif args.json:
         print(all_versions.dumps())
     else:
@@ -229,8 +230,8 @@ def set_default(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args, strict=True)
     with handle_empty_commit():
-        commands.set_default(args.version, args.template, branch=args.branch,
-                             message=args.message,
+        commands.set_default(args.identifier, args.template,
+                             branch=args.branch, message=args.message,
                              allow_empty=args.allow_empty,
                              deploy_prefix=args.deploy_prefix)
         if args.push:
@@ -280,12 +281,12 @@ def main():
                           help=('method for creating aliases (one of: ' +
                                 '%(choices)s; default: symlink)'))
     deploy_p.add_argument('-T', '--template', complete='file',
-                          help='the template file to use for redirects')
+                          help='template file to use for redirects')
     add_git_arguments(deploy_p)
     deploy_p.add_argument('version', metavar='VERSION',
-                          help='version (directory) to deploy this build to')
-    deploy_p.add_argument('alias', nargs='*', metavar='ALIAS',
-                          help='alias for this build (e.g. "latest")')
+                          help='version to deploy this build to')
+    deploy_p.add_argument('aliases', nargs='*', metavar='ALIAS',
+                          help='additional alias for this build')
 
     delete_p = subparsers.add_parser(
         'delete', description=delete_desc, help='delete docs from a branch'
@@ -294,11 +295,11 @@ def main():
     delete_p.add_argument('--all', action='store_true',
                           help='delete everything')
     add_git_arguments(delete_p)
-    delete_p.add_argument('version', nargs='*', metavar='VERSION',
-                          help='version (directory) to delete')
+    delete_p.add_argument('identifiers', nargs='*', metavar='IDENTIFIER',
+                          help='version or alias to delete')
 
     alias_p = subparsers.add_parser(
-        'alias', description=alias_desc, help='alias docs from a branch'
+        'alias', description=alias_desc, help='alias docs on a branch'
     )
     alias_p.set_defaults(func=alias)
     alias_p.add_argument('-u', '--update-aliases', action='store_true',
@@ -308,12 +309,12 @@ def main():
                          help=('method for creating aliases (one of: ' +
                                '%(choices)s; default: symlink)'))
     alias_p.add_argument('-T', '--template', complete='file',
-                         help='the template file to use for redirects')
+                         help='template file to use for redirects')
     add_git_arguments(alias_p)
-    alias_p.add_argument('version', metavar='VERSION',
-                         help='version (directory) to alias')
-    alias_p.add_argument('alias', nargs='*', metavar='ALIAS',
-                         help='alias to add (e.g. "latest")')
+    alias_p.add_argument('identifier', metavar='IDENTIFIER',
+                         help='existing version or alias')
+    alias_p.add_argument('aliases', nargs='*', metavar='ALIAS',
+                         help='new alias to add')
 
     retitle_p = subparsers.add_parser(
         'retitle', description=retitle_desc,
@@ -321,10 +322,9 @@ def main():
     )
     retitle_p.set_defaults(func=retitle)
     add_git_arguments(retitle_p)
-    retitle_p.add_argument('version', metavar='VERSION',
-                           help='version (or alias) to retitle')
-    retitle_p.add_argument('title', metavar='TITLE',
-                           help='the new title to use')
+    retitle_p.add_argument('identifier', metavar='IDENTIFIER',
+                           help='version or alias to retitle')
+    retitle_p.add_argument('title', metavar='TITLE', help='new title to use')
 
     list_p = subparsers.add_parser(
         'list', description=list_desc, help='list deployed docs on a branch'
@@ -333,8 +333,8 @@ def main():
     list_p.add_argument('-j', '--json', action='store_true',
                         help='display the result as JSON')
     add_git_arguments(list_p, commit=False)
-    list_p.add_argument('version', metavar='VERSION', nargs='?',
-                        help='optional version to search for')
+    list_p.add_argument('identifier', metavar='IDENTIFIER', nargs='?',
+                        help='optional version or alias to search for')
 
     set_default_p = subparsers.add_parser(
         'set-default', description=set_default_desc,
@@ -342,10 +342,10 @@ def main():
     )
     set_default_p.set_defaults(func=set_default)
     set_default_p.add_argument('-T', '--template', complete='file',
-                               help='the template file to use')
+                               help='template file to use')
     add_git_arguments(set_default_p)
-    set_default_p.add_argument('version', metavar='VERSION',
-                               help='version to set as default')
+    set_default_p.add_argument('identifier', metavar='IDENTIFIER',
+                               help='version or alias to set as default')
 
     serve_p = subparsers.add_parser(
         'serve', description=serve_desc, help='serve docs locally for testing'

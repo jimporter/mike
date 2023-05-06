@@ -61,7 +61,7 @@ class TestList(ListTestCase):
         self._check_list(['4.0'], '4.0 [dev, latest]\n')
         self._check_list(['stable'], '"3.0.3" (3.0) [stable]\n')
         self._check_list(['nonexist'], '',
-                         'error: version nonexist does not exist\n', 1)
+                         'error: identifier nonexist does not exist\n', 1)
 
     def test_list_json(self):
         proc = self._get_list(['-j'])
@@ -95,7 +95,7 @@ class TestList(ListTestCase):
             self._check_list(['4.0'] + opts, '4.0 [dev, latest]\n')
             self._check_list(['stable'] + opts, '"3.0.3" (3.0) [stable]\n')
             self._check_list(['nonexist'] + opts, '',
-                             'error: version nonexist does not exist\n', 1)
+                             'error: identifier nonexist does not exist\n', 1)
 
             self._check_list(['1.0', '-b', 'gh-pages', '-r', 'origin'],
                              '1.0\n')
@@ -184,4 +184,4 @@ class TestListDeployPrefix(ListTestCase):
         self._check_list(['4.0'], '4.0 [dev, latest]\n')
         self._check_list(['stable'], '"3.0.3" (3.0) [stable]\n')
         self._check_list(['nonexist'], '',
-                         'error: version nonexist does not exist\n', 1)
+                         'error: identifier nonexist does not exist\n', 1)

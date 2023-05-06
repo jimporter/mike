@@ -116,16 +116,16 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
         commit.add_file(make_nojekyll())
 
 
-def delete(versions=None, all=False, *, branch='gh-pages', message=None,
+def delete(identifiers=None, all=False, *, branch='gh-pages', message=None,
            allow_empty=False, deploy_prefix=''):
-    if not all and versions is None:
-        raise ValueError('specify `version` or `all`')
+    if not all and identifiers is None:
+        raise ValueError('specify `identifiers` or `all`')
 
     if message is None:
         message = (
-            'Removed {doc_version}{deploy_prefix} with mike {mike_version}'
+            'Removed {doc_identifiers}{deploy_prefix} with mike {mike_version}'
         ).format(
-            doc_version='everything' if all else ', '.join(versions),
+            doc_identifiers='everything' if all else ', '.join(identifiers),
             deploy_prefix=_format_deploy_prefix(deploy_prefix),
             mike_version=app_version
         )
@@ -139,9 +139,9 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
         else:
             all_versions = list_versions(branch, deploy_prefix)
             try:
-                removed = all_versions.difference_update(versions)
+                removed = all_versions.difference_update(identifiers)
             except KeyError as e:
-                raise ValueError('version {!r} does not exist'.format(e))
+                raise ValueError('identifier {!r} does not exist'.format(e))
 
             for i in removed:
                 if isinstance(i, str):
@@ -154,14 +154,14 @@ def delete(versions=None, all=False, *, branch='gh-pages', message=None,
             commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 
-def alias(cfg, version, aliases, update_aliases=False,
+def alias(cfg, identifier, aliases, update_aliases=False,
           alias_type=AliasType.symlink, template=None, *, branch='gh-pages',
           message=None, allow_empty=False, deploy_prefix=''):
     all_versions = list_versions(branch, deploy_prefix)
     try:
-        real_version = all_versions.find(version, strict=True)[0]
+        real_version = all_versions.find(identifier, strict=True)[0]
     except KeyError as e:
-        raise ValueError('version {!r} does not exist'.format(e))
+        raise ValueError('identifier {!r} does not exist'.format(e))
 
     if message is None:
         message = (
@@ -208,14 +208,14 @@ def alias(cfg, version, aliases, update_aliases=False,
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 
-def retitle(version, title, *, branch='gh-pages', message=None,
+def retitle(identifier, title, *, branch='gh-pages', message=None,
             allow_empty=False, deploy_prefix=''):
     if message is None:
         message = (
-            'Set title of {doc_version} to {title}{deploy_prefix} with mike ' +
-            '{mike_version}'
+            'Set title of {doc_identifier} to {title}{deploy_prefix} with ' +
+            'mike {mike_version}'
         ).format(
-            doc_version=version,
+            doc_identifier=identifier,
             title=title,
             deploy_prefix=_format_deploy_prefix(deploy_prefix),
             mike_version=app_version
@@ -223,35 +223,35 @@ def retitle(version, title, *, branch='gh-pages', message=None,
 
     all_versions = list_versions(branch, deploy_prefix)
     try:
-        all_versions.update(version, title)
+        all_versions.update(identifier, title)
     except KeyError:
-        raise ValueError('version {!r} does not exist'.format(version))
+        raise ValueError('identifier {!r} does not exist'.format(identifier))
 
     with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 
-def set_default(version, template=None, *, branch='gh-pages', message=None,
+def set_default(identifier, template=None, *, branch='gh-pages', message=None,
                 allow_empty=False, deploy_prefix=''):
     if message is None:
         message = (
-            'Set default version to {doc_version}{deploy_prefix} with mike ' +
-            '{mike_version}'
+            'Set default version to {doc_identifier}{deploy_prefix} with ' +
+            'mike {mike_version}'
         ).format(
-            doc_version=version,
+            doc_identifier=identifier,
             deploy_prefix=_format_deploy_prefix(deploy_prefix),
             mike_version=app_version
         )
 
     all_versions = list_versions(branch, deploy_prefix)
-    if not all_versions.find(version):
-        raise ValueError('version {!r} does not exist'.format(version))
+    if not all_versions.find(identifier):
+        raise ValueError('identifier {!r} does not exist'.format(identifier))
 
     t = _redirect_template(template)
     with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         commit.add_file(git_utils.FileInfo(
             os.path.join(deploy_prefix, 'index.html'),
-            t.render(href=version + '/')
+            t.render(href=identifier + '/')
         ))
 
 

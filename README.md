@@ -162,11 +162,11 @@ made a mistake or you're pruning unsupported versions. You can do this via the
 `delete` subcommand:
 
 ```sh
-mike delete [version-or-alias]...
+mike delete [identifier]...
 ```
 
-If `version-or-alias` is a version, this will delete the version and all its
-aliases from the branch; if it's an alias, it will only delete that alias.
+If `identifier` is a version, this will delete the version and all its aliases
+from the branch; if it's an alias, it will only delete that alias.
 
 If you'd like to *completely* wipe the contents of your docs branch, just run
 `mike delete --all`. Like `deploy` above, you can specify `--branch`, `--push`,
@@ -181,11 +181,11 @@ run:
 mike list
 ```
 
-To list the info for a particular version, you can just pass the version or
-alias:
+To list the info for a particular version, you can just pass the version name or
+an alias to that version:
 
 ```sh
-mike list [version-or-alias]
+mike list [identifier]
 ```
 
 Sometimes, you need this information to be consumed by another tool. In that
@@ -198,7 +198,7 @@ so that people going to the root of your site are redirected to the latest
 version of the docs:
 
 ```sh
-mike set-default [version-or-alias]
+mike set-default [identifier]
 ```
 
 If you want to use a different template from the default, you can pass
@@ -216,7 +216,7 @@ release a new patch, you want to update the title to `1.0.1`. You can do this
 with the `retitle` command:
 
 ```sh
-mike retitle [version-or-alias] [title]
+mike retitle [identifier] [title]
 ```
 
 As with other commands that change your docs, you can specify `--branch`,
@@ -228,7 +228,7 @@ Sometimes, you might need to add a new alias for a version without rebuilding
 your documentation. You can use the `alias` command for this:
 
 ```sh
-mike alias [version-or-alias] [alias]...
+mike alias [identifier] [alias]...
 ```
 
 As with `deploy`, you can pass `-u`/`--update-aliases` to change where an
