@@ -84,7 +84,9 @@ plugins:
   * `copy`: Copy all the files of the documentation to the alias's path
 * `redirect_template`: The template file to use when creating HTML redirects; if
   `null`, use the default template
-* `deploy_prefix`: The root directory to put the docs in
+* `deploy_prefix`: The root directory to put the generated docs in; this can be
+  useful if you'd like to have other pages at the root of your site, or to host
+  multiple, independently-versioned sets of docs side by side
 * `canonical_version`: The "canonical" version to use for the documentation,
   useful for telling search engines what pages to prefer (e.g. `latest` if
   you've defined that as an alias that always points to the latest release); if
