@@ -216,9 +216,8 @@ def list_versions(parser, args):
                 print(info.dumps())
             else:
                 print_version(info)
-        except KeyError:
-            raise ValueError('identifier {} does not exist'
-                             .format(args.identifier))
+        except KeyError as e:
+            raise ValueError('identifier {} does not exist'.format(e))
     elif args.json:
         print(all_versions.dumps())
     else:

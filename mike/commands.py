@@ -141,7 +141,8 @@ def delete(identifiers=None, all=False, *, branch='gh-pages', message=None,
             try:
                 removed = all_versions.difference_update(identifiers)
             except KeyError as e:
-                raise ValueError('identifier {!r} does not exist'.format(e))
+                raise ValueError('unable to delete nonexistant identifier {}'
+                                 .format(e))
 
             for i in removed:
                 if isinstance(i, str):
@@ -161,7 +162,7 @@ def alias(cfg, identifier, aliases, update_aliases=False,
     try:
         real_version = all_versions.find(identifier, strict=True)[0]
     except KeyError as e:
-        raise ValueError('identifier {!r} does not exist'.format(e))
+        raise ValueError('identifier {} does not exist'.format(e))
 
     if message is None:
         message = (

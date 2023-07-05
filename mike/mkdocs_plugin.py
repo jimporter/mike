@@ -18,7 +18,7 @@ def get_theme_dir(theme_name):
     try:
         theme = metadata.entry_points(group='mike.themes')[theme_name]
     except KeyError:
-        raise ValueError("theme '{}' unsupported".format(theme_name))
+        raise ValueError('theme {!r} unsupported'.format(theme_name))
     return os.path.dirname(theme.load().__file__)
 
 
