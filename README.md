@@ -120,9 +120,11 @@ mike deploy [version] [alias]...
 If `[version]` already exists, this command will *also* update all of the
 pre-existing aliases for it. Normally, if an alias specified on the command line
 is already associated with another version, this will return an error. If you
-*do* want to move an alias from another version to this version (e.g. when
+*do* want to move an alias from another version to this version (including
+when the new version itself was previously an alias), you can pass
+`-u`/`--update-aliases` to allow this. For example, this can be useful when
 releasing a new version and updating the `latest` alias to point to this new
-version), you can pass `-u`/`--update-aliases` to allow this.
+version.
 
 By default, each alias creates a symbolic link to the base directory of the real
 version of the docs; to create a copy of the docs for each alias, you can pass

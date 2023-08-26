@@ -354,11 +354,15 @@ class TestVersions(unittest.TestCase):
     def test_add_overwrite_alias_with_version(self):
         versions = Versions()
         versions.add('1.0b1', aliases=['1.0'])
+
         msg = r"version '1\.0' already exists"
         with self.assertRaisesRegex(ValueError, msg):
             versions.add('1.0')
-        with self.assertRaisesRegex(ValueError, msg):
-            versions.add('1.0', update_aliases=True)
+        versions.add('1.0', update_aliases=True)
+        self.assertEqual(list(versions), [
+            VersionInfo('1.0'),
+            VersionInfo('1.0b1'),
+        ])
 
     def test_add_invalid(self):
         versions = Versions()

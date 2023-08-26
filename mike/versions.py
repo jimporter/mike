@@ -137,6 +137,15 @@ class Versions:
 
     def _ensure_unique_aliases(self, version, aliases, update_aliases=False):
         removed_aliases = []
+
+        # Check whether `version` is already defined as an alias.
+        key = self.find(version)
+        if key and len(key) == 2:
+            if not update_aliases:
+                raise ValueError('version {!r} already exists'.format(version))
+            removed_aliases.append(key)
+
+        # Check whether any `aliases` are already defined.
         for i in aliases:
             key = self.find(i)
             if key and key[0] != version:
@@ -150,6 +159,7 @@ class Versions:
                         .format(i, str(key[0]))
                     )
                 removed_aliases.append(key)
+
         return removed_aliases
 
     def add(self, version, title=None, aliases=[], update_aliases=False):
@@ -161,8 +171,6 @@ class Versions:
         if v in self._data:
             self._data[v].update(title, aliases)
         else:
-            if self.find(version):
-                raise ValueError('version {!r} already exists'.format(version))
             self._data[v] = VersionInfo(version, title, aliases)
 
         # Remove aliases from old versions that we've moved to this version.
