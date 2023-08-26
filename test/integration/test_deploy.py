@@ -122,6 +122,15 @@ class TestDeploy(DeployTestCase):
             versions.VersionInfo('1.0'),
         ])
 
+    def test_update_aliases_for_release(self):
+        assertPopen(['mike', 'deploy', '1.0-beta', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', 'latest', '-u'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest']),
+            versions.VersionInfo('1.0-beta'),
+        ])
+
     def test_from_subdir(self):
         os.mkdir('sub')
         with pushd('sub'):

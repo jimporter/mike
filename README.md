@@ -122,7 +122,9 @@ pre-existing aliases for it. Normally, if an alias specified on the command line
 is already associated with another version, this will return an error. If you
 *do* want to move an alias from another version to this version (e.g. when
 releasing a new version and updating the `latest` alias to point to this new
-version), you can pass `-u`/`--update-aliases` to allow this.
+version) or the new version was previously an alias (e.g. when you used the
+future release name as an alias for development builds), you can pass
+`-u`/`--update-aliases` to allow this.
 
 By default, each alias creates a symbolic link to the base directory of the real
 version of the docs; to create a copy of the docs for each alias, you can pass

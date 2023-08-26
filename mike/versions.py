@@ -128,8 +128,14 @@ class Versions:
         if v in self._data:
             self._data[v].update(title, aliases)
         else:
-            if self.find(version):
-                raise ValueError('version {!r} already exists'.format(version))
+            find = self.find(version)
+            if find:
+                if update_aliases:
+                    removed_aliases.append(find)
+                else:
+                    raise ValueError(
+                        'version {!r} already exists'.format(version)
+                    )
             self._data[v] = VersionInfo(version, title, aliases)
 
         # Remove aliases from old versions that we've moved to this version.
