@@ -46,11 +46,9 @@ window.addEventListener("DOMContentLoaded", function() {
     return select;
   }
 
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", ABS_BASE_URL + "../versions.json");
-  xhr.onload = function() {
-    var versions = JSON.parse(this.responseText);
-
+  fetch(ABS_BASE_URL + "../versions.json").then((response) => {
+    return response.json();
+  }).then((versions) => {
     var realVersion = versions.find(function(i) {
       return i.version === CURRENT_VERSION ||
              i.aliases.includes(CURRENT_VERSION);
@@ -66,6 +64,5 @@ window.addEventListener("DOMContentLoaded", function() {
 
     var title = document.querySelector("div.wy-side-nav-search");
     title.insertBefore(select, title.querySelector(".icon-home").nextSibling);
-  };
-  xhr.send();
+  });
 });
