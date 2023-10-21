@@ -205,7 +205,8 @@ mike set-default [identifier]
 
 If you want to use a different template from the default, you can pass
 `-T`/`--template`; this takes a path to a [Jinja][jinja] template that accepts
-an `{{href}}` variable.
+an `{{href}}` variable. (Note that this page *always* uses a redirect, no matter
+the setting of `alias_type`/`--alias-type`.)
 
 Like `deploy` and `delete` above, you can specify `--branch`, `--push`,
 etc to control how the commit is handled.
