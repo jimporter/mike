@@ -52,7 +52,7 @@ def list_versions(branch='gh-pages', deploy_prefix=''):
 
 def versions_to_file_info(versions, deploy_prefix=''):
     return git_utils.FileInfo(os.path.join(deploy_prefix, versions_file),
-                              versions.dumps())
+                              versions.dumps() + '\n')
 
 
 def make_nojekyll():

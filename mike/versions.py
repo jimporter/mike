@@ -23,6 +23,22 @@ class VersionInfo:
         if str(self.version) in self.aliases:
             raise ValueError('duplicated version and alias')
 
+    @classmethod
+    def from_json(cls, data):
+        return cls(data['version'], data['title'], data['aliases'])
+
+    def to_json(self):
+        return {'version': str(self.version),
+                'title': self.title,
+                'aliases': list(self.aliases)}
+
+    @classmethod
+    def loads(cls, data):
+        return cls.from_json(json.loads(data))
+
+    def dumps(self):
+        return json.dumps(self.to_json(), indent=2)
+
     @staticmethod
     def _check_version(version, kind):
         if ( not version or version in ['.', '..'] or
@@ -38,14 +54,6 @@ class VersionInfo:
         return '<VersionInfo({!r}, {!r}, {{{}}})>'.format(
             self.version, self.title, ', '.join(repr(i) for i in self.aliases)
         )
-
-    def to_json(self):
-        return {'version': str(self.version),
-                'title': self.title,
-                'aliases': list(self.aliases)}
-
-    def dumps(self):
-        return json.dumps(self.to_json())
 
     def update(self, title=None, aliases=[]):
         for i in aliases:
@@ -66,15 +74,25 @@ class Versions:
     def __init__(self):
         self._data = {}
 
-    @staticmethod
-    def loads(data):
-        result = Versions()
-        for i in json.loads(data):
-            result.add(i['version'], i['title'], i['aliases'])
+    @classmethod
+    def from_json(cls, data):
+        result = cls()
+        for i in data:
+            version = VersionInfo.from_json(i)
+            version_str = str(version.version)
+            result._ensure_unique_aliases(version_str, version.aliases)
+            result._data[version_str] = version
         return result
 
+    def to_json(self):
+        return [i.to_json() for i in iter(self)]
+
+    @classmethod
+    def loads(cls, data):
+        return cls.from_json(json.loads(data))
+
     def dumps(self):
-        return json.dumps([i.to_json() for i in iter(self)], indent=2) + '\n'
+        return json.dumps(self.to_json(), indent=2)
 
     def __iter__(self):
         def key(info):

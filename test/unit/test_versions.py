@@ -72,15 +72,35 @@ class TestVersionInfo(unittest.TestCase):
         self.assertNotEqual(v, VersionInfo('1.0', '1.0.0'))
         self.assertEqual(v, VersionInfo('1.0', aliases=['latest']))
 
-    def test_dumps(self):
+    def test_from_json(self):
+        self.assertEqual(VersionInfo.from_json({
+            'version': '1.0', 'title': '1.0', 'aliases': []
+        }), VersionInfo('1.0'))
+
+        self.assertEqual(VersionInfo.from_json({
+            'version': '1.0', 'title': '1.0.0', 'aliases': ['latest']
+        }), VersionInfo('1.0', '1.0.0', ['latest']))
+
+    def test_to_json(self):
         v = VersionInfo('1.0')
-        self.assertEqual(json.loads(v.dumps()), {
+        self.assertEqual(v.to_json(), {
             'version': '1.0', 'title': '1.0', 'aliases': []
         })
 
         v = VersionInfo('1.0', '1.0.0', ['latest'])
-        self.assertEqual(json.loads(v.dumps()), {
+        self.assertEqual(v.to_json(), {
             'version': '1.0', 'title': '1.0.0', 'aliases': ['latest']
+        })
+
+    def test_loads(self):
+        self.assertEqual(VersionInfo.loads(
+            '{"version": "1.0", "title": "1.0", "aliases": []}'
+        ), VersionInfo('1.0'))
+
+    def test_dumps(self):
+        v = VersionInfo('1.0')
+        self.assertEqual(json.loads(v.dumps()), {
+            'version': '1.0', 'title': '1.0', 'aliases': []
         })
 
     def test_update(self):
@@ -439,6 +459,25 @@ class TestVersions(unittest.TestCase):
             VersionInfo('3.0', aliases=['latest']),
             VersionInfo('2.0'),
             VersionInfo('1.0'),
+        ])
+
+    def test_from_json(self):
+        versions = Versions.from_json([
+            {'version': '2.0', 'title': '2.0.2', 'aliases': ['latest']},
+            {'version': '1.0', 'title': '1.0.1', 'aliases': ['stable']}
+        ])
+        self.assertEqual(list(versions), [
+            VersionInfo('2.0', '2.0.2', aliases={'latest'}),
+            VersionInfo('1.0', '1.0.1', aliases={'stable'}),
+        ])
+
+    def test_to_json(self):
+        versions = Versions()
+        versions.add('2.0', '2.0.2', ['latest'])
+        versions.add('1.0', '1.0.1', ['stable'])
+        self.assertEqual(versions.to_json(), [
+            {'version': '2.0', 'title': '2.0.2', 'aliases': ['latest']},
+            {'version': '1.0', 'title': '1.0.1', 'aliases': ['stable']}
         ])
 
     def test_loads(self):
