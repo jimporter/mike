@@ -2,6 +2,8 @@ import json
 import re
 from verspec.loose import LooseVersion as Version
 
+from . import jsonpath
+
 
 def _ensure_version(version):
     if not isinstance(version, Version):
@@ -10,7 +12,7 @@ def _ensure_version(version):
 
 
 class VersionInfo:
-    def __init__(self, version, title=None, aliases=[]):
+    def __init__(self, version, title=None, aliases=[], properties=None):
         self._check_version(str(version), 'version')
         for i in aliases:
             self._check_version(i, 'alias')
@@ -19,18 +21,23 @@ class VersionInfo:
         self.version = _ensure_version(version)
         self.title = version_name if title is None else title
         self.aliases = set(aliases)
+        self.properties = properties
 
         if str(self.version) in self.aliases:
             raise ValueError('duplicated version and alias')
 
     @classmethod
     def from_json(cls, data):
-        return cls(data['version'], data['title'], data['aliases'])
+        return cls(data['version'], data['title'], data['aliases'],
+                   data.get('properties'))
 
     def to_json(self):
-        return {'version': str(self.version),
+        data = {'version': str(self.version),
                 'title': self.title,
                 'aliases': list(self.aliases)}
+        if self.properties:
+            data['properties'] = self.properties
+        return data
 
     @classmethod
     def loads(cls, data):
@@ -48,11 +55,13 @@ class VersionInfo:
     def __eq__(self, rhs):
         return (str(self.version) == str(rhs.version) and
                 self.title == rhs.title and
-                self.aliases == rhs.aliases)
+                self.aliases == rhs.aliases and
+                self.properties == rhs.properties)
 
     def __repr__(self):
-        return '<VersionInfo({!r}, {!r}, {{{}}})>'.format(
-            self.version, self.title, ', '.join(repr(i) for i in self.aliases)
+        return '<VersionInfo({!r}, {!r}, {{{}}}{})>'.format(
+            self.version, self.title, ', '.join(repr(i) for i in self.aliases),
+            ', {!r}'.format(self.properties) if self.properties else ''
         )
 
     def update(self, title=None, aliases=[]):
@@ -68,6 +77,12 @@ class VersionInfo:
         added = aliases - self.aliases
         self.aliases |= aliases
         return added
+
+    def get_property(self, expr, **kwargs):
+        return jsonpath.get_value(self.properties, expr, **kwargs)
+
+    def set_property(self, expr, value):
+        self.properties = jsonpath.set_value(self.properties, expr, value)
 
 
 class Versions:

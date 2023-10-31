@@ -2,6 +2,7 @@ import json
 import unittest
 from verspec.loose import LooseVersion as Version
 
+from mike.jsonpath import Deleted
 from mike.versions import VersionInfo, Versions
 
 
@@ -11,21 +12,31 @@ class TestVersionInfo(unittest.TestCase):
         self.assertEqual(v.version, Version('1.0'))
         self.assertEqual(v.title, '1.0')
         self.assertEqual(v.aliases, set())
+        self.assertEqual(v.properties, None)
 
         v = VersionInfo('1.0', '1.0.0')
         self.assertEqual(v.version, Version('1.0'))
         self.assertEqual(v.title, '1.0.0')
         self.assertEqual(v.aliases, set())
+        self.assertEqual(v.properties, None)
 
         v = VersionInfo('1.0', aliases=['latest'])
         self.assertEqual(v.version, Version('1.0'))
         self.assertEqual(v.title, '1.0')
         self.assertEqual(v.aliases, {'latest'})
+        self.assertEqual(v.properties, None)
+
+        v = VersionInfo('1.0', properties={'prop': 'val'})
+        self.assertEqual(v.version, Version('1.0'))
+        self.assertEqual(v.title, '1.0')
+        self.assertEqual(v.aliases, set())
+        self.assertEqual(v.properties, {'prop': 'val'})
 
         v = VersionInfo(Version('1.0'))
         self.assertEqual(v.version, Version('1.0'))
         self.assertEqual(v.title, '1.0')
         self.assertEqual(v.aliases, set())
+        self.assertEqual(v.properties, None)
 
         with self.assertRaisesRegex(ValueError, "^'' is not a valid version$"):
             VersionInfo('')
@@ -58,6 +69,7 @@ class TestVersionInfo(unittest.TestCase):
         self.assertNotEqual(v, VersionInfo('1.0', aliases=['latest']))
         self.assertNotEqual(v, VersionInfo('1.0.0'))
         self.assertNotEqual(v, VersionInfo('1.0.0', '1.0'))
+        self.assertNotEqual(v, VersionInfo('1.0', properties={'prop': 'val'}))
 
         v = VersionInfo('1.0', '1.0.0')
         self.assertNotEqual(v, VersionInfo('1.0'))
@@ -65,12 +77,21 @@ class TestVersionInfo(unittest.TestCase):
         self.assertEqual(v, VersionInfo('1.0', '1.0.0'))
         self.assertNotEqual(v, VersionInfo('1.0', aliases=['latest']))
         self.assertNotEqual(v, VersionInfo('1.0.0'))
+        self.assertNotEqual(v, VersionInfo('1.0', properties={'prop': 'val'}))
 
         v = VersionInfo('1.0', aliases=['latest'])
         self.assertNotEqual(v, VersionInfo('1.0'))
         self.assertNotEqual(v, VersionInfo('1.1'))
         self.assertNotEqual(v, VersionInfo('1.0', '1.0.0'))
         self.assertEqual(v, VersionInfo('1.0', aliases=['latest']))
+        self.assertNotEqual(v, VersionInfo('1.0', properties={'prop': 'val'}))
+
+        v = VersionInfo('1.0', properties={'prop': 'val'})
+        self.assertNotEqual(v, VersionInfo('1.0'))
+        self.assertNotEqual(v, VersionInfo('1.1'))
+        self.assertNotEqual(v, VersionInfo('1.0', '1.0.0'))
+        self.assertNotEqual(v, VersionInfo('1.0', aliases=['latest']))
+        self.assertEqual(v, VersionInfo('1.0', properties={'prop': 'val'}))
 
     def test_from_json(self):
         self.assertEqual(VersionInfo.from_json({
@@ -81,6 +102,11 @@ class TestVersionInfo(unittest.TestCase):
             'version': '1.0', 'title': '1.0.0', 'aliases': ['latest']
         }), VersionInfo('1.0', '1.0.0', ['latest']))
 
+        self.assertEqual(VersionInfo.from_json({
+            'version': '1.0', 'title': '1.0.0', 'aliases': [],
+            'properties': {'prop': 'val'}
+        }), VersionInfo('1.0', '1.0.0', [], {'prop': 'val'}))
+
     def test_to_json(self):
         v = VersionInfo('1.0')
         self.assertEqual(v.to_json(), {
@@ -90,6 +116,12 @@ class TestVersionInfo(unittest.TestCase):
         v = VersionInfo('1.0', '1.0.0', ['latest'])
         self.assertEqual(v.to_json(), {
             'version': '1.0', 'title': '1.0.0', 'aliases': ['latest']
+        })
+
+        v = VersionInfo('1.0', '1.0.0', [], {'prop': 'val'})
+        self.assertEqual(v.to_json(), {
+            'version': '1.0', 'title': '1.0.0', 'aliases': [],
+            'properties': {'prop': 'val'}
         })
 
     def test_loads(self):
@@ -126,6 +158,22 @@ class TestVersionInfo(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,
                                     "^'foo/bar' is not a valid alias$"):
             v.update(aliases=['foo/bar'])
+
+    def test_get_property(self):
+        v = VersionInfo('1.0', properties={'prop': 'val'})
+        self.assertEqual(v.get_property('prop'), 'val')
+
+        v = VersionInfo('1.0', properties={'prop': ['foo', 'bar']})
+        self.assertEqual(v.get_property('prop[1]'), 'bar')
+
+    def test_set_property(self):
+        v = VersionInfo('1.0', properties={'prop': 'val'})
+        v.set_property('hello', 'world')
+        self.assertEqual(v.properties, {'prop': 'val', 'hello': 'world'})
+
+        v = VersionInfo('1.0', properties={'prop': ['foo', 'bar']})
+        v.set_property('prop[1]', Deleted)
+        self.assertEqual(v.properties, {'prop': ['foo']})
 
 
 class TestVersions(unittest.TestCase):
