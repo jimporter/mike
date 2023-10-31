@@ -1,9 +1,12 @@
+import json
 import os
 import sys
 from contextlib import contextmanager
 
-from . import arguments, commands
+from . import arguments
+from . import commands
 from . import git_utils
+from . import jsonpath
 from . import mkdocs_utils
 from .app_version import version as app_version
 from .mkdocs_plugin import MikePlugin
@@ -30,6 +33,22 @@ removed; if deleting an alias, only that alias will be removed.
 alias_desc = """
 Add one or more new aliases to the specified version of the documentation on
 the target branch.
+"""
+
+props_desc = """
+Get or set properties for the specified version.
+
+When getting or setting a particular property, you can specify it with a
+limited JSONPath-like syntax. You can use bare field names, quoted field names,
+and indices/field names inside square brackets. The only operator supported is
+`.`. For example, this is a valid expression:
+
+  foo."bar"[0].["baz"]
+
+When setting values, you can add to the head or tail of a list via the `head`
+or `tail` keywords, e.g.:
+
+  foo[head]
 """
 
 retitle_desc = """
@@ -80,11 +99,38 @@ def add_git_arguments(parser, *, commit=True, deploy_prefix=True):
     if deploy_prefix:
         git.add_argument('--deploy-prefix', metavar='PATH',
                          complete='directory',
-                         help=('subdirectory within {branch} where generated '
-                               'docs should be deployed to'))
+                         help=('subdirectory within {branch} where ' +
+                               'generated docs should be deployed to'))
 
     git.add_argument('--ignore-remote-status', action='store_true',
                      help="don't check status of remote branch")
+
+
+def add_set_prop_arguments(parser, *, prefix=''):
+    def parse_set_json(expression):
+        result = jsonpath.parse_set(expression)
+        return result[0], json.loads(result[1])
+
+    prop_p = parser.add_argument_group('property manipulation arguments')
+    prop_p.add_argument('--{}set'.format(prefix), metavar='PROP=JSON',
+                        action='append', type=parse_set_json, dest='set_props',
+                        help='set the property at PROP to a JSON value')
+    prop_p.add_argument('--{}set-string'.format(prefix), metavar='PROP=STRING',
+                        action='append', type=jsonpath.parse_set,
+                        dest='set_props',
+                        help='set the property at PROP to a STRING value')
+    prop_p.add_argument('--{}set-all'.format(prefix), metavar='JSON',
+                        action='append', type=lambda x: ('', json.loads(x)),
+                        dest='set_props',
+                        help='set all properties to a JSON value')
+    prop_p.add_argument('--{}delete'.format(prefix), metavar='PROP',
+                        action='append',
+                        type=lambda x: (jsonpath.parse(x), jsonpath.Deleted),
+                        dest='set_props', help='delete the property at PROP')
+    prop_p.add_argument('--{}delete-all'.format(prefix),
+                        action='append_const', const=('', jsonpath.Deleted),
+                        dest='set_props', help='delete all properties')
+    return prop_p
 
 
 def load_mkdocs_config(args, strict=False):
@@ -149,7 +195,8 @@ def deploy(parser, args):
                              args.update_aliases, alias_type, args.template,
                              branch=args.branch, message=args.message,
                              allow_empty=args.allow_empty,
-                             deploy_prefix=args.deploy_prefix), \
+                             deploy_prefix=args.deploy_prefix,
+                             set_props=args.set_props or []), \
              mkdocs_utils.inject_plugin(args.config_file) as config_file:
             mkdocs_utils.build(config_file, args.version)
         if args.push:
@@ -177,6 +224,28 @@ def alias(parser, args):
                        deploy_prefix=args.deploy_prefix)
         if args.push:
             git_utils.push_branch(args.remote, args.branch)
+
+
+def props(parser, args):
+    load_mkdocs_config(args)
+    check_remote_status(args, strict=args.set_props)
+
+    if args.get_prop and args.set_props:
+        raise ValueError('cannot get and set properties at the same time')
+    elif args.set_props:
+        with handle_empty_commit():
+            commands.set_properties(args.identifier, args.set_props,
+                                    branch=args.branch, message=args.message,
+                                    allow_empty=args.allow_empty,
+                                    deploy_prefix=args.deploy_prefix)
+            if args.push:
+                git_utils.push_branch(args.remote, args.branch)
+    else:
+        print(json.dumps(
+            commands.get_property(args.identifier, args.get_prop,
+                                  branch=args.branch,
+                                  deploy_prefix=args.deploy_prefix)
+        ))
 
 
 def retitle(parser, args):
@@ -282,6 +351,7 @@ def main():
     deploy_p.add_argument('-T', '--template', complete='file',
                           help='template file to use for redirects')
     add_git_arguments(deploy_p)
+    add_set_prop_arguments(deploy_p, prefix='prop-')
     deploy_p.add_argument('version', metavar='VERSION',
                           help='version to deploy this build to')
     deploy_p.add_argument('aliases', nargs='*', metavar='ALIAS',
@@ -314,6 +384,18 @@ def main():
                          help='existing version or alias')
     alias_p.add_argument('aliases', nargs='*', metavar='ALIAS',
                          help='new alias to add')
+
+    props_p = subparsers.add_parser(
+        'props', description=props_desc, help='get/set version properties',
+        formatter_class=arguments.ParagraphDescriptionHelpFormatter
+    )
+    props_p.set_defaults(func=props)
+    add_git_arguments(props_p)
+    add_set_prop_arguments(props_p)
+    props_p.add_argument('identifier', metavar='IDENTIFIER',
+                         help='existing version or alias')
+    props_p.add_argument('get_prop', nargs='?', metavar='PROP', default='',
+                         help='property to get')
 
     retitle_p = subparsers.add_parser(
         'retitle', description=retitle_desc,

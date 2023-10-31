@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import shutil
@@ -9,6 +10,7 @@ from .. import *
 from .mock_server import MockRequest, MockServer
 from mike import commands, git_utils, versions
 from mike.commands import AliasType
+from mike.jsonpath import Deleted
 
 
 def mock_config(site_dir, remote_name='origin',
@@ -190,6 +192,18 @@ class TestDeploy(TestBase):
         self._test_deploy(expected_versions=[
             versions.VersionInfo('1.0', aliases=['latest'])
         ], alias_type=AliasType.copy)
+
+    def test_props(self):
+        with commands.deploy(self.cfg, '1.0', set_props=[
+            (['foo', 'bar'], [1, 2, 3]),
+            (['foo', 'bar', 1], True),
+            (['foo', 'bar', 0], Deleted),
+        ]):
+            self._mock_build()
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', properties={'foo': {'bar': [True, 3]}})
+        ])
 
     def test_branch(self):
         with commands.deploy(self.cfg, '1.0', branch='branch'):
@@ -501,6 +515,146 @@ class TestAlias(TestBase):
                           ['alias'])
         self.assertRaises(ValueError, commands.alias, self.cfg, '1.0',
                           ['alias'], branch='branch')
+
+
+class TestPropertyBase(unittest.TestCase):
+    def setUp(self):
+        self.stage = stage_dir(self.stage_dir)
+        git_init()
+
+    def _commit_versions(self, *args, branch='gh-pages', deploy_prefix=''):
+        with git_utils.Commit(branch, 'add versions.json') as commit:
+            commit.add_file(git_utils.FileInfo(
+                os.path.join(deploy_prefix, 'versions.json'),
+                json.dumps([i.to_json() for i in args])
+            ))
+
+
+class TestGetProperty(TestPropertyBase):
+    stage_dir = 'get_property'
+
+    def test_get_property(self):
+        self._commit_versions(versions.VersionInfo(
+            '1.0', properties={'hidden': True}
+        ))
+        self.assertEqual(commands.get_property('1.0', ''), {'hidden': True})
+        self.assertEqual(commands.get_property('1.0', 'hidden'), True)
+
+    def test_get_property_from_alias(self):
+        self._commit_versions(versions.VersionInfo(
+            '1.0', aliases=['latest'], properties={'hidden': True}
+        ))
+        self.assertEqual(commands.get_property('latest', ''), {'hidden': True})
+        self.assertEqual(commands.get_property('latest', 'hidden'), True)
+
+    def test_no_properties(self):
+        self._commit_versions(versions.VersionInfo('1.0'))
+        self.assertEqual(commands.get_property('1.0', ''), None)
+
+    def test_branch(self):
+        self._commit_versions(versions.VersionInfo(
+            '1.0', properties={'hidden': True}
+        ), branch='branch')
+        self.assertEqual(commands.get_property('1.0', '', branch='branch'),
+                         {'hidden': True})
+
+    def test_deploy_prefix(self):
+        self._commit_versions(versions.VersionInfo(
+            '1.0', properties={'hidden': True}
+        ), deploy_prefix='prefix')
+        self.assertEqual(
+            commands.get_property('1.0', '', deploy_prefix='prefix'),
+            {'hidden': True}
+        )
+
+    def test_invalid_version(self):
+        self._commit_versions(versions.VersionInfo('1.0'))
+        with self.assertRaises(ValueError):
+            commands.get_property('2.0', '')
+
+
+class TestSetProperties(TestPropertyBase):
+    stage_dir = 'set_properties'
+
+    def _test_set_properties(self, expected_versions, expected_message=None,
+                             directory='.'):
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
+        if expected_message:
+            self.assertEqual(message, expected_message)
+        else:
+            self.assertRegex(
+                message,
+                r'^Set properties for \S+( in .*)? with mike \S+$'
+            )
+
+        with open(os.path.join(directory, 'versions.json')) as f:
+            self.assertEqual(list(versions.Versions.loads(f.read())),
+                             expected_versions)
+
+    def test_set_property(self):
+        self._commit_versions(versions.VersionInfo('1.0'))
+        commands.set_properties('1.0', [('foo.bar', True)])
+
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', properties={'foo': {'bar': True}}),
+        ])
+
+    def test_set_all_properties(self):
+        self._commit_versions(versions.VersionInfo(
+            '1.0', properties={'hidden': True}
+        ))
+        commands.set_properties('1.0', [('', 'hello')])
+
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', properties='hello'),
+        ])
+
+    def test_set_property_from_alias(self):
+        self._commit_versions(versions.VersionInfo('1.0', aliases=['latest']))
+        commands.set_properties('latest', [('foo.bar', True)])
+
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', aliases=['latest'],
+                                 properties={'foo': {'bar': True}}),
+        ])
+
+    def test_branch(self):
+        self._commit_versions(versions.VersionInfo('1.0'), branch='branch')
+        commands.set_properties('1.0', [('foo.bar', True)], branch='branch')
+
+        check_call_silent(['git', 'checkout', 'branch'])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', properties={'foo': {'bar': True}}),
+        ])
+
+    def test_commit_message(self):
+        self._commit_versions(versions.VersionInfo('1.0'))
+        commands.set_properties('1.0', [('foo.bar', True)],
+                                message='commit message')
+
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', properties={'foo': {'bar': True}}),
+        ], expected_message='commit message')
+
+    def test_deploy_prefix(self):
+        self._commit_versions(versions.VersionInfo('1.0'),
+                              deploy_prefix='prefix')
+        commands.set_properties('1.0', [('foo.bar', True)],
+                                deploy_prefix='prefix')
+
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', properties={'foo': {'bar': True}}),
+        ], directory='prefix')
+
+    def test_invalid_version(self):
+        self._commit_versions(versions.VersionInfo('1.0'))
+        with self.assertRaises(ValueError):
+            commands.set_properties('2.0', [('foo.bar', True)])
 
 
 class TestRetitle(unittest.TestCase):

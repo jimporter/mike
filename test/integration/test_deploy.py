@@ -105,6 +105,16 @@ class TestDeploy(DeployTestCase):
             versions.VersionInfo('1.0', aliases=['latest'])
         ], alias_type=AliasType.copy)
 
+    def test_props(self):
+        assertPopen(['mike', 'deploy', '1.0',
+                     '--prop-set', 'foo.bar=[1,2,3]',
+                     '--prop-set', 'foo.bar[1]=true',
+                     '--prop-delete', 'foo.bar[0]'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', properties={'foo': {'bar': [True, 3]}})
+        ])
+
     def test_update(self):
         assertPopen(['mike', 'deploy', '1.0', 'latest'])
         assertPopen(['mike', 'deploy', '1.0', 'greatest', '-t', '1.0.1'])

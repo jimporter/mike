@@ -62,7 +62,7 @@ def make_nojekyll():
 @contextmanager
 def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
            alias_type=AliasType.symlink, template=None, *, branch='gh-pages',
-           message=None, allow_empty=False, deploy_prefix=''):
+           message=None, allow_empty=False, deploy_prefix='', set_props=[]):
     if message is None:
         message = (
             'Deployed {rev} to {doc_version}{deploy_prefix} with MkDocs ' +
@@ -80,6 +80,9 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
     version_str = str(info.version)
     destdir = os.path.join(deploy_prefix, version_str)
     alias_destdirs = [os.path.join(deploy_prefix, i) for i in info.aliases]
+
+    for path, value in set_props:
+        info.set_property(path, value)
 
     # Let the caller perform the build.
     yield
@@ -206,6 +209,43 @@ def alias(cfg, identifier, aliases, update_aliases=False,
                     d, os.path.relpath(canonical_dir, base_dir), mode=0o120000
                 ))
 
+        commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
+
+
+def get_property(identifier, prop, *, branch='gh-pages', deploy_prefix=''):
+    all_versions = list_versions(branch, deploy_prefix)
+    try:
+        real_version = all_versions.find(identifier, strict=True)[0]
+        info = all_versions[real_version]
+    except KeyError as e:
+        raise ValueError('identifier {} does not exist'.format(e))
+
+    return info.get_property(prop)
+
+
+def set_properties(identifier, set_props, *, branch='gh-pages', message=None,
+                   allow_empty=False, deploy_prefix=''):
+    all_versions = list_versions(branch, deploy_prefix)
+    try:
+        real_version = all_versions.find(identifier, strict=True)[0]
+        info = all_versions[real_version]
+    except KeyError as e:
+        raise ValueError('identifier {} does not exist'.format(e))
+
+    if message is None:
+        message = (
+            'Set properties for {doc_version}{deploy_prefix} with mike ' +
+            '{mike_version}'
+        ).format(
+            doc_version=real_version,
+            deploy_prefix=_format_deploy_prefix(deploy_prefix),
+            mike_version=app_version
+        )
+
+    for path, value in set_props:
+        info.set_property(path, value)
+
+    with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 

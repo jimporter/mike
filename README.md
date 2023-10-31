@@ -132,7 +132,10 @@ redirect template with `-T`/`--template`; this takes a path to a [Jinja][jinja]
 template that accepts an `{{href}}` variable.
 
 If you'd like to specify a title for this version that doesn't match the version
-string, you can pass `-t TITLE`/`--title=TITLE` as well.
+string, you can pass `-t TITLE`/`--title=TITLE` as well. You can set custom
+properties for this version as well, using `--prop-set`, `--prop-set-string`,
+`--prop-set-all`, `--prop-delete`, and `--prop-delete-all` (see the [Managing
+Properties](#managing-properties) section for more details).
 
 In addition, you can specify where to deploy your docs via `-b`/`--branch`,
 `-r`/`--remote`, and `--deploy-prefix`, specifying the branch, remote, and
@@ -240,6 +243,44 @@ existing alias points to.
 Once again, you can specify `--branch`, `--push`, etc to control how the commit
 is handled.
 
+### Managing Properties
+
+Each version of your documentation can have any arbitrary properties assigned to
+it that you like. You can use these properties to hold extra metadata, and then
+your documentation theme can consult those properties to do whatever you like.
+You can get properties via `props` command:
+
+```sh
+mike props [identifier] [prop]
+```
+
+If `prop` is specified, this will return the value of that property; otherwise,
+it will return all of that version's properties as a JSON object.
+
+You can also set properties by specifying one or more of `--set prop=json`,
+`--set-string prop=str`, `--set-all json`, `--delete prop`, and `--delete-all`.
+(If you prefer, you can also set properties at the same time as deploying via
+the `--prop-*` options.)
+
+When getting or setting a particular property, you can specify it with a
+limited JSONPath-like syntax. You can use bare field names, quoted field
+names, and indices/field names inside square brackets. The only operator
+supported is `.`. For example, this is a valid expression:
+
+```javascript
+foo."bar"[0].["baz"]
+```
+
+When setting values, you can add to the head or tail of a list via the `head`
+or `tail` keywords, e.g.:
+
+```javascript
+foo[head]
+```
+
+As usual, you can specify `--branch`, `--push`, etc to control how the commit is
+handled.
+
 ### More Details
 
 For more details on the available options, consult the `--help` command for
@@ -314,9 +355,14 @@ this:
 ```js
 [
   {"version": "1.0", "title": "1.0.1", "aliases": ["latest"]},
-  {"version": "0.9", "title": "0.9", "aliases": []}
+  {"version": "0.9", "title": "0.9", "aliases": [], properties: "anything"}
 ]
 ```
+
+Every version has a `version` string, a `title` (which may be the same as
+`version`), a list of `aliases`, and optionally, a `properties` attribute that
+can hold anything at all. These properties can be used by other packages,
+themes, etc in order to add their own custom metadata to each version.
 
 If you're creating a third-party extension to an existing theme, you add a
 setuptools entry point for `mike.themes` pointing to a Python submodule that

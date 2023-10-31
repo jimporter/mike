@@ -20,6 +20,12 @@ class HelpTest(unittest.TestCase):
                               '--ignore-remote-status'])
         self.assertRegex(output, r'^usage: mike deploy')
 
+    def test_help_paragraph_formatter(self):
+        output = assertPopen(['mike', 'help', 'props'])
+        self.assertRegex(output, r'^usage: mike props')
+        self.assertRegex(output, ('(?m)^Get or set properties for the ' +
+                                  'specified version\\.\n\nWhen getting'))
+
 
 class GenerateCompletionTest(unittest.TestCase):
     def test_completion(self):

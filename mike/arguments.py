@@ -1,4 +1,6 @@
 from argparse import *
+import re as _re
+import textwrap as _textwrap
 
 _ArgumentParser = ArgumentParser
 _Action = Action
@@ -11,6 +13,13 @@ def _add_complete(argument, complete):
     if complete is not None:
         argument.complete = complete
     return argument
+
+
+class ParagraphDescriptionHelpFormatter(HelpFormatter):
+    def _fill_text(self, text, width, indent):
+        # Re-fill text, but keep paragraphs. Why isn't this the default???
+        return '\n\n'.join(_textwrap.fill(i, width) for i in
+                           _re.split('\n\n', text.strip()))
 
 
 class Action(_Action):
