@@ -40,7 +40,7 @@
 - Fix retrieval of Git user name/email when using non-UTF8 encodings
 - Fix version selector for `mkdocs` and `readthedocs` themes when
   `use_directory_urls` is false
-- When redirecting to another page, include the `?search`
+- When redirecting to another page, include the `?query`
 - Ensure that aliases cannot be circularly defined
 - Support file names with double-quotes or newlines
 
