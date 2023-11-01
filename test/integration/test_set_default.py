@@ -106,7 +106,7 @@ class TestSetDefault(SetDefaultTestCase):
         self._deploy()
         assertPopen(['mike', 'set-default', '1.0'])
         rev = git_utils.get_latest_commit('gh-pages')
-        assertOutput(self, ['mike', 'set-default', '1.0'], output=(
+        assertOutput(self, ['mike', 'set-default', '1.0'], stdout='', stderr=(
             'warning: nothing changed in commit\n' +
             '  To create a commit anyway, retry with --allow-empty\n'
         ))
@@ -181,7 +181,7 @@ class TestSetDefault(SetDefaultTestCase):
         clone_rev = git_utils.get_latest_commit('gh-pages')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        assertOutput(self, ['mike', 'set-default', '1.0'], output=(
+        assertOutput(self, ['mike', 'set-default', '1.0'], stdout='', stderr=(
             'error: gh-pages has diverged from origin/gh-pages\n' +
             "  If you're sure this is intended, retry with " +
             '--ignore-remote-status\n'

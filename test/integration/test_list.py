@@ -1,9 +1,9 @@
 import json
 import os
-import subprocess
 import unittest
+from unittest import mock
 
-from . import assertPopen
+from . import assertPopen, assertOutput
 from .. import *
 from mike import git_utils, versions
 
@@ -33,21 +33,13 @@ class ListTestCase(unittest.TestCase):
                 all_versions.dumps()
             ))
 
-    def _get_list(self, options=[]):
-        extra_args = (['--deploy-prefix', self.deploy_prefix]
-                      if self.deploy_prefix else [])
-        return subprocess.run(
-            ['mike', 'list'] + options + extra_args,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            universal_newlines=True
-        )
-
     def _check_list(self, options=[], stdout=_default_output, stderr='',
                     returncode=0):
-        proc = self._get_list(options)
-        self.assertEqual(proc.returncode, returncode)
-        self.assertEqual(proc.stdout, stdout)
-        self.assertEqual(proc.stderr, stderr)
+        extra_args = (['--deploy-prefix', self.deploy_prefix]
+                      if self.deploy_prefix else [])
+        return assertOutput(self, ['mike', 'list'] + options + extra_args,
+                            stdout=stdout, stderr=stderr,
+                            returncode=returncode)
 
 
 class TestList(ListTestCase):
@@ -64,11 +56,8 @@ class TestList(ListTestCase):
                          "error: identifier 'nonexist' does not exist\n", 1)
 
     def test_list_json(self):
-        proc = self._get_list(['-j'])
-        self.assertEqual(proc.returncode, 0)
-        self.assertEqual(proc.stderr, '')
-
-        data = json.loads(proc.stdout)
+        stdout = self._check_list(['-j'], stdout=mock.ANY)[0]
+        data = json.loads(stdout)
         data[0]['aliases'].sort()
         self.assertEqual(data, [
             {'version': '4.0', 'title': '4.0', 'aliases': ['dev', 'latest']},
@@ -78,10 +67,8 @@ class TestList(ListTestCase):
         ])
 
     def test_list_version_json(self):
-        proc = self._get_list(['-j', 'stable'])
-        self.assertEqual(proc.returncode, 0)
-        self.assertEqual(proc.stderr, '')
-        self.assertEqual(json.loads(proc.stdout), {
+        stdout = self._check_list(['-j', 'stable'], stdout=mock.ANY)[0]
+        self.assertEqual(json.loads(stdout), {
             'version': '3.0', 'title': '3.0.3', 'aliases': ['stable']
         })
 

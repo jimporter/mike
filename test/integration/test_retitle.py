@@ -172,11 +172,13 @@ class TestRetitle(RetitleTestCase):
         clone_rev = git_utils.get_latest_commit('gh-pages')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        assertOutput(self, ['mike', 'retitle', '1.0', '1.0.1'], output=(
-            'error: gh-pages has diverged from origin/gh-pages\n' +
-            "  If you're sure this is intended, retry with " +
-            '--ignore-remote-status\n'
-        ), returncode=1)
+        assertOutput(
+            self, ['mike', 'retitle', '1.0', '1.0.1'], stdout='', stderr=(
+                'error: gh-pages has diverged from origin/gh-pages\n' +
+                "  If you're sure this is intended, retry with " +
+                '--ignore-remote-status\n'
+            ), returncode=1
+        )
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), clone_rev)
 
         assertPopen(['mike', 'retitle', '--ignore-remote-status', '1.0',

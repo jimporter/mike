@@ -255,7 +255,7 @@ class TestDeploy(DeployTestCase):
         clone_rev = git_utils.get_latest_commit('gh-pages')
         check_call_silent(['git', 'fetch', 'origin'])
 
-        assertOutput(self, ['mike', 'deploy', '1.0'], output=(
+        assertOutput(self, ['mike', 'deploy', '1.0'], stdout='', stderr=(
             'error: gh-pages has diverged from origin/gh-pages\n' +
             "  If you're sure this is intended, retry with " +
             '--ignore-remote-status\n'
