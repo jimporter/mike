@@ -34,12 +34,12 @@ window.addEventListener("DOMContentLoaded", function() {
   var ABS_BASE_URL = expandPath(base_url);
   var CURRENT_VERSION = ABS_BASE_URL.match(/\/([^\/]+)\/$/)[1];
 
-  function makeSelect(options, selected) {
+  function makeSelect(options) {
     var select = document.createElement("select");
 
     options.forEach(function(i) {
       var option = new Option(i.text, i.value, undefined,
-                              i.value === selected);
+                              i.selected);
       select.add(option);
     });
 
@@ -54,9 +54,12 @@ window.addEventListener("DOMContentLoaded", function() {
              i.aliases.includes(CURRENT_VERSION);
     }).version;
 
-    var select = makeSelect(versions.map(function(i) {
-      return {text: i.title, value: i.version};
-    }), realVersion);
+    var select = makeSelect(versions.filter(function(i) {
+      return i.version === realVersion || !i.properties || !i.properties.hidden;
+    }).map(function(i) {
+      return {text: i.title, value: i.version,
+              selected: i.version === realVersion};
+    }));
     select.id = "version-selector";
     select.addEventListener("change", function(event) {
       window.location.href = ABS_BASE_URL + "../" + this.value + "/";

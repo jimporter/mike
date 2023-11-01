@@ -248,6 +248,10 @@ is handled.
 Each version of your documentation can have any arbitrary properties assigned to
 it that you like. You can use these properties to hold extra metadata, and then
 your documentation theme can consult those properties to do whatever you like.
+When using the built-in MkDocs themes, mike supports one property: `hidden`.
+When this is `true`, that version will be hidden from the version selector
+(unless it's the current version).
+
 You can get properties via `props` command:
 
 ```sh

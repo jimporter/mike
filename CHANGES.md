@@ -5,6 +5,8 @@
 ### New features
 
 - Add support for applying arbitrary properties to documentation versions
+- Add support for hiding specific versions from the selector when using the
+  default themes
 - Deploy aliases using symbolic links by default; this can be configured via
   `--alias-type` on the command line or `alias_type` in the `mike` MkDocs plugin
 - Avoid creating empty commits by default; if you want empty commits, pass
