@@ -310,8 +310,7 @@ mike will do its best to stay in-sync with your remote repository and will
 automatically update your local branch to match the remote's if possible (note
 that mike *won't* automatically `git fetch` anything). If your local branch has
 diverged from your remote, mike will leave it as-is and ask you what to do. To
-ignore the remote's state, just pass `--ignore`; to update to the remote's
-state, pass `--rebase`.
+ignore the remote's state, just pass `--ignore-remote-status`.
 
 ## `CNAME` (and Other Special Files)
 
