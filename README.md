@@ -47,7 +47,7 @@ shell. For more details on how to set this up, consult shtab's
 
 ## Usage
 
-### Before Using Mike
+### Before Using mike
 
 Before using mike for the first time, you may want to use [`mike delete
 --all`](#deleting-docs) to delete any old documentation on your `gh-pages`
@@ -358,7 +358,7 @@ If you'd like to provide support for mike in your theme, you just need to
 fetch `versions.json` and build a version selector. `versions.json` looks like
 this:
 
-```js
+```javascript
 [
   {"version": "1.0", "title": "1.0.1", "aliases": ["latest"]},
   {"version": "0.9", "title": "0.9", "aliases": [], "properties": "anything"}
