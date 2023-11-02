@@ -35,6 +35,8 @@ class TestParse(unittest.TestCase):
         self.assertEqual(jsonpath.parse('foo.bar'), ['foo', 'bar'])
         self.assertEqual(jsonpath.parse('foo[1].bar'), ['foo', 1, 'bar'])
         self.assertEqual(jsonpath.parse('"foo.bar".baz'), ['foo.bar', 'baz'])
+        self.assertEqual(jsonpath.parse('foo."bar"[0]["baz"]'),
+                         ['foo', 'bar', 0, 'baz'])
 
     def test_whitespace(self):
         self.assertEqual(jsonpath.parse(' '), [])

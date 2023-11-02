@@ -274,7 +274,7 @@ names, and indices/field names inside square brackets. The only operator
 supported is `.`. For example, this is a valid expression:
 
 ```javascript
-foo."bar"[0].["baz"]
+foo."bar"[0]["baz"]
 ```
 
 When setting values, you can add to the head or tail of a list via the `head`
