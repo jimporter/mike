@@ -1,6 +1,6 @@
 # Changes
 
-## v2.0.0 (in progress)
+## v2.0.0 (2023-11-02)
 
 ### New features
 
