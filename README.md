@@ -361,7 +361,7 @@ this:
 ```js
 [
   {"version": "1.0", "title": "1.0.1", "aliases": ["latest"]},
-  {"version": "0.9", "title": "0.9", "aliases": [], properties: "anything"}
+  {"version": "0.9", "title": "0.9", "aliases": [], "properties": "anything"}
 ]
 ```
 
