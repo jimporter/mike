@@ -367,7 +367,7 @@ this:
 
 Every version has a `version` string, a `title` (which may be the same as
 `version`), a list of `aliases`, and optionally, a `properties` attribute that
-can hold anything at all. These properties can be used by other packages,
+can hold anything at all. These `properties` can be used by other packages,
 themes, etc in order to add their own custom metadata to each version.
 
 If you're creating a third-party extension to an existing theme, you add a
