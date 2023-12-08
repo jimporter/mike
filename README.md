@@ -384,8 +384,8 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 
 [pypi-image]: https://img.shields.io/pypi/v/mike.svg
 [pypi-link]: https://pypi.python.org/pypi/mike
-[ci-image]: https://github.com/jimporter/mike/workflows/build/badge.svg
-[ci-link]: https://github.com/jimporter/mike/actions?query=branch%3Amaster+workflow%3Abuild
+[ci-image]: https://github.com/jimporter/mike/actions/workflows/build.yml/badge.svg
+[ci-link]: https://github.com/jimporter/mike/actions/workflows/build.yml?query=branch%3Amaster
 [codecov-image]: https://codecov.io/gh/jimporter/mike/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/mike
 
