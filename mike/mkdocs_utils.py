@@ -1,4 +1,5 @@
 import mkdocs.config
+import mkdocs.plugins
 import mkdocs.utils
 import os
 import re
@@ -30,7 +31,14 @@ def _open_config(config_file=None):
 def load_config(config_file=None, **kwargs):
     with _open_config(config_file) as f:
         cfg = mkdocs.config.load_config(f, **kwargs)
-        return cfg['plugins'].run_event('config', cfg)
+
+        if 'startup' in mkdocs.plugins.EVENTS:
+            cfg['plugins'].run_event('startup', command='mike', dirty=False)
+        cfg = cfg['plugins'].run_event('config', cfg)
+        if 'shutdown' in mkdocs.plugins.EVENTS:
+            cfg['plugins'].run_event('shutdown')
+
+        return cfg
 
 
 @contextmanager

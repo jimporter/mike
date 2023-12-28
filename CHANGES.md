@@ -1,5 +1,13 @@
 # Changes
 
+## v2.1.0 (in progress)
+
+### Bug fixes
+- When loading an MkDocs config, mike now runs the `startup` and `shutdown`
+  events
+
+---
+
 ## v2.0.0 (2023-11-02)
 
 ### New features
