@@ -151,21 +151,23 @@ built-in MkDocs fields `remote_branch` and `remote_name`.)
 
 ### Viewing Your Docs
 
-To test that your docs have been built as expected, you can serve them locally
-from a dev server:
+To test all the versions of your documentation as you'd see on your production
+server, you can serve them locally via:
 
 ```sh
 mike serve
 ```
 
 By default, this serves the docs on `http://localhost:8000`, but you can
-change this with `-a`/`--dev-addr`. Remember though, *this is for testing only*.
-To host your docs for real, you should use a real web server.
+change this with `-a`/`--dev-addr`.
 
-> [!NOTE]
-> When editing your documentation, it's usually best to use `mkdocs serve`
-> instead. This renders the current version of your documentation without
-> forcing you to create a Git commit first via `mike deploy`.
+When editing your documentation, it's usually best to use `mkdocs serve`
+instead. This serves the current version of your documentation without forcing
+you to create a Git commit first via `mike deploy`.
+
+> [!CAUTION]
+> `mike serve` and `mkdocs serve` should be used *for testing only*. To host
+> your docs for real, use a real web server.
 
 ### Deleting Docs
 
