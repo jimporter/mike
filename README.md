@@ -162,8 +162,9 @@ production server, you can serve them locally via:
 mike serve
 ```
 
-By default, this serves the docs on `http://localhost:8000`, but you can
-change this with `-a`/`--dev-addr`.
+This serves your current documentation as committed to your `gh-pages` branch.
+By default, it serves the docs at `http://localhost:8000`, but you can change
+this with `-a`/`--dev-addr`.
 
 > [!CAUTION]
 > `mike serve` and `mkdocs serve` should be used *for testing only*. To host
