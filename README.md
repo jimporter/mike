@@ -151,8 +151,12 @@ built-in MkDocs fields `remote_branch` and `remote_name`.)
 
 ### Viewing Your Docs
 
-To test all the versions of your documentation as you'd see on your production
-server, you can serve them locally via:
+When editing your documentation, you can usually just use the ordinary [`mkdocs
+serve`][mkdocs-serve]. This serves the current version of your documentation
+without forcing you to create a Git commit first via `mike deploy`.
+
+If you want to test all the versions of your documentation as you'd see on your
+production server, you can serve them locally via:
 
 ```sh
 mike serve
@@ -160,10 +164,6 @@ mike serve
 
 By default, this serves the docs on `http://localhost:8000`, but you can
 change this with `-a`/`--dev-addr`.
-
-When editing your documentation, it's usually best to use `mkdocs serve`
-instead. This serves the current version of your documentation without forcing
-you to create a Git commit first via `mike deploy`.
 
 > [!CAUTION]
 > `mike serve` and `mkdocs serve` should be used *for testing only*. To host
@@ -401,4 +401,5 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [shtab]: https://github.com/iterative/shtab
 [shtab-setup]: https://github.com/iterative/shtab#cli-usage
 [jinja]: https://jinja.palletsprojects.com/
+[mkdocs-serve]: https://www.mkdocs.org/user-guide/cli/#mkdocs-serve
 [gh-action-commit]: https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
