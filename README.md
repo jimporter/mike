@@ -152,8 +152,9 @@ built-in MkDocs fields `remote_branch` and `remote_name`.)
 ### Viewing Your Docs
 
 When editing your documentation, you can usually just use the ordinary [`mkdocs
-serve`][mkdocs-serve]. This serves the current version of your documentation
-without forcing you to create a Git commit first via `mike deploy`.
+serve`][mkdocs-serve] to show the genereated results. This serves the current
+version of your documentation without forcing you to create a Git commit first
+via `mike deploy`.
 
 If you want to test all the versions of your documentation as you'd see on your
 production server, you can serve them locally via:
