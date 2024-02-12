@@ -296,7 +296,8 @@ def set_default(identifier, template=None, *, branch='gh-pages', message=None,
         ))
 
 
-def serve(address='localhost:8000', *, branch='gh-pages', verbose=True):
+def serve(address='localhost:8000', *, branch='gh-pages', deploy_prefix='',
+          verbose=True):
     my_branch = branch
 
     class Handler(server.GitBranchHTTPHandler):
@@ -307,7 +308,7 @@ def serve(address='localhost:8000', *, branch='gh-pages', verbose=True):
     httpd = http.server.HTTPServer((host, port), Handler)
 
     if verbose:
-        print('Starting server at http://{}:{}/'.format(host, port))
+        print('Starting server at http://{}:{}/{}'.format(host, port, deploy_prefix))
         print('Press Ctrl+C to quit.')
     try:
         httpd.serve_forever()

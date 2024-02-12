@@ -309,7 +309,9 @@ def set_default(parser, args):
 def serve(parser, args):
     load_mkdocs_config(args)
     check_remote_status(args)
-    commands.serve(args.dev_addr, branch=args.branch)
+    commands.serve(args.dev_addr,
+                   branch=args.branch,
+                   deploy_prefix=args.deploy_prefix)
 
 
 def help(parser, args):
@@ -432,7 +434,7 @@ def main():
         'serve', description=serve_desc, help='serve docs locally for testing'
     )
     serve_p.set_defaults(func=serve)
-    add_git_arguments(serve_p, commit=False, deploy_prefix=False)
+    add_git_arguments(serve_p, commit=False)
     serve_p.add_argument('-a', '--dev-addr', default='localhost:8000',
                          metavar='HOST[:PORT]',
                          help=('Host address and port to serve from ' +
