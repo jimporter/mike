@@ -89,5 +89,5 @@ def version():
         ['mkdocs', '--version'],
         check=True, stdout=subprocess.PIPE, universal_newlines=True
     ).stdout.rstrip()
-    m = re.search('^mkdocs, version (\\S*)', output)
+    m = re.search('^.*?, version (\\S*)', output)
     return m.group(1)
