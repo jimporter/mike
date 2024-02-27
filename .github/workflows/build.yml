@@ -30,7 +30,7 @@ jobs:
           python setup.py coverage -q
           coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
   lint:
