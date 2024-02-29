@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import warnings
 from contextlib import contextmanager
 
 from . import arguments
@@ -75,6 +76,10 @@ generate_completion_desc = """
 Generate shell-completion functions for bfg9000 and write them to standard
 output. This requires the Python package `shtab`.
 """
+
+
+def showwarning(message, category, filename, lineno, file=None, line=None):
+    sys.stderr.write('warning: {}\n'.format(message))
 
 
 def add_git_arguments(parser, *, commit=True, deploy_prefix=True):
@@ -174,7 +179,7 @@ def check_remote_status(args, strict=False):
             raise ValueError(str(e) + "\n  If you're sure this is intended, " +
                              'retry with --ignore-remote-status')
         else:
-            sys.stderr.write('warning: {}\n'.format(e))
+            warnings.warn(str(e))
 
 
 @contextmanager
@@ -182,8 +187,8 @@ def handle_empty_commit():
     try:
         yield
     except git_utils.GitEmptyCommit as e:
-        sys.stderr.write(('warning: {}\n  To create a commit anyway, retry ' +
-                          'with --allow-empty\n').format(e))
+        warnings.warn(str(e) + '\n  To create a commit anyway, retry with ' +
+                      '--allow-empty')
 
 
 def deploy(parser, args):
@@ -198,7 +203,7 @@ def deploy(parser, args):
                              deploy_prefix=args.deploy_prefix,
                              set_props=args.set_props or []), \
              mkdocs_utils.inject_plugin(args.config_file) as config_file:
-            mkdocs_utils.build(config_file, args.version)
+            mkdocs_utils.build(config_file, args.version, quiet=args.quiet)
         if args.push:
             git_utils.push_branch(args.remote, args.branch)
 
@@ -327,12 +332,16 @@ def generate_completion(parser, args):
 
 
 def main():
+    warnings.showwarning = showwarning
+
     parser = arguments.ArgumentParser(prog='mike', description=description)
     subparsers = parser.add_subparsers(metavar='COMMAND')
     subparsers.required = True
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + app_version)
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='silence warnings')
     parser.add_argument('--debug', action='store_true',
                         help='report extra information for debugging mike')
 
@@ -460,6 +469,9 @@ def main():
                               help='shell type (default: %(default)s)')
 
     args = parser.parse_args()
+    if args.quiet:
+        warnings.filterwarnings('ignore')
+
     try:
         return args.func(parser, args)
     except Exception as e:

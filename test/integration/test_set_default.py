@@ -118,6 +118,14 @@ class TestSetDefault(SetDefaultTestCase):
         ))
         self.assertEqual(git_utils.get_latest_commit('gh-pages'), rev)
 
+    def test_no_changes_quiet(self):
+        self._deploy()
+        assertPopen(['mike', 'set-default', '1.0'])
+        rev = git_utils.get_latest_commit('gh-pages')
+        assertOutput(self, ['mike', '--quiet', 'set-default', '1.0'],
+                     stdout='', stderr='')
+        self.assertEqual(git_utils.get_latest_commit('gh-pages'), rev)
+
     def test_remote_empty(self):
         stage_dir('set_default_clone')
         check_call_silent(['git', 'clone', self.stage, '.'])

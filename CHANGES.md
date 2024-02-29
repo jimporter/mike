@@ -5,6 +5,7 @@
 ### New features
 - When calling `set-default`, you can now pass `--allow-undefined` to set the
   default to a version that doesn't exist yet
+- Add global-level `-q` / `--quiet` option to suppress warning messages
 
 ### Bug fixes
 - When loading an MkDocs config, mike now runs the `startup` and `shutdown`

@@ -1,4 +1,5 @@
 import os
+import subprocess
 import unittest
 import yaml
 from io import StringIO
@@ -192,7 +193,7 @@ class TestBuild(unittest.TestCase):
     def test_build(self):
         self.stage = stage_dir('build')
         copytree(os.path.join(test_data_dir, 'basic_theme'), self.stage)
-        mkdocs_utils.build('mkdocs.yml', '1.0', verbose=False)
+        mkdocs_utils.build('mkdocs.yml', '1.0', output=subprocess.DEVNULL)
 
         self.assertTrue(os.path.exists('site/index.html'))
 
@@ -205,7 +206,7 @@ class TestBuild(unittest.TestCase):
         # responsible for).
         with pushd(this_dir):
             mkdocs_utils.build(os.path.join(self.stage, 'mkdocs.yml'),
-                               '1.0', verbose=False)
+                               '1.0', output=subprocess.DEVNULL)
 
         self.assertTrue(os.path.exists('site/index.html'))
 

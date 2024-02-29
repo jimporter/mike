@@ -71,16 +71,15 @@ def inject_plugin(config_file):
         os.remove(f.name)
 
 
-def build(config_file, version, verbose=True):
+def build(config_file, version, *, quiet=False, output=None):
     command = (
-        ['mkdocs', 'build', '--clean'] +
+        ['mkdocs'] + (['--quiet'] if quiet else []) + ['build', '--clean'] +
         (['--config-file', config_file] if config_file else [])
     )
 
     env = os.environ.copy()
     env[docs_version_var] = version
 
-    output = None if verbose else subprocess.DEVNULL
     subprocess.run(command, check=True, env=env, stdout=output, stderr=output)
 
 
