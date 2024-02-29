@@ -141,6 +141,15 @@ class TestDeploy(DeployTestCase):
             versions.VersionInfo('1.0b1'),
         ])
 
+    def test_set_default(self):
+        assertPopen(['mike', 'deploy', '1.0', '--set-default'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0'),
+        ])
+        with open('index.html') as f:
+            self.assertRegex(f.read(), match_redir('1.0/'))
+
     def test_from_subdir(self):
         os.mkdir('sub')
         with pushd('sub'):

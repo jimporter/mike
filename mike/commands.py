@@ -62,7 +62,8 @@ def make_nojekyll():
 @contextmanager
 def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
            alias_type=AliasType.symlink, template=None, *, branch='gh-pages',
-           message=None, allow_empty=False, deploy_prefix='', set_props=[]):
+           message=None, allow_empty=False, deploy_prefix='', set_props=[], 
+           set_default=False):
     if message is None:
         message = (
             'Deployed {rev} to {doc_version}{deploy_prefix} with MkDocs ' +
@@ -117,6 +118,13 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
 
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
         commit.add_file(make_nojekyll())
+
+        if set_default:
+            t = _redirect_template(template)
+            commit.add_file(git_utils.FileInfo(
+                os.path.join(deploy_prefix, 'index.html'),
+                t.render(href=version_str + '/')
+            ))
 
 
 def delete(identifiers=None, all=False, *, branch='gh-pages', message=None,

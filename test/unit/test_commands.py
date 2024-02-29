@@ -49,11 +49,14 @@ class TestBase(unittest.TestCase):
         commit_files(['page.html', 'file.txt', 'dir/index.html'])
 
     def _test_state(self, expected_message, expected_versions,
-                    alias_type=AliasType.symlink, directory='.'):
+                    alias_type=AliasType.symlink, directory='.',
+                    expected_files=None):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, expected_message)
 
         files = {'versions.json'}
+        if expected_files:
+            files.update(expected_files)
         for v in expected_versions:
             vstr = str(v.version)
             files |= {vstr, vstr + '/page.html', vstr + '/file.txt',
@@ -280,6 +283,15 @@ class TestDeploy(TestBase):
             versions.VersionInfo('2.0', '2.0.0', ['latest']),
             versions.VersionInfo('1.0', '1.0', []),
         ])
+
+    def test_set_default(self):
+        with commands.deploy(self.cfg, '1.0', set_default=True):
+            self._mock_build()
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_files=["index.html"])
+
+        with open('index.html') as f:
+            self.assertRegex(f.read(), match_redir("1.0/"))
 
 
 class TestDelete(TestBase):

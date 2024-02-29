@@ -225,6 +225,9 @@ the setting of `alias_type`/`--alias-type`.)
 Like `deploy` and `delete` above, you can specify `--branch`, `--push`,
 etc to control how the commit is handled.
 
+As with `deploy`, you can pass `-d`/`--set-default` to set the published version
+as the new default.
+
 ### Changing a Version's Title
 
 As you update your docs, you may want to change the title of a particular

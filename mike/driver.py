@@ -196,7 +196,8 @@ def deploy(parser, args):
                              branch=args.branch, message=args.message,
                              allow_empty=args.allow_empty,
                              deploy_prefix=args.deploy_prefix,
-                             set_props=args.set_props or []), \
+                             set_props=args.set_props or [],
+                             set_default=args.set_default), \
              mkdocs_utils.inject_plugin(args.config_file) as config_file:
             mkdocs_utils.build(config_file, args.version)
         if args.push:
@@ -350,6 +351,8 @@ def main():
                                 '%(choices)s; default: symlink)'))
     deploy_p.add_argument('-T', '--template', complete='file',
                           help='template file to use for redirects')
+    deploy_p.add_argument('-d', '--set-default', action='store_true',
+                          help='set the deployed version as the new default')
     add_git_arguments(deploy_p)
     add_set_prop_arguments(deploy_p, prefix='prop-')
     deploy_p.add_argument('version', metavar='VERSION',
