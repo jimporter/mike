@@ -299,7 +299,8 @@ def set_default(parser, args):
     check_remote_status(args, strict=True)
     with handle_empty_commit():
         commands.set_default(args.identifier, args.template,
-                             branch=args.branch, message=args.message,
+                             args.allow_undefined, branch=args.branch,
+                             message=args.message,
                              allow_empty=args.allow_empty,
                              deploy_prefix=args.deploy_prefix)
         if args.push:
@@ -424,6 +425,9 @@ def main():
     set_default_p.set_defaults(func=set_default)
     set_default_p.add_argument('-T', '--template', complete='file',
                                help='template file to use')
+    set_default_p.add_argument('--allow-undefined', action='store_true',
+                               help=('allow setting undefined versions as ' +
+                                     'default'))
     add_git_arguments(set_default_p)
     set_default_p.add_argument('identifier', metavar='IDENTIFIER',
                                help='version or alias to set as default')

@@ -43,6 +43,12 @@ class TestSetDefault(SetDefaultTestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default()
 
+    def test_allow_undefined(self):
+        self._deploy()
+        assertPopen(['mike', 'set-default', '2.0', '--allow-undefined'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default(match_redir('2.0/'))
+
     def test_custom_template(self):
         self._deploy()
         assertPopen(['mike', 'set-default', '1.0', '-T',

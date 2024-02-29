@@ -272,8 +272,9 @@ def retitle(identifier, title, *, branch='gh-pages', message=None,
         commit.add_file(versions_to_file_info(all_versions, deploy_prefix))
 
 
-def set_default(identifier, template=None, *, branch='gh-pages', message=None,
-                allow_empty=False, deploy_prefix=''):
+def set_default(identifier, template=None, allow_undefined=False, *,
+                branch='gh-pages', message=None, allow_empty=False,
+                deploy_prefix=''):
     if message is None:
         message = (
             'Set default version to {doc_identifier}{deploy_prefix} with ' +
@@ -285,7 +286,7 @@ def set_default(identifier, template=None, *, branch='gh-pages', message=None,
         )
 
     all_versions = list_versions(branch, deploy_prefix)
-    if not all_versions.find(identifier):
+    if not allow_undefined and not all_versions.find(identifier):
         raise ValueError('identifier {!r} does not exist'.format(identifier))
 
     t = _redirect_template(template)

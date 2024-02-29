@@ -752,6 +752,12 @@ class TestSetDefault(unittest.TestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_default()
 
+    def test_allow_undefined(self):
+        self._deploy()
+        commands.set_default('2.0', allow_undefined=True)
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default(match_redir('2.0/'))
+
     def test_custom_template(self):
         self._deploy()
         with mock.patch('builtins.open',

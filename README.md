@@ -217,6 +217,10 @@ version of the docs:
 mike set-default [identifier]
 ```
 
+Normally, this command will return an error if `identifier` doesn't exist. If
+you want to set the default to a version that doesn't exist yet, you can pass
+`--allow-undefined`.
+
 If you want to use a different template from the default, you can pass
 `-T`/`--template`; this takes a path to a [Jinja][jinja] template that accepts
 an `{{href}}` variable. (Note that this page *always* uses a redirect, no matter

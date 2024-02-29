@@ -2,6 +2,10 @@
 
 ## v2.1.0 (in progress)
 
+### New features
+- When calling `set-default`, you can now pass `--allow-undefined` to set the
+  default to a version that doesn't exist yet
+
 ### Bug fixes
 - When loading an MkDocs config, mike now runs the `startup` and `shutdown`
   events
