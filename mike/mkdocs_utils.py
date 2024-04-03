@@ -12,6 +12,31 @@ from tempfile import NamedTemporaryFile
 docs_version_var = 'MIKE_DOCS_VERSION'
 
 
+class RoundTrippableTag:
+    def __init__(self, node):
+        self.node = node
+
+    def __repr__(self):
+        return repr(self.node)
+
+    @staticmethod
+    def constructor(loader, suffix, node):
+        return RoundTrippableTag(node)
+
+    @staticmethod
+    def representer(dumper, data):
+        return data.node
+
+
+class RoundTripLoader(yaml.SafeLoader):
+    pass
+
+
+yaml.add_multi_constructor('!', RoundTrippableTag.constructor,
+                           Loader=RoundTripLoader)
+yaml.add_multi_representer(RoundTrippableTag, RoundTrippableTag.representer)
+
+
 def _open_config(config_file=None):
     if config_file is None:
         config_file = ['mkdocs.yml', 'mkdocs.yaml']
@@ -45,7 +70,7 @@ def load_config(config_file=None, **kwargs):
 def inject_plugin(config_file):
     with _open_config(config_file) as f:
         config_file = f.name
-        config = mkdocs.utils.yaml_load(f)
+        config = mkdocs.utils.yaml_load(f, loader=RoundTripLoader)
 
     plugins = config.setdefault('plugins', ['search'])
     for i in plugins:
