@@ -184,6 +184,22 @@ class TestInjectPlugin(unittest.TestCase):
                     '- baz:\n    option: !ENV [variable, default]\n')
         self.assertEqual(self.out.getvalue(), expected)
 
+    def test_python_tag(self):
+        cfg = 'plugins:\n  - foo:\n      option: !!python/none'
+        with mock.patch('builtins.open',
+                        mock_open_files({'mkdocs.yml': cfg})), \
+             mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
+                        return_value=self.out), \
+             mock.patch('os.remove') as mremove:
+            with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
+                self.assertEqual(f, self.out.name)
+                newcfg = yaml.safe_load(self.out.getvalue())
+            mremove.assert_called_once()
+
+        self.assertEqual(newcfg, {'plugins': [
+            'mike', {'foo': {'option': None}},
+        ]})
+
     def test_inherit(self):
         main_cfg = 'INHERIT: mkdocs-base.yml\nplugins:\n  foo: {}\n'
         base_cfg = 'plugins:\n  bar: {}\n'

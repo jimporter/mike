@@ -28,7 +28,7 @@ class RoundTrippableTag:
         return data.node
 
 
-class RoundTripLoader(yaml.SafeLoader):
+class RoundTripLoader(yaml.Loader):
     pass
 
 
