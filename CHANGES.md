@@ -1,6 +1,6 @@
 # Changes
 
-## v2.1.0 (in progress)
+## v2.1.0 (2024-05-01)
 
 ### New features
 - When calling `set-default`, you can now pass `--allow-undefined` to set the
