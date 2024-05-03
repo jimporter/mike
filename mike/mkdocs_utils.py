@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import yaml
+import yaml_env_tag
 from collections.abc import Iterable, Mapping
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
@@ -31,6 +32,12 @@ class RoundTrippableTag:
 class RoundTripLoader(yaml.Loader):
     pass
 
+
+# We need to expand environment variables in our round trip loader (making it
+# less of a "round trip"), or else `INHERIT: !ENV ...` will fail when injecting
+# the mike plugin. MkDocs really doesn't make this easy on us...
+yaml.add_constructor('!ENV', yaml_env_tag.construct_env_tag,
+                     Loader=RoundTripLoader)
 
 yaml.add_multi_constructor('!', RoundTrippableTag.constructor,
                            Loader=RoundTripLoader)

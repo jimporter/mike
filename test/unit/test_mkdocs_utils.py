@@ -167,21 +167,21 @@ class TestInjectPlugin(unittest.TestCase):
         cfg = ('plugins:\n' +
                '  - foo:\n      option: !relative $config_dir\n' +
                '  - bar:\n      option: !ENV variable\n' +
-               '  - baz:\n      option: !ENV [variable, default]'
-               )
+               '  - baz:\n      option: !ENV [variable, default]')
         with mock.patch('builtins.open',
                         mock_open_files({'mkdocs.yml': cfg})), \
              mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
                         return_value=self.out), \
-             mock.patch('os.remove') as mremove:
+             mock.patch('os.remove') as mremove, \
+             mock.patch.dict(os.environ, {'variable': 'mock_val'}, clear=True):
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, self.out.name)
             mremove.assert_called_once()
 
         expected = ('plugins:\n- mike\n' +
                     "- foo:\n    option: !relative '$config_dir'\n" +
-                    "- bar:\n    option: !ENV 'variable'\n"
-                    '- baz:\n    option: !ENV [variable, default]\n')
+                    '- bar:\n    option: mock_val\n'
+                    '- baz:\n    option: mock_val\n')
         self.assertEqual(self.out.getvalue(), expected)
 
     def test_python_tag(self):
@@ -211,6 +211,30 @@ class TestInjectPlugin(unittest.TestCase):
                         return_value=self.out), \
              mock.patch('os.path.exists', return_value=True), \
              mock.patch('os.remove') as mremove:
+            with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
+                self.assertEqual(f, 'mike-mkdocs.yml')
+                newcfg = yaml.safe_load(self.out.getvalue())
+            mremove.assert_called_once()
+
+        self.assertEqual(newcfg, {'plugins': {
+            'mike': {}, 'bar': {}, 'foo': {},
+        }})
+        self.assertEqual(
+            list(newcfg['plugins'].items()),
+            [('mike', {}), ('bar', {}), ('foo', {})]
+        )
+
+    def test_inherit_env(self):
+        main_cfg = 'INHERIT: !ENV base_file\nplugins:\n  foo: {}\n'
+        base_cfg = 'plugins:\n  bar: {}\n'
+        files = {'mkdocs.yml': main_cfg, 'mkdocs-base.yml': base_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)), \
+             mock.patch('mike.mkdocs_utils.NamedTemporaryFile',
+                        return_value=self.out), \
+             mock.patch('os.path.exists', return_value=True), \
+             mock.patch('os.remove') as mremove, \
+             mock.patch.dict(os.environ, {'base_file': 'mkdocs-base.yml'},
+                             clear=True):
             with mkdocs_utils.inject_plugin('mkdocs.yml') as f:
                 self.assertEqual(f, 'mike-mkdocs.yml')
                 newcfg = yaml.safe_load(self.out.getvalue())

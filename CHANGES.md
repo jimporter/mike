@@ -1,5 +1,13 @@
 # Changes
 
+## v2.1.1 (in progress)
+
+### Bug fixes
+- Support using environment variables for `INHERIT` when injecting the `mike`
+  plugin into `mkdocs.yml`
+
+---
+
 ## v2.1.0 (2024-05-01)
 
 ### New features
