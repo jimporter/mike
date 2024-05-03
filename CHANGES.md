@@ -1,6 +1,6 @@
 # Changes
 
-## v2.1.1 (in progress)
+## v2.1.1 (2024-05-03)
 
 ### Bug fixes
 - Support using environment variables for `INHERIT` when injecting the `mike`
