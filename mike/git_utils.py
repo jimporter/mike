@@ -85,7 +85,7 @@ def get_latest_commit(rev, *, short=False):
 
 
 def count_reachable(rev):
-    cmd = ['git', 'rev-list', '--count', rev]
+    cmd = ['git', 'rev-list', '--count', rev, '--']
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     if p.returncode == 0:
         return int(p.stdout.strip())
