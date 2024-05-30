@@ -62,7 +62,7 @@ def make_when(timestamp=None):
 
 
 def get_config(key, encoding='utf-8'):
-    cmd = ['git', 'config', key]
+    cmd = ['git', 'config', '--', key]
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, encoding=encoding)
     if p.returncode != 0:
         raise GitError('error getting config {!r}'.format(key), p.stderr)
@@ -85,7 +85,7 @@ def get_latest_commit(rev, *, short=False):
 
 
 def count_reachable(rev):
-    cmd = ['git', 'rev-list', '--count', rev]
+    cmd = ['git', 'rev-list', '--count', rev, '--']
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     if p.returncode == 0:
         return int(p.stdout.strip())
@@ -164,7 +164,7 @@ def push_branch(remote, branch):
 
 
 def delete_branch(branch):
-    cmd = ['git', 'branch', '--delete', '--force', branch]
+    cmd = ['git', 'branch', '--delete', '--force', '--', branch]
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     if p.returncode != 0:
         raise GitError('unable to delete branch {}'.format(branch),
@@ -172,7 +172,7 @@ def delete_branch(branch):
 
 
 def is_commit_empty(rev):
-    cmd = ['git', 'log', '-1', '--format=', '--name-only', rev]
+    cmd = ['git', 'log', '-1', '--format=', '--name-only', rev, '--']
     p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     if p.returncode == 0:
         return not p.stdout
