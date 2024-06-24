@@ -1,5 +1,13 @@
 # Changes
 
+## v2.1.2 (2024-06-23)
+
+### Bug fixes
+- Remove ambiguity of some Git commands so that file and branch names don't
+  collide
+
+---
+
 ## v2.1.1 (2024-05-03)
 
 ### Bug fixes
