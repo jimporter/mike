@@ -91,7 +91,7 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
         t = _redirect_template(template)
 
     with git_utils.Commit(branch, message, allow_empty=allow_empty) as commit:
-        commit.delete_files([version_str] + list(info.aliases))
+        commit.delete_files([destdir] + alias_destdirs)
 
         for f in git_utils.walk_real_files(cfg['site_dir']):
             canonical_file = f.copy(destdir, cfg['site_dir'])
