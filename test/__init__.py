@@ -84,7 +84,7 @@ def git_config():
 
 
 def git_init():
-    check_call_silent(['git', 'init'])
+    check_call_silent(['git', 'init', '--initial-branch=master'])
     git_config()
 
 
