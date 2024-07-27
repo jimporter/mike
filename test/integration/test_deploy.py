@@ -164,6 +164,13 @@ class TestDeploy(DeployTestCase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_deploy(directory='prefix')
 
+    def test_double_deploy_prefix(self):
+        assertPopen(['mike', 'deploy', '1.0'])
+        assertPopen(['mike', 'deploy', '1.0', '--deploy-prefix', 'prefix'])
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy()
+        self._test_deploy(directory='prefix')
+
     def test_push(self):
         check_call_silent(['git', 'config', 'receive.denyCurrentBranch',
                            'ignore'])
