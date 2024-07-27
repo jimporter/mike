@@ -92,7 +92,8 @@ class TestDeploy(TestBase):
             rev = git_utils.get_latest_commit('master', short=True)
             expected_message = (
                 r'^Deployed {} to {}( in .*)? with MkDocs \S+ and mike \S+$'
-                .format(rev, expected_versions[0].version)
+                .format(re.escape(rev),
+                        re.escape(str(expected_versions[0].version)))
             )
 
         if os.path.exists(self.cfg['site_dir']):
