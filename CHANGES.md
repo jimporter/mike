@@ -1,5 +1,13 @@
 # Changes
 
+## v2.2.0 (in progress)
+
+### Bug fixes
+- When deploying using a deploy prefix, only delete stale versions of the docs
+  within that prefix
+
+---
+
 ## v2.1.2 (2024-06-23)
 
 ### Bug fixes
