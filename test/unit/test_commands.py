@@ -49,7 +49,8 @@ class TestBase(unittest.TestCase):
         commit_files(['page.html', 'file.txt', 'dir/index.html'])
 
     def _test_state(self, expected_message, expected_versions,
-                    alias_type=AliasType.symlink, directory='.'):
+                    alias_type=AliasType.symlink, directory='.', *,
+                    allow_extra=False):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message, expected_message)
 
@@ -68,7 +69,7 @@ class TestBase(unittest.TestCase):
                               a + '/dir/index.html'}
                 if this_alias_type == AliasType.copy:
                     files.add(a + '/file.txt')
-        assertDirectory(directory, files)
+        assertDirectory(directory, files, allow_extra=allow_extra)
 
         with open(os.path.join(directory, 'versions.json')) as f:
             self.assertEqual(list(versions.Versions.loads(f.read())),
@@ -83,6 +84,8 @@ class TestDeploy(TestBase):
         self.cfg['site_dir'] = os.path.join(self.cfg['site_dir'], 'site')
 
     def _mock_build(self):
+        if os.path.exists(self.cfg['site_dir']):
+            shutil.rmtree(self.cfg['site_dir'])
         copytree(self.stage, self.cfg['site_dir'])
 
     def _test_deploy(self, expected_message=None,
@@ -227,6 +230,21 @@ class TestDeploy(TestBase):
             versions.VersionInfo('1.0', aliases=['latest'])
         ], directory='prefix')
 
+    def test_mixed_deploy_prefixes(self):
+        with commands.deploy(self.cfg, '1.0', aliases=['latest']):
+            self._mock_build()
+        with commands.deploy(self.cfg, '1.0', aliases=['latest'],
+                             deploy_prefix='prefix'):
+            self._mock_build()
+
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ], expected_message='.*', allow_extra=True)
+        self._test_deploy(expected_versions=[
+            versions.VersionInfo('1.0', aliases=['latest'])
+        ], directory='prefix')
+
     def test_overwrite_version(self):
         with git_utils.Commit('gh-pages', 'add versions.json') as commit:
             commit.add_file(git_utils.FileInfo(
@@ -357,10 +375,38 @@ class TestDelete(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_delete(directory='prefix')
 
+    def test_mixed_deploy_prefixes(self):
+        self._deploy()
+        self._deploy(deploy_prefix='prefix')
+        commands.delete(['1.0'], deploy_prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        self._test_delete(expected_versions=[
+            versions.VersionInfo('2.0'),
+            versions.VersionInfo('1.0', aliases=['stable']),
+        ], expected_message='.*', allow_extra=True)
+        self._test_delete(directory='prefix')
+
     def test_deploy_prefix_delete_all(self):
         self._deploy(deploy_prefix='prefix')
         commands.delete(all=True, deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
+        self.assertRegex(message,
+                         r'^Removed everything in prefix with mike \S+$')
+        assertDirectory('prefix', set())
+
+    def test_mixed_deploy_prefixes_delete_all(self):
+        self._deploy()
+        self._deploy(deploy_prefix='prefix')
+        commands.delete(all=True, deploy_prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        self._test_delete(expected_versions=[
+            versions.VersionInfo('2.0'),
+            versions.VersionInfo('1.0', aliases=['stable']),
+        ], expected_message='.*', allow_extra=True)
 
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
         self.assertRegex(message,
@@ -510,6 +556,16 @@ class TestAlias(TestBase):
         check_call_silent(['git', 'checkout', 'gh-pages'])
         self._test_alias(directory='prefix')
 
+    def test_mixed_deploy_prefixes(self):
+        self._deploy()
+        self._deploy(deploy_prefix='prefix')
+        commands.alias(self.cfg, '1.0', ['greatest'], deploy_prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        self._test_alias(expected_aliases=[], expected_message='.*',
+                         allow_extra=True)
+        self._test_alias(directory='prefix')
+
     def test_alias_invalid_version(self):
         self._deploy()
         self.assertRaises(ValueError, commands.alias, self.cfg, '2.0',
@@ -566,6 +622,20 @@ class TestGetProperty(TestPropertyBase):
         self.assertEqual(
             commands.get_property('1.0', '', deploy_prefix='prefix'),
             {'hidden': True}
+        )
+
+    def test_mixed_deploy_prefixes(self):
+        self._commit_versions(versions.VersionInfo(
+            '1.0', properties={'foo': True}
+        ))
+        self._commit_versions(versions.VersionInfo(
+            '1.0', properties={'bar': True}
+        ), deploy_prefix='prefix')
+
+        self.assertEqual(commands.get_property('1.0', ''), {'foo': True})
+        self.assertEqual(
+            commands.get_property('1.0', '', deploy_prefix='prefix'),
+            {'bar': True}
         )
 
     def test_invalid_version(self):
@@ -652,6 +722,23 @@ class TestSetProperties(TestPropertyBase):
             versions.VersionInfo('1.0', properties={'foo': {'bar': True}}),
         ], directory='prefix')
 
+    def test_mixed_deploy_prefixes(self):
+        self._commit_versions(versions.VersionInfo(
+            '1.0', properties={'foo': {'bar': True}}
+        ))
+        self._commit_versions(versions.VersionInfo('1.0'),
+                              deploy_prefix='prefix')
+        commands.set_properties('1.0', [('zoo.goat', True)],
+                                deploy_prefix='prefix')
+
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', properties={'foo': {'bar': True}}),
+        ])
+        self._test_set_properties([
+            versions.VersionInfo('1.0', properties={'zoo': {'goat': True}}),
+        ], directory='prefix')
+
     def test_invalid_version(self):
         self._commit_versions(versions.VersionInfo('1.0'))
         with self.assertRaises(ValueError):
@@ -670,25 +757,26 @@ class TestRetitle(unittest.TestCase):
                              deploy_prefix=deploy_prefix):
             pass
 
-    def _test_retitle(self, expected_message=None, directory='.'):
+    def _test_retitle(self, expected_message=None,
+                      expected_version=versions.VersionInfo('1.0', '1.0.1'),
+                      directory='.', *, allow_extra=False):
         message = check_output(['git', 'log', '-1', '--pretty=%B']).rstrip()
-        if expected_message:
-            self.assertEqual(message, expected_message)
-        else:
-            self.assertRegex(
-                message,
-                r'^Set title of \S+ to 1\.0\.1( in .*)? with mike \S+$'
+        if not expected_message:
+            expected_message = (
+                r'^Set title of {} to {}( in .*)? with mike \S+$'
+                .format(re.escape(str(expected_version.version)),
+                        re.escape(expected_version.title))
             )
+        self.assertRegex(message, expected_message)
 
         assertDirectory(directory, {
             'versions.json',
             '1.0',
             '1.0/file.txt'
-        })
+        }, allow_extra=allow_extra)
         with open(os.path.join(directory, 'versions.json')) as f:
-            self.assertEqual(list(versions.Versions.loads(f.read())), [
-                versions.VersionInfo('1.0', '1.0.1'),
-            ])
+            self.assertEqual(list(versions.Versions.loads(f.read())),
+                             [expected_version])
 
     def test_retitle(self):
         self._deploy()
@@ -712,6 +800,16 @@ class TestRetitle(unittest.TestCase):
         self._deploy(deploy_prefix='prefix')
         commands.retitle('1.0', '1.0.1', deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_retitle(directory='prefix')
+
+    def test_mixed_deploy_prefixes(self):
+        self._deploy()
+        self._deploy(deploy_prefix='prefix')
+        commands.retitle('1.0', '1.0.1', deploy_prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        self._test_retitle(expected_version=versions.VersionInfo('1.0'),
+                           expected_message='.*', allow_extra=True)
         self._test_retitle(directory='prefix')
 
     def test_retitle_invalid(self):
@@ -783,6 +881,15 @@ class TestSetDefault(unittest.TestCase):
         self._deploy(deploy_prefix='prefix')
         commands.set_default('1.0', deploy_prefix='prefix')
         check_call_silent(['git', 'checkout', 'gh-pages'])
+        self._test_default(directory='prefix')
+
+    def test_mixed_deploy_prefixes(self):
+        self._deploy()
+        self._deploy(deploy_prefix='prefix')
+        commands.set_default('1.0', deploy_prefix='prefix')
+        check_call_silent(['git', 'checkout', 'gh-pages'])
+
+        self.assertFalse(os.path.exists('./index.html'))
         self._test_default(directory='prefix')
 
     def test_set_invalid_default(self):

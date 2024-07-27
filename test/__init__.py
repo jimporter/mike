@@ -120,7 +120,8 @@ def match_redir(url):
     return r'window\.location\.replace\(\s*"{}"'.format(re.escape(url))
 
 
-def assertDirectory(path, contents, include_hidden=False, allow_extra=False):
+def assertDirectory(path, contents, *, include_hidden=False,
+                    allow_extra=False):
     path = os.path.normpath(path)
     actual = set(os.path.normpath(os.path.join(base, f))
                  for base, dirs, files in walk(path, include_hidden)
