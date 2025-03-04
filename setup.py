@@ -34,9 +34,9 @@ class Coverage(Command):
 
         subprocess.run(['coverage', 'erase'], check=True)
         subprocess.run(
-            ['coverage', 'run', 'setup.py', 'test'] +
-            (['-q'] if self.verbose == 0 else []) +
-            (['-s', self.test_suite] if self.test_suite else []),
+            ['coverage', 'run', '-m', 'unittest', 'discover'] +
+            (['-v'] if self.verbose != 0 else []) +
+            ([self.test_suite] if self.test_suite else []),
             env=env, check=True
         )
         subprocess.run(['coverage', 'combine'], check=True,
@@ -75,12 +75,13 @@ setup(
         'License :: OSI Approved :: BSD License',
 
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
 
     packages=find_packages(exclude=['test', 'test.*']),
