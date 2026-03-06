@@ -19,7 +19,7 @@ class Coverage(Command):
         self.test_suite = None
 
     def finalize_options(self):
-        pass
+        self.test_suite = self.test_suite.split(',') if self.test_suite else []
 
     def run(self):
         env = dict(os.environ)
@@ -36,7 +36,7 @@ class Coverage(Command):
         subprocess.run(
             ['coverage', 'run', '-m', 'unittest', 'discover'] +
             (['-v'] if self.verbose != 0 else []) +
-            ([self.test_suite] if self.test_suite else []),
+            ['-k' + i for i in self.test_suite],
             env=env, check=True
         )
         subprocess.run(['coverage', 'combine'], check=True,
