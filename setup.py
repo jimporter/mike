@@ -70,9 +70,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
 
         'Intended Audience :: Developers',
-
         'Topic :: Documentation',
-        'License :: OSI Approved :: BSD License',
 
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
