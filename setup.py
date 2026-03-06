@@ -86,7 +86,8 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     include_package_data=True,
 
-    install_requires=(['importlib_metadata', 'importlib_resources',
+    install_requires=(['importlib_metadata;python_version<"3.10"',
+                       'importlib_resources;python_version<"3.10"',
                        'jinja2 >= 2.7', 'mkdocs >= 1.0', 'pyparsing >= 3.0',
                        'pyyaml >= 5.1', 'pyyaml_env_tag', 'verspec']),
     extras_require={

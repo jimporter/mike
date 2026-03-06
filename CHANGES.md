@@ -1,5 +1,12 @@
 # Changes
 
+## v2.1.4 (in progress)
+
+### Bug fixes
+- Use built-in `importlib` in Python 3.10 and greater
+
+---
+
 ## v2.1.3 (2024-08-12)
 
 ### Bug fixes

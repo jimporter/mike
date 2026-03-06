@@ -1,5 +1,5 @@
-import importlib_metadata as metadata
 import os
+import sys
 from urllib.parse import urljoin
 from mkdocs.config import config_options as opts
 from mkdocs.plugins import BasePlugin
@@ -7,6 +7,11 @@ from mkdocs.structure.files import File
 
 from .mkdocs_utils import docs_version_var
 from .commands import AliasType
+
+if sys.version_info < (3, 10):
+    import importlib_metadata as metadata
+else:
+    from importlib import metadata
 
 try:
     from mkdocs.exceptions import PluginError
