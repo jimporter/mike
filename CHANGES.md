@@ -48,7 +48,6 @@
 ## v2.0.0 (2023-11-02)
 
 ### New features
-
 - Add support for applying arbitrary properties to documentation versions
 - Add support for hiding specific versions from the selector when using the
   default themes
@@ -65,7 +64,6 @@
   8000
 
 ### Breaking changes
-
 - `--prefix` is now `--deploy-prefix`
 - `--no-redirect` is now `--alias-type=copy`
 - `--ignore` is now `--ignore-remote-status`
@@ -76,7 +74,6 @@
   Git to resolve any conflicts)
 
 ### Bug fixes
-
 - Aliases that are "similar" to preexisting versions (e.g. `1.0` and `1.0.0`)
   can now be set properly
 - Versions that *don't* start with a digit (or `v` and then a digit) are now
@@ -94,7 +91,6 @@
 ## v1.1.2 (2021-10-03)
 
 ### Bug fixes
-
 - Improve support for shell-completion
 
 ---
@@ -102,7 +98,6 @@
 ## v1.1.1 (2021-09-13)
 
 ### Bug fixes
-
 - Fix support for Unicode in redirection templates
 - Properly decode paths in the development server
 
@@ -123,7 +118,6 @@
 ## v1.0.1 (2021-05-31)
 
 ### Bug fixes
-
 - When redirecting to another page, include the `#hash`
 - Ensure the MkDocs `search` plugin is correctly enabled when building via mike
 
