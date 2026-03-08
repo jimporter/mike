@@ -1,6 +1,6 @@
 # Changes
 
-## v2.1.4 (in progress)
+## v2.1.4 (2026-03-07)
 
 ### Bug fixes
 - Use built-in `importlib` in Python 3.10 and greater
