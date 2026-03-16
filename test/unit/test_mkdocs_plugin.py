@@ -34,7 +34,7 @@ class TestMkdocsPluginOnConfig(PluginTest):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
             config = {'site_url': 'https://example.com/'}
             self.make_plugin().on_config(config)
-            self.assertEqual(config['site_url'], 'https://example.com/1.0')
+            self.assertEqual(config['site_url'], 'https://example.com/1.0/')
 
     def test_no_site_url(self):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
@@ -46,7 +46,7 @@ class TestMkdocsPluginOnConfig(PluginTest):
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
             config = {'site_url': 'https://example.com/'}
             self.make_plugin(canonical_version='latest').on_config(config)
-            self.assertEqual(config['site_url'], 'https://example.com/latest')
+            self.assertEqual(config['site_url'], 'https://example.com/latest/')
 
         with mock.patch('os.environ', {docs_version_var: '1.0'}):
             config = {'site_url': 'https://example.com/'}
