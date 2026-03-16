@@ -8,6 +8,7 @@ import time
 import unicodedata
 
 from enum import Enum
+from gitignore_parser import parse_gitignore
 
 BranchStatus = Enum('BranchState', ['even', 'ahead', 'behind', 'diverged'])
 
@@ -316,8 +317,8 @@ class Commit:
         if self._pipe.wait() != 0:
             raise GitCommitError(self._stderr.decode('utf-8'))
 
-        if ( not self._allow_empty
-             and is_commit_empty(get_latest_commit(self._branch)) ):
+        if (not self._allow_empty
+                and is_commit_empty(get_latest_commit(self._branch))):
             delete_latest_commit(self._branch)
             raise GitEmptyCommit()
 
@@ -407,13 +408,27 @@ def walk_files(branch, path=''):
                        .format(branch=branch, path=gpath))
 
 
-def walk_real_files(srcdir):
+def walk_real_files(srcdir, topdir=os.getcwd()):
+    gitignorepath=os.path.join(topdir,'.gitignore')
+    gitignore = parse_gitignore(gitignorepath) if os.path.isfile(gitignorepath) else None
+    if gitignore is not None: 
+        print(f"Using Gitignore: {gitignorepath}")
     for path, dirs, filenames in os.walk(srcdir):
+        # if gitignore is not None:
+        #     if gitignore(path) is True:
+        #         print(f"Ignoring: {path}",file=sys.stderr)
+        #         continue
         if '.git' in dirs:
             dirs.remove('.git')
         for f in filenames:
+            
             filepath = os.path.join(path, f)
+            if gitignore is not None:
+                if gitignore(filepath) is True:
+                    print(f"Ignoring: {path}",file=sys.stderr)
+                    continue
             mode = 0o100755 if os.access(filepath, os.X_OK) else 0o100644
             with open(filepath, 'rb') as fd:
                 data = fd.read()
+            
             yield FileInfo(filepath, data, mode)
