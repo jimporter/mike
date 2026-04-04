@@ -22,8 +22,17 @@ class TestMakeWhen(unittest.TestCase):
     def test_default(self):
         self.assertRegex(git_utils.make_when(), r'\d+ (\+|-)\d{4}')
 
-    def test_timestamp(self):
-        self.assertRegex(git_utils.make_when(12345), r'12345 (\+|-)\d{4}')
+    def test_raw(self):
+        self.assertEqual(git_utils.make_when('12345 +0200'), '12345 +0200')
+
+    def test_iso8601(self):
+        self.assertEqual(git_utils.make_when('2012-03-04T05:06:07+02:00'),
+                         '1330830367 +0200')
+
+    def test_rfc2822(self):
+        self.assertEqual(
+            git_utils.make_when('Sun, 04 Mar 2012 05:06:07 +0200'),
+            '1330830367 +0200')
 
 
 class TestGetConfig(unittest.TestCase):

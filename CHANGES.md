@@ -1,5 +1,13 @@
 # Changes
 
+## v2.2.0 (in progress)
+
+### Bug fixes
+- Use DST timestamps for new commits when DST is in effect
+- Support ISO8601 and RFC 2822 values for `GIT_COMMITTER_DATE`
+
+---
+
 ## v2.1.4 (2026-03-07)
 
 ### Bug fixes
