@@ -15,6 +15,8 @@ jobs:
         include:
           - {os: ubuntu-24.04, python-version: '3.8'}
           - {os: ubuntu-latest, python-version: '3.9'}
+          - {os: ubuntu-latest, python-version: '3.14',
+             extra-packages: [properdocs, properdocs-theme-mkdocs]}
       fail-fast: false
 
     steps:
@@ -25,7 +27,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          pip install '.[test]'
+          pip install '.[test]' ${{ join(matrix.extra-packages, ' ') }}
       - name: Run tests
         run: |
           python setup.py coverage -q

@@ -273,4 +273,5 @@ class TestBuild(unittest.TestCase):
 
 class TestVersion(unittest.TestCase):
     def test_version(self):
-        self.assertRegex(mkdocs_utils.version(), r'\S+')
+        self.assertRegex(mkdocs_utils.version_info(),
+                         r'(MkDocs|ProperDocs) \S+')

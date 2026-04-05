@@ -18,8 +18,8 @@ class DeployTestCase(unittest.TestCase):
         else:
             self.assertRegex(
                 message,
-                r'^Deployed {} to {}( in .*)? with MkDocs \S+ and mike \S+$'
-                .format(rev, expected_versions[0].version)
+                (r'^Deployed {} to {}( in .*)? with (MkDocs|ProperDocs) \S+ ' +
+                 r'and mike \S+$').format(rev, expected_versions[0].version)
             )
 
         files = {'versions.json'}

@@ -1,16 +1,34 @@
-import mkdocs.config
-import mkdocs.plugins
-import mkdocs.utils
 import os
-import re
 import subprocess
-import yaml
-import yaml_env_tag
+import sys
 from collections.abc import Iterable, Mapping
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 
+import mkdocs.config
+import mkdocs.plugins
+import mkdocs.utils
+import yaml
+import yaml_env_tag
+
+if sys.version_info < (3, 10):
+    import importlib_metadata as metadata
+else:
+    from importlib import metadata
+
 docs_version_var = 'MIKE_DOCS_VERSION'
+default_config_file = ['mkdocs.yml', 'mkdocs.yaml']
+
+try:
+    _version = metadata.version('properdocs')
+    _program_name = 'properdocs'
+    _brand = 'ProperDocs'
+    default_config_file = (['properdocs.yml', 'properdocs.yaml'] +
+                           default_config_file)
+except metadata.PackageNotFoundError:
+    _version = metadata.version('mkdocs')
+    _program_name = 'mkdocs'
+    _brand = 'MkDocs'
 
 
 class RoundTrippableTag:
@@ -46,7 +64,7 @@ yaml.add_multi_representer(RoundTrippableTag, RoundTrippableTag.representer)
 
 def _open_config(config_file=None):
     if config_file is None:
-        config_file = ['mkdocs.yml', 'mkdocs.yaml']
+        config_file = default_config_file
     elif not isinstance(config_file, Iterable) or isinstance(config_file, str):
         config_file = [config_file]
 
@@ -105,7 +123,9 @@ def inject_plugin(config_file):
 
 def build(config_file, version, *, quiet=False, output=None):
     command = (
-        ['mkdocs'] + (['--quiet'] if quiet else []) + ['build', '--clean'] +
+        [_program_name] +
+        (['--quiet'] if quiet else []) +
+        ['build', '--clean'] +
         (['--config-file', config_file] if config_file else [])
     )
 
@@ -115,10 +135,5 @@ def build(config_file, version, *, quiet=False, output=None):
     subprocess.run(command, check=True, env=env, stdout=output, stderr=output)
 
 
-def version():
-    output = subprocess.run(
-        ['mkdocs', '--version'],
-        check=True, stdout=subprocess.PIPE, universal_newlines=True
-    ).stdout.rstrip()
-    m = re.search('^mkdocs, version (\\S*)', output)
-    return m.group(1)
+def version_info():
+    return '{} {}'.format(_brand, _version)

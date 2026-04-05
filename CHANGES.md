@@ -2,9 +2,14 @@
 
 ## v2.2.0 (in progress)
 
+### New features
+- Add support for [ProperDocs][properdocs]
+
 ### Bug fixes
 - Use DST timestamps for new commits when DST is in effect
 - Support ISO8601 and RFC 2822 values for `GIT_COMMITTER_DATE`
+
+[properdocs]: https://properdocs.org/
 
 ---
 

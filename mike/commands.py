@@ -70,13 +70,13 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
            message=None, allow_empty=False, deploy_prefix='', set_props=[]):
     if message is None:
         message = (
-            'Deployed {rev} to {doc_version}{deploy_prefix} with MkDocs ' +
+            'Deployed {rev} to {doc_version}{deploy_prefix} with ' +
             '{mkdocs_version} and mike {mike_version}'
         ).format(
             rev=git_utils.get_latest_commit('HEAD', short=True),
             doc_version=version,
             deploy_prefix=_format_deploy_prefix(deploy_prefix),
-            mkdocs_version=mkdocs_utils.version(),
+            mkdocs_version=mkdocs_utils.version_info(),
             mike_version=app_version
         )
 

@@ -94,10 +94,10 @@ class TestDeploy(TestBase):
         if not expected_message:
             rev = git_utils.get_latest_commit('master', short=True)
             expected_message = (
-                r'^Deployed {} to {}( in .*)? with MkDocs \S+ and mike \S+$'
-                .format(re.escape(rev),
-                        re.escape(str(expected_versions[0].version)))
-            )
+                r'^Deployed {} to {}( in .*)? with (MkDocs|ProperDocs) \S+ ' +
+                r'and mike \S+$'
+            ).format(re.escape(rev),
+                     re.escape(str(expected_versions[0].version)))
 
         if os.path.exists(self.cfg['site_dir']):
             shutil.rmtree(self.cfg['site_dir'])
