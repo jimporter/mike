@@ -405,7 +405,7 @@ def walk_files(branch, path=''):
                  universal_newlines=True)
 
     for line in p.stdout:
-        strmode, _, _, filename = re.split(r'\s', line.rstrip(), 3)
+        strmode, _, _, filename = re.split(r'\s', line.rstrip(), maxsplit=3)
         mode = int(strmode, 8)
         filepath = os.path.join(path, os.path.normpath(filename))
         yield FileInfo(filepath, read_file(branch, filepath), mode)
