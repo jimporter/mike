@@ -87,7 +87,7 @@ setup(
     install_requires=(['importlib_metadata;python_version<"3.10"',
                        'importlib_resources;python_version<"3.10"',
                        'jinja2 >= 2.7', 'mkdocs >= 1.0', 'pyparsing >= 3.0',
-                       'pyyaml >= 5.1', 'pyyaml_env_tag', 'verspec']),
+                       'pyyaml >= 5.1', 'pyyaml_env_tag', 'verspec', 'gitignore-parser>= 0.1.13 ']),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'flake8-quotes', 'shtab'],
         'test': ['coverage', 'flake8 >= 3.0', 'flake8-quotes', 'shtab'],

@@ -101,6 +101,7 @@ def deploy(cfg, version, title=None, aliases=[], update_aliases=False,
         for f in git_utils.walk_real_files(cfg['site_dir']):
             canonical_file = f.copy(destdir, cfg['site_dir'])
             commit.add_file(canonical_file)
+            print(f"Adding {f.path}")
             for d in alias_destdirs:
                 alias_file = f.copy(d, cfg['site_dir'])
                 if alias_type == AliasType.redirect:
