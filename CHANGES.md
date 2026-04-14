@@ -1,6 +1,6 @@
 # Changes
 
-## v2.2.0 (in progress)
+## v2.2.0 (2026-04-13)
 
 ### New features
 - Add support for [ProperDocs][properdocs]
