@@ -51,7 +51,7 @@ class MikePlugin(BasePlugin):
         if version and config.get('site_url'):
             if self.config['canonical_version'] is not None:
                 version = self.config['canonical_version']
-            config['site_url'] = urljoin(config['site_url'], version)
+            config['site_url'] = urljoin(config['site_url'], version) + '/'
 
     def on_files(self, files, config):
         if not self.config['version_selector']:
