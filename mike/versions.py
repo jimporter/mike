@@ -1,6 +1,6 @@
 import json
 import re
-from verspec.loose import LooseVersion as Version
+from inversion.loose import Version
 
 from . import jsonpath
 

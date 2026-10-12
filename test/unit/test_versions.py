@@ -1,6 +1,6 @@
 import json
 import unittest
-from verspec.loose import LooseVersion as Version
+from inversion.loose import Version
 
 from mike.jsonpath import Deleted
 from mike.versions import VersionInfo, Versions
