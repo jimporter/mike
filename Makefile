@@ -1,5 +1,6 @@
 BUILDDIR = build
-TESTSUITES =
+TESTS =
+VERBOSE =
 
 .PHONY: coverage
 coverage:
@@ -7,12 +8,14 @@ coverage:
 	PYTHONPATH=$(shell pwd)/test/scripts:$(PYTHONPATH) \
 	COVERAGE_FILE=$(shell pwd)/.coverage \
 	COVERAGE_PROCESS_START=$(shell pwd)/pyproject.toml \
-	coverage run -m unittest discover
+	coverage run -m unittest discover $(if $(VERBOSE),--verbose) \
+	$(if $(TESTS),$(patsubst %,-k %,$(TESTS)))
 	coverage combine
 
 .PHONY: test
 test:
-	python -m unittest discover
+	python -m unittest discover $(if $(VERBOSE),--verbose) \
+	$(if $(TESTS),$(patsubst %,-k %,$(TESTS)))
 
 .PHONY: lint
 lint:
