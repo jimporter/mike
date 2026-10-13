@@ -1,0 +1,113 @@
+[build-system]
+requires = ['setuptools']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'mike'
+authors = [{name = 'Jim Porter', email = 'itsjimporter@gmail.com'}]
+description = 'Manage multiple versions of your MkDocs-powered documentation'
+dynamic = ['license', 'readme', 'version']
+
+requires-python = '>=3.8'
+keywords = ['mkdocs', 'multiple versions']
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+
+    'Intended Audience :: Developers',
+    'Topic :: Documentation',
+
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
+]
+
+dependencies = [
+    'importlib_metadata; python_version<"3.10"',
+    'importlib_resources; python_version<"3.10"',
+    'inversion', 'jinja2 >= 2.7', 'mkdocs ~= 1.0', 'pyparsing >= 3.0',
+    'pyyaml >= 5.1', 'pyyaml_env_tag',
+]
+
+[project.optional-dependencies]
+test = ['coverage[toml]', 'flake8 >= 3.0', 'flake8-quotes', 'shtab']
+
+[project.scripts]
+mike = 'mike.driver:main'
+
+[project.entry-points."mkdocs.plugins"]
+mike = 'mike.mkdocs_plugin:MikePlugin'
+
+[project.entry-points."mike.themes"]
+mkdocs = 'mike.themes.mkdocs'
+readthedocs = 'mike.themes.readthedocs'
+
+# Bootswatch themes
+bootstrap = 'mike.themes.mkdocs'
+cerulean = 'mike.themes.mkdocs'
+cosmo = 'mike.themes.mkdocs'
+cyborg = 'mike.themes.mkdocs'
+darkly = 'mike.themes.mkdocs'
+flatly = 'mike.themes.mkdocs'
+journal = 'mike.themes.mkdocs'
+litera = 'mike.themes.mkdocs'
+lumen = 'mike.themes.mkdocs'
+lux = 'mike.themes.mkdocs'
+materia = 'mike.themes.mkdocs'
+minty = 'mike.themes.mkdocs'
+pulse = 'mike.themes.mkdocs'
+sandstone = 'mike.themes.mkdocs'
+simplex = 'mike.themes.mkdocs'
+slate = 'mike.themes.mkdocs'
+solar = 'mike.themes.mkdocs'
+spacelab = 'mike.themes.mkdocs'
+superhero = 'mike.themes.mkdocs'
+united = 'mike.themes.mkdocs'
+yeti = 'mike.themes.mkdocs'
+
+# Bootswatch classic themes
+amelia = 'mike.themes.mkdocs'
+readable = 'mike.themes.mkdocs'
+mkdocs-classic = 'mike.themes.mkdocs'
+amelia-classic = 'mike.themes.mkdocs'
+bootstrap-classic = 'mike.themes.mkdocs'
+cerulean-classic = 'mike.themes.mkdocs'
+cosmo-classic = 'mike.themes.mkdocs'
+cyborg-classic = 'mike.themes.mkdocs'
+flatly-classic = 'mike.themes.mkdocs'
+journal-classic = 'mike.themes.mkdocs'
+readable-classic = 'mike.themes.mkdocs'
+simplex-classic = 'mike.themes.mkdocs'
+slate-classic = 'mike.themes.mkdocs'
+spacelab-classic = 'mike.themes.mkdocs'
+united-classic = 'mike.themes.mkdocs'
+yeti-classic = 'mike.themes.mkdocs'
+
+[tool.setuptools.dynamic]
+version = {attr = 'mike.app_version.version'}
+
+[tool.setuptools.packages.find]
+exclude = ['test', 'test.*']
+
+[tool.coverage.run]
+source = ['mike']
+parallel = true
+branch = true
+
+[tool.coverage.paths]
+source = [
+    'mike/',
+    '/usr/local/lib/*/site-packages/mike/',
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    'pragma: no cover',
+    'raise NotImplementedError',
+    'return NotImplemented',
+    'def __repr__',
+]

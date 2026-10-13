@@ -30,7 +30,7 @@ jobs:
           pip install '.[test]' ${{ join(matrix.extra-packages, ' ') }}
       - name: Run tests
         run: |
-          python setup.py coverage -q
+          make coverage
           coverage xml
       - name: Upload coverage
         uses: codecov/codecov-action@v3
@@ -50,4 +50,4 @@ jobs:
           pip install '.[test]'
       - name: Run lint
         run: |
-          flake8
+          make lint
