@@ -79,6 +79,8 @@ class VersionInfo:
         return added
 
     def get_property(self, expr, **kwargs):
+        if self.properties is None:
+            return None
         return jsonpath.get_value(self.properties, expr, **kwargs)
 
     def set_property(self, expr, value):

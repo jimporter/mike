@@ -166,6 +166,10 @@ class TestVersionInfo(unittest.TestCase):
         v = VersionInfo('1.0', properties={'prop': ['foo', 'bar']})
         self.assertEqual(v.get_property('prop[1]'), 'bar')
 
+        v = VersionInfo('1.0')
+        self.assertIsNone(v.get_property('prop'))
+        self.assertIsNone(v.get_property('prop[1]'))
+
     def test_set_property(self):
         v = VersionInfo('1.0', properties={'prop': 'val'})
         v.set_property('hello', 'world')
