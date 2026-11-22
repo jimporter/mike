@@ -66,8 +66,10 @@ def get_value(data, expression, *, strict=False):
         expression = parse(expression)
 
     for step in expression:
-        _check_step(data, step)
+        if data is None and not strict:
+            return None
 
+        _check_step(data, step)
         try:
             data = data[step]
         except (IndexError, KeyError):

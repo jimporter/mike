@@ -92,16 +92,32 @@ class TestGetValue(unittest.TestCase):
     def test_dict(self):
         self.assertEqual(jsonpath.get_value({'a': 2, 'b': 4, 'c': 6}, 'b'), 4)
 
-    def test_missing(self):
+    def test_missing_list(self):
         self.assertEqual(jsonpath.get_value(['a', 'b', 'c'], '[3]'), None)
+        self.assertEqual(jsonpath.get_value(None, '[3]'), None)
+        self.assertEqual(jsonpath.get_value([None], '[0][3]'), None)
+
+    def test_missing_dict(self):
         self.assertEqual(jsonpath.get_value({'a': 2, 'b': 4, 'c': 6}, 'd'),
                          None)
+        self.assertEqual(jsonpath.get_value(None, 'd'), None)
+        self.assertEqual(jsonpath.get_value({'a': None}, 'a.x'), None)
 
-    def test_missing_strict(self):
+    def test_missing_list_strict(self):
         with self.assertRaises(IndexError):
             jsonpath.get_value(['a', 'b', 'c'], '[3]', strict=True)
+        with self.assertRaises(TypeError):
+            jsonpath.get_value(None, '[3]', strict=True)
+        with self.assertRaises(TypeError):
+            jsonpath.get_value([None], '[0][3]', strict=True)
+
+    def test_missing_dict_strict(self):
         with self.assertRaises(KeyError):
             jsonpath.get_value({'a': 2, 'b': 4, 'c': 6}, 'd', strict=True)
+        with self.assertRaises(TypeError):
+            jsonpath.get_value(None, 'd', strict=True)
+        with self.assertRaises(TypeError):
+            jsonpath.get_value({'a': None}, 'a.x', strict=True)
 
     def test_nested(self):
         data = {'zoo': {'goat': ['billy'], 'redpanda': ['adira', 'pavitra']}}
